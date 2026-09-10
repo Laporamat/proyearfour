@@ -1,0 +1,17 @@
+# Data & Quant
+yfinance==1.7.0
+pandas>=2.2.0
+numpy>=1.26.0
+scipy>=1.13.0
+
+# Machine Learning
+scikit-learn>=1.5.0
+joblib>=1.4.0
+
+# Backend
+fastapi>=0.111.0
+uvicorn[standard]>=0.30.0
+pydantic>=2.7.0
+
+# LLM (optional — ใส่เมื่อต้องการใช้ OpenAI Function Calling)
+openai>=1.35.0

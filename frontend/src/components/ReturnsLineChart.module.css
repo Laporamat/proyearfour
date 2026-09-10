@@ -1,0 +1,106 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ── Header ───────────────────────────────────── */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.header h3 { margin: 0; font-size: 0.88rem; }
+
+.controls { display: flex; gap: 3px; }
+.periodBtn {
+  padding: 3px 9px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.14s;
+}
+.periodBtn:hover { border-color: var(--accent); color: var(--accent); }
+.periodBtn.active {
+  background: var(--accent-dim);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* ── Ticker chips ─────────────────────────────── */
+.tickers { display: flex; flex-wrap: wrap; gap: 5px; }
+.tickerChip {
+  padding: 2px 9px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.67rem;
+  font-weight: 600;
+  font-family: monospace;
+  cursor: pointer;
+  transition: all 0.14s;
+}
+.tickerChip.on {
+  background: var(--surface2);
+}
+
+/* ── Skeleton ─────────────────────────────────── */
+.skeleton {
+  width: 100%;
+  border-radius: 8px;
+  background: linear-gradient(90deg, var(--surface2) 25%, var(--surface3) 50%, var(--surface2) 75%);
+  background-size: 800px 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+@keyframes shimmer { 0%{background-position:-400px 0} 100%{background-position:400px 0} }
+
+/* ── Empty ────────────────────────────────────── */
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: var(--text-muted);
+  text-align: center;
+  width: 100%;
+  border-radius: 8px;
+  background: var(--surface2);
+  border: 1px dashed var(--border);
+}
+.empty span { font-size: 1.8rem; }
+.empty p    { font-size: 0.82rem; line-height: 1.6; margin: 0; }
+.empty em   { color: var(--accent); font-style: normal; font-weight: 600; }
+
+/* ── Tooltip ──────────────────────────────────── */
+.tip {
+  background: var(--surface3);
+  border: 1px solid var(--border-hi);
+  border-radius: 8px;
+  padding: 9px 13px;
+  box-shadow: var(--shadow);
+  min-width: 150px;
+}
+.tipDate { font-size: 0.72rem; color: var(--text-muted); margin-bottom: 6px; font-weight: 600; }
+.tipRow  { font-size: 0.78rem; margin: 2px 0; }
+
+/* ── Regime badge ─────────────────────────────── */
+.regimeBadge {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  flex-wrap: wrap;
+  padding-top: 2px;
+  border-top: 1px solid var(--border);
+}
+.regimeSub { color: var(--text-muted); font-size: 0.7rem; }

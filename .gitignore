@@ -1,0 +1,46 @@
+# ── Python ────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+*.so
+.venv/
+venv/
+env/
+
+# ── Secrets (อย่า commit !) ────────────────────
+backend/.env
+*.env
+*.env.*
+
+# ── Backend output (data ไฟล์ใหญ่) ────────────
+backend/output/*.csv
+backend/output/*.pkl
+backend/output/*.log
+backend/output/*.txt
+
+# ── Node ───────────────────────────────────────
+frontend/node_modules/
+frontend/front/node_modules/
+front/
+node_modules/
+
+# ── Vite build output ──────────────────────────
+frontend/dist/
+
+# ── IDE ────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# ── Jupyter ────────────────────────────────────
+.ipynb_checkpoints/
+*.ipynb

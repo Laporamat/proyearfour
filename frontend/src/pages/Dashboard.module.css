@@ -1,0 +1,124 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+/* ── Top bar ──────────────────────────────────── */
+.topBar {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+.heading { display: flex; flex-direction: column; gap: 3px; }
+.sub {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.dot {
+  width: 4px; height: 4px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  display: inline-block;
+}
+
+/* ── KPI strip ────────────────────────────────── */
+.kpiGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+}
+@media (max-width: 1200px) { .kpiGrid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 580px)  { .kpiGrid { grid-template-columns: 1fr 1fr; gap: 10px; } }
+
+/* ── Split ────────────────────────────────────── */
+.split {
+  display: grid;
+  grid-template-columns: 1fr 400px;
+  gap: 16px;
+  align-items: start;
+}
+@media (max-width: 1100px) { .split { grid-template-columns: 1fr; } }
+
+/* ── Charts column ────────────────────────────── */
+.chartsCol { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+
+.chartCard {
+  padding: 18px 20px;
+  position: relative;
+  overflow: hidden;
+}
+/* subtle top glow line */
+.chartCard::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 20%; right: 20%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent-glow), transparent);
+}
+
+/* ── Regime card ──────────────────────────────── */
+.regimeCard { padding: 18px 20px; }
+.regimeHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+.regimeTitle { margin: 0; }
+.regimeDate  { font-size: 0.72rem; color: var(--text-muted); }
+
+.bar      { display: flex; align-items: center; gap: 10px; margin-bottom: 11px; }
+.bar:last-child { margin-bottom: 0; }
+.barLabel { width: 74px; font-size: 0.78rem; flex-shrink: 0; }
+.barBg {
+  flex: 1;
+  height: 7px;
+  background: var(--surface2);
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+.barFill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.8s cubic-bezier(0.4,0,0.2,1);
+}
+.barPct {
+  width: 42px;
+  text-align: right;
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+/* ── Chat column ──────────────────────────────── */
+.chatCol {
+  padding: 0;
+  height: calc(100vh - 192px);
+  min-height: 500px;
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 20px;
+  overflow: hidden;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
+}
+@media (max-width: 1100px) { .chatCol { height: 580px; position: static; } }
+
+/* ── Section label ────────────────────────────── */
+.sectionLabel {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+}
