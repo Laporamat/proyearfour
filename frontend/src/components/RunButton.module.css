@@ -1,6 +1,52 @@
-.row  { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-.btn  { min-width: 120px; justify-content: center; font-size: 0.78rem; padding: 7px 14px; }
-.ok   { border-color: var(--green)  !important; color: var(--green)  !important; background: var(--green-dim) !important; }
-.err  { border-color: var(--red)    !important; color: var(--red)    !important; background: var(--red-dim)   !important; }
-.check { color: var(--green); margin-left: 2px; font-size: 0.85rem; }
-.x    { color: var(--red);   margin-left: 2px; font-size: 0.85rem; }
+.wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  align-items: flex-start;
+}
+
+.item {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: 7px 13px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--text);
+  font-size: 0.78rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all var(--tx);
+  white-space: nowrap;
+}
+.btn:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-dim);
+}
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btnIcon { font-size: 0.85rem; }
+
+/* states */
+.ok  { border-color: var(--green) !important; color: var(--green)  !important; background: var(--green-dim)  !important; }
+.err { border-color: var(--red)   !important; color: var(--red)    !important; background: var(--red-dim)    !important; }
+
+.check   { color: var(--green); font-weight: 700; }
+.errIcon { color: var(--red);   font-weight: 700; }
+
+.errMsg {
+  font-size: 0.67rem;
+  color: var(--red);
+  max-width: 200px;
+  line-height: 1.35;
+  padding: 0 2px;
+}
