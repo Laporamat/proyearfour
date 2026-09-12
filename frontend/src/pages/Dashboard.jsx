@@ -1,15 +1,15 @@
 import { useEffect, useCallback } from 'react'
-import StatCard           from '../components/StatCard'
-import RunButton          from '../components/RunButton'
-import PortfolioPieChart  from '../components/PortfolioPieChart'
-import ReturnsLineChart   from '../components/ReturnsLineChart'
-import Chat               from './Chat'
-import { useChart }       from '../context/ChartContext'
-import { api }            from '../hooks/useApi'
-import styles             from './Dashboard.module.css'
+import StatCard          from '../components/StatCard'
+import RunButton         from '../components/RunButton'
+import PortfolioPieChart from '../components/PortfolioPieChart'
+import ReturnsLineChart  from '../components/ReturnsLineChart'
+import Chat              from './Chat'
+import { useChart }      from '../context/ChartContext'
+import { api }           from '../hooks/useApi'
+import s                 from './Dashboard.module.css'
 
-const fmt = (n, d = 2) => (n != null ? Number(n).toFixed(d) : '—')
-const pct = n           => (n != null ? `${fmt(n)}%` : '—')
+const fmt = (n, d = 2) => n != null ? Number(n).toFixed(d) : '—'
+const pct = n => n != null ? `${fmt(n)}%` : '—'
 
 export default function Dashboard() {
   const { portfolio, regime, dispatch } = useChart()
@@ -21,18 +21,22 @@ export default function Dashboard() {
         api.regimeLatest(),
         api.prices(1),
       ])
+
       if (p && !p.status) {
         const raw = p.top5_weights ?? {}
         dispatch({
           type: 'SET_PORTFOLIO',
           payload: {
-            weights: Object.fromEntries(Object.entries(raw).map(([k, v]) => [k, parseFloat(v)])),
-            sharpe:  p.sharpe_ratio,
-            ret:     parseFloat(p.annualized_return),
-            vol:     parseFloat(p.annualized_volatility),
+            weights: Object.fromEntries(
+              Object.entries(raw).map(([k, v]) => [k, parseFloat(v)])
+            ),
+            sharpe: p.sharpe_ratio,
+            ret:    parseFloat(p.annualized_return),
+            vol:    parseFloat(p.annualized_volatility),
           },
         })
       }
+
       if (r?.regime) {
         dispatch({
           type: 'SET_REGIME',
@@ -45,91 +49,109 @@ export default function Dashboard() {
           },
         })
       }
+
       if (px?.prices) dispatch({ type: 'SET_PRICES', payload: px.prices })
     } catch { /* API offline */ }
   }, [dispatch])
 
   useEffect(() => { loadInitial() }, [loadInitial])
 
-  const regimeLabel = regime?.regime ?? ''
-  const regimeClass = regimeLabel.toLowerCase()
-  const loading     = !portfolio && !regime
+  const label = regime?.regime ?? ''
+  const cls   = label.toLowerCase()
+  const loading = !portfolio && !regime
 
   return (
-    <div className={styles.page}>
+    <div className={s.page}>
 
-      {/* ── Header ── */}
-      <div className={styles.topBar}>
-        <div className={styles.heading}>
+      {/* ── Header ─────────────────────────── */}
+      <header className={s.header}>
+        <div>
           <h1>Dashboard</h1>
-          <p className={styles.sub}>
-            25 Assets
-            <span className={styles.dot} />
-            หน่วย THB
-            {regime?.date && <><span className={styles.dot} />{regime.date}</>}
+          <p className={s.headerSub}>
+            25 สินทรัพย์ · หน่วย THB
+            {regime?.date && <> · <time>{regime.date}</time></>}
           </p>
         </div>
         <RunButton onDone={loadInitial} />
-      </div>
+      </header>
 
-      {/* ── KPI ── */}
-      <div className={styles.kpiGrid}>
-        <StatCard icon="◈" label="Sharpe Ratio"   color="accent" loading={loading}
-          value={fmt(portfolio?.sharpe, 4)} sub="Max Sharpe Portfolio" />
-        <StatCard icon="↑" label="Annual Return"  color="green"  loading={loading}
-          value={pct(portfolio?.ret)} sub="ผลตอบแทนต่อปี" />
-        <StatCard icon="~" label="Volatility"     color="yellow" loading={loading}
-          value={pct(portfolio?.vol)} sub="ความผันผวนต่อปี" />
-        <StatCard icon="◉" label="Market Regime"
-          color={regimeClass === 'bull' ? 'green' : regimeClass === 'bear' ? 'red' : 'yellow'}
+      {/* ── KPI ────────────────────────────── */}
+      <div className={s.kpi}>
+        <StatCard
+          icon="◈" label="Sharpe Ratio" color="accent" loading={loading}
+          value={fmt(portfolio?.sharpe, 4)}
+          sub="Max Sharpe Portfolio"
+        />
+        <StatCard
+          icon="↑" label="Annual Return" color="green" loading={loading}
+          value={pct(portfolio?.ret)}
+          sub="ผลตอบแทนต่อปี"
+        />
+        <StatCard
+          icon="~" label="Volatility" color="yellow" loading={loading}
+          value={pct(portfolio?.vol)}
+          sub="ความผันผวนต่อปี"
+        />
+        <StatCard
+          icon="◉" label="Market Regime"
+          color={cls === 'bull' ? 'green' : cls === 'bear' ? 'red' : 'yellow'}
           loading={loading}
-          value={regimeLabel ? <span className={`badge ${regimeClass}`}>{regimeLabel}</span> : null}
-          sub={regime ? `🐂 ${(regime.prob_bull * 100).toFixed(1)}%  🐻 ${(regime.prob_bear * 100).toFixed(1)}%` : undefined}
+          value={label ? <span className={`badge ${cls}`}>{label}</span> : null}
+          sub={regime
+            ? `🐂 ${(regime.prob_bull * 100).toFixed(1)}%  🐻 ${(regime.prob_bear * 100).toFixed(1)}%`
+            : undefined
+          }
         />
       </div>
 
-      {/* ── Split: Charts + Chat ── */}
-      <div className={styles.split}>
+      {/* ── Body ───────────────────────────── */}
+      <div className={s.body}>
 
-        {/* ── Charts column ── */}
-        <div className={styles.chartsCol}>
-
-          <div className={`card ${styles.chartCard}`}>
-            <ReturnsLineChart height={220} />
+        {/* left — charts */}
+        <div className={s.charts}>
+          <div className={`card ${s.chartCard}`}>
+            <ReturnsLineChart height={210} />
           </div>
 
-          <div className={`card ${styles.chartCard}`}>
-            <PortfolioPieChart />
-          </div>
-
-          {regime && (
-            <div className={`card ${styles.regimeCard}`}>
-              <div className={styles.regimeHead}>
-                <h3 className={styles.regimeTitle}>Regime Probability</h3>
-                <span className={styles.regimeDate}>{regime.date}</span>
-              </div>
-              {[
-                { key: 'prob_bull',    label: 'Bull 🐂',    color: '#2dd4a0' },
-                { key: 'prob_neutral', label: 'Neutral',    color: '#f5b942' },
-                { key: 'prob_bear',    label: 'Bear 🐻',    color: '#f26c6c' },
-              ].map(({ key, label, color }) => {
-                const val = ((regime[key] ?? 0) * 100)
-                return (
-                  <div key={key} className={styles.bar}>
-                    <span className={styles.barLabel}>{label}</span>
-                    <div className={styles.barBg}>
-                      <div className={styles.barFill} style={{ width: `${val.toFixed(1)}%`, background: color }} />
-                    </div>
-                    <span className={styles.barPct} style={{ color }}>{val.toFixed(1)}%</span>
-                  </div>
-                )
-              })}
+          <div className={s.chartRow}>
+            <div className={`card ${s.chartCard}`}>
+              <PortfolioPieChart />
             </div>
-          )}
+
+            {regime && (
+              <div className={`card ${s.regimeCard}`}>
+                <div className={s.regimeHead}>
+                  <h3>Regime</h3>
+                  <span className={s.regimeDate}>{regime.date}</span>
+                </div>
+                {[
+                  { key: 'prob_bull',    label: 'Bull',    color: 'var(--green)'  },
+                  { key: 'prob_neutral', label: 'Neutral', color: 'var(--yellow)' },
+                  { key: 'prob_bear',    label: 'Bear',    color: 'var(--red)'    },
+                ].map(({ key, label, color }) => {
+                  const pct = ((regime[key] ?? 0) * 100)
+                  return (
+                    <div key={key} className={s.regimeRow}>
+                      <span className={s.regimeLbl}>{label}</span>
+                      <div className={s.regimeBg}>
+                        <div
+                          className={s.regimeFill}
+                          style={{ width: `${pct.toFixed(1)}%`, background: color }}
+                        />
+                      </div>
+                      <span className={s.regimePct} style={{ color }}>
+                        {pct.toFixed(1)}%
+                      </span>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* ── Chat panel ── */}
-        <div className={styles.chatCol}>
+        {/* right — chat */}
+        <div className={s.chatWrap}>
           <Chat embedded />
         </div>
 

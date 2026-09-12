@@ -1,41 +1,38 @@
 .wrap {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--sp-3);
 }
 
-/* ── Header ───────────────────────────────────── */
 .header {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   justify-content: space-between;
+  gap: var(--sp-3);
   flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 2px;
 }
-.header h3 { margin: 0; font-size: 0.88rem; }
+.header h3 { margin: 0; }
 
-.badges { display: flex; gap: 6px; flex-wrap: wrap; }
-.badge {
-  font-size: 0.68rem;
+.stats { display: flex; gap: var(--sp-3); align-items: center; }
+.stat {
+  font-size: 0.72rem;
+  color: var(--text-muted);
   background: var(--surface2);
   border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 2px 8px;
-  color: var(--text-muted);
-  font-weight: 500;
+  border-radius: var(--r-sm);
+  padding: 2px var(--sp-2);
 }
-.badge strong { color: var(--text-head); font-weight: 700; }
+.stat strong { color: var(--text-head); font-weight: 700; }
 
-/* ── Legend ───────────────────────────────────── */
+/* legend */
 .legend {
   list-style: none;
   display: flex;
   flex-wrap: wrap;
-  gap: 5px 12px;
+  gap: 4px 12px;
   justify-content: center;
-  padding: 0;
   margin: 0;
+  padding: 0;
 }
 .legendItem {
   display: flex;
@@ -43,58 +40,47 @@
   gap: 5px;
   font-size: 0.72rem;
 }
-.dot      { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.legendDot  { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
 .legendName { color: var(--text-muted); }
 .legendVal  { color: var(--text-head); font-weight: 700; }
 
-/* ── Tooltip ──────────────────────────────────── */
+/* tooltip */
 .tip {
   background: var(--surface3);
   border: 1px solid var(--border-hi);
-  border-radius: 8px;
-  padding: 8px 13px;
+  border-radius: var(--r-md);
+  padding: 8px 12px;
   display: flex;
-  gap: 10px;
   align-items: center;
-  box-shadow: var(--shadow);
+  gap: var(--sp-2);
+  box-shadow: var(--shadow-md);
+  font-size: 0.8rem;
 }
-.tipName { font-size: 0.78rem; color: var(--text-muted); }
-.tipVal  { font-size: 0.85rem; font-weight: 700; color: var(--text-head); }
+.tipDot  { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.tipName { color: var(--text-muted); }
+.tipVal  { font-weight: 700; color: var(--text-head); margin-left: auto; padding-left: var(--sp-3); }
 
-/* ── Empty state ──────────────────────────────── */
+/* empty */
 .empty {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: var(--sp-3);
+  padding: var(--sp-8) var(--sp-4);
   color: var(--text-muted);
   text-align: center;
-  padding: 32px 16px;
-  border-radius: 8px;
-  background: var(--surface2);
   border: 1px dashed var(--border);
-  min-height: 180px;
+  border-radius: var(--r-lg);
 }
-.empty span { font-size: 1.8rem; }
-.empty p    { font-size: 0.82rem; line-height: 1.6; margin: 0; }
-.empty em   { color: var(--accent); font-style: normal; font-weight: 600; }
+.empty svg { opacity: 0.4; }
+.empty p   { font-size: 0.82rem; margin: 0; line-height: 1.5; }
+.empty em  { color: var(--accent); font-style: normal; font-weight: 600; }
 
-/* ── Updated timestamp ────────────────────────── */
-.updated {
-  font-size: 0.67rem;
+.ts {
+  font-size: 0.65rem;
   color: var(--text-muted);
   text-align: right;
-  margin-top: 2px;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 4px;
-}
-.updated::before {
-  content: '';
-  width: 5px; height: 5px;
-  border-radius: 50%;
-  background: var(--accent);
-  box-shadow: 0 0 6px var(--accent-glow);
+  margin: 0;
+  opacity: 0.7;
 }

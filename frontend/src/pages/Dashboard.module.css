@@ -1,124 +1,132 @@
 .page {
   display: flex;
   flex-direction: column;
-  gap: 22px;
+  gap: var(--sp-6);
+  height: 100%;
+  min-height: 0;
 }
 
-/* ── Top bar ──────────────────────────────────── */
-.topBar {
+/* ── Header ──────────────────────────────────── */
+.header {
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 14px;
+  gap: var(--sp-4);
 }
-.heading { display: flex; flex-direction: column; gap: 3px; }
-.sub {
+.headerSub {
   font-size: 0.78rem;
   color: var(--text-muted);
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  margin-top: var(--sp-1);
 }
-.dot {
-  width: 4px; height: 4px;
-  border-radius: 50%;
-  background: var(--text-muted);
-  display: inline-block;
-}
+.headerSub time { color: var(--text); }
 
-/* ── KPI strip ────────────────────────────────── */
-.kpiGrid {
+/* ── KPI grid ────────────────────────────────── */
+.kpi {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 14px;
+  gap: var(--sp-4);
 }
-@media (max-width: 1200px) { .kpiGrid { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 580px)  { .kpiGrid { grid-template-columns: 1fr 1fr; gap: 10px; } }
+@media (max-width: 1200px) { .kpi { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 560px)  { .kpi { grid-template-columns: 1fr 1fr; gap: var(--sp-3); } }
 
-/* ── Split ────────────────────────────────────── */
-.split {
+/* ── Body split ──────────────────────────────── */
+.body {
   display: grid;
-  grid-template-columns: 1fr 400px;
-  gap: 16px;
+  grid-template-columns: 1fr 380px;
+  gap: var(--sp-4);
+  /* fill remaining vertical space */
+  flex: 1;
+  min-height: 0;
   align-items: start;
 }
-@media (max-width: 1100px) { .split { grid-template-columns: 1fr; } }
+@media (max-width: 1100px) { .body { grid-template-columns: 1fr; } }
 
-/* ── Charts column ────────────────────────────── */
-.chartsCol { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
-
-.chartCard {
-  padding: 18px 20px;
-  position: relative;
-  overflow: hidden;
-}
-/* subtle top glow line */
-.chartCard::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 20%; right: 20%;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, var(--accent-glow), transparent);
-}
-
-/* ── Regime card ──────────────────────────────── */
-.regimeCard { padding: 18px 20px; }
-.regimeHead {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 16px;
-}
-.regimeTitle { margin: 0; }
-.regimeDate  { font-size: 0.72rem; color: var(--text-muted); }
-
-.bar      { display: flex; align-items: center; gap: 10px; margin-bottom: 11px; }
-.bar:last-child { margin-bottom: 0; }
-.barLabel { width: 74px; font-size: 0.78rem; flex-shrink: 0; }
-.barBg {
-  flex: 1;
-  height: 7px;
-  background: var(--surface2);
-  border-radius: 4px;
-  overflow: hidden;
-  border: 1px solid var(--border);
-}
-.barFill {
-  height: 100%;
-  border-radius: 4px;
-  transition: width 0.8s cubic-bezier(0.4,0,0.2,1);
-}
-.barPct {
-  width: 42px;
-  text-align: right;
-  font-size: 0.76rem;
-  font-weight: 700;
-}
-
-/* ── Chat column ──────────────────────────────── */
-.chatCol {
-  padding: 0;
-  height: calc(100vh - 192px);
-  min-height: 500px;
+/* ── Charts column ───────────────────────────── */
+.charts {
   display: flex;
   flex-direction: column;
-  position: sticky;
-  top: 20px;
+  gap: var(--sp-4);
+  min-width: 0;
+}
+
+.chartCard { padding: var(--sp-5); }
+
+/* row for pie + regime side by side */
+.chartRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--sp-4);
+  min-width: 0;
+}
+@media (max-width: 860px) { .chartRow { grid-template-columns: 1fr; } }
+
+/* ── Regime card ─────────────────────────────── */
+.regimeCard { padding: var(--sp-5); }
+
+.regimeHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: var(--sp-5);
+}
+.regimeDate {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.regimeRow {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-4);
+}
+.regimeRow:last-child { margin-bottom: 0; }
+
+.regimeLbl {
+  width: 58px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text);
+  flex-shrink: 0;
+}
+
+.regimeBg {
+  flex: 1;
+  height: 6px;
+  background: var(--surface2);
+  border-radius: var(--r-pill);
   overflow: hidden;
+  border: 1px solid var(--border);
+}
+.regimeFill {
+  height: 100%;
+  border-radius: var(--r-pill);
+  transition: width 0.7s cubic-bezier(0.4,0,0.2,1);
+}
+.regimePct {
+  width: 46px;
+  text-align: right;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+/* ── Chat panel ──────────────────────────────── */
+.chatWrap {
+  /* Use flex column so Chat fills all available height */
+  display: flex;
+  flex-direction: column;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-card);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  /* sticky so it stays visible when scrolling charts */
+  position: sticky;
+  top: var(--sp-4);
+  /* height = viewport minus page paddings (2×32px) minus header (~70px) minus KPI (~92px) minus gaps */
+  height: calc(100vh - 32px - 32px - 70px - 92px - 24px - 24px);
+  min-height: 480px;
 }
-@media (max-width: 1100px) { .chatCol { height: 580px; position: static; } }
-
-/* ── Section label ────────────────────────────── */
-.sectionLabel {
-  font-size: 0.68rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--text-muted);
-  margin-bottom: 10px;
+@media (max-width: 1100px) {
+  .chatWrap { position: static; height: 560px; }
 }

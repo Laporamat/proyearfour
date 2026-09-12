@@ -1,43 +1,23 @@
-/**
- * PortfolioPieChart
- * — Pie chart สัดส่วนพอร์ต reactive กับ ChartContext
- * — animate ทุกครั้งที่ data เปลี่ยน (chat bot อัพเดท)
- */
 import { useMemo } from 'react'
-import {
-  PieChart, Pie, Cell, Tooltip,
-  Legend, ResponsiveContainer,
-} from 'recharts'
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts'
 import { useChart } from '../context/ChartContext'
-import styles from './PortfolioPieChart.module.css'
+import s from './PortfolioPieChart.module.css'
 
-const PALETTE = [
-  '#6478f9','#2dd4a0','#f5b942','#f26c6c','#a78bfa',
-  '#38bdf8','#fb923c','#4ade80','#e879f9','#64748b',
-]
+const COLORS = ['var(--c1)','var(--c2)','var(--c3)','var(--c4)','var(--c5)',
+                 'var(--c6)','var(--c7)','var(--c8)','var(--c9)','var(--c10)']
 
-function CustomTooltip({ active, payload }) {
+const HEX = ['#5b73f5','#23c97d','#e8a825','#e85c5c','#a78bfa',
+             '#38c9e8','#f2844b','#4ade80','#e879f9','#94a3b8']
+
+function Tip({ active, payload }) {
   if (!active || !payload?.length) return null
   const { name, value } = payload[0]
   return (
-    <div className={styles.tip}>
-      <span className={styles.tipName}>{name}</span>
-      <span className={styles.tipVal}>{value.toFixed(2)}%</span>
+    <div className={s.tip}>
+      <span className={s.tipDot} style={{ background: payload[0].payload.fill }} />
+      <span className={s.tipName}>{name}</span>
+      <span className={s.tipVal}>{value.toFixed(2)}%</span>
     </div>
-  )
-}
-
-function CustomLegend({ payload }) {
-  return (
-    <ul className={styles.legend}>
-      {payload.map((entry, i) => (
-        <li key={i} className={styles.legendItem}>
-          <span className={styles.dot} style={{ background: entry.color }} />
-          <span className={styles.legendName}>{entry.value}</span>
-          <span className={styles.legendVal}>{entry.payload.value.toFixed(1)}%</span>
-        </li>
-      ))}
-    </ul>
   )
 }
 
@@ -49,64 +29,71 @@ export default function PortfolioPieChart() {
     return Object.entries(portfolio.weights)
       .filter(([, v]) => v > 0.5)
       .sort((a, b) => b[1] - a[1])
-      .map(([name, value]) => ({ name, value: +value.toFixed(2) }))
+      .map(([name, value], i) => ({ name, value: +value.toFixed(2), fill: HEX[i % HEX.length] }))
   }, [portfolio])
 
   const hasData = data.length > 0
 
   return (
-    <div className={styles.wrap}>
-      <div className={styles.header}>
-        <h3>🥧 Portfolio Allocation</h3>
+    <div className={s.wrap}>
+      <div className={s.header}>
+        <h3>Portfolio Allocation</h3>
         {portfolio && (
-          <div className={styles.badges}>
-            <span className={styles.badge}>
-              Sharpe&nbsp;<strong>{portfolio.sharpe?.toFixed(4)}</strong>
+          <div className={s.stats}>
+            <span className={s.stat}>
+              Sharpe <strong>{portfolio.sharpe?.toFixed(4)}</strong>
             </span>
-            <span className={styles.badge} style={{ color: 'var(--green)' }}>
-              Ret&nbsp;<strong>{portfolio.ret?.toFixed(2)}%</strong>
-            </span>
-            <span className={styles.badge} style={{ color: 'var(--yellow)' }}>
-              Vol&nbsp;<strong>{portfolio.vol?.toFixed(2)}%</strong>
+            <span className={s.stat} style={{ color: 'var(--green)' }}>
+              {portfolio.ret?.toFixed(2)}%
             </span>
           </div>
         )}
       </div>
 
       {hasData ? (
-        <ResponsiveContainer width="100%" height={260}>
-          <PieChart>
-            <Pie
-              data={data}
-              cx="50%"
-              cy="45%"
-              innerRadius={60}
-              outerRadius={95}
-              paddingAngle={3}
-              dataKey="value"
-              animationBegin={0}
-              animationDuration={600}
-              isAnimationActive
-            >
-              {data.map((_, i) => (
-                <Cell key={i} fill={PALETTE[i % PALETTE.length]} stroke="var(--surface)" strokeWidth={2} />
-              ))}
-            </Pie>
-            <Tooltip content={<CustomTooltip />} />
-            <Legend content={<CustomLegend />} />
-          </PieChart>
-        </ResponsiveContainer>
+        <>
+          <ResponsiveContainer width="100%" height={200}>
+            <PieChart>
+              <Pie
+                data={data}
+                cx="50%" cy="50%"
+                innerRadius={52} outerRadius={82}
+                paddingAngle={3}
+                dataKey="value"
+                animationBegin={0}
+                animationDuration={550}
+                isAnimationActive
+              >
+                {data.map((d, i) => (
+                  <Cell key={i} fill={d.fill} stroke="var(--surface)" strokeWidth={2} />
+                ))}
+              </Pie>
+              <Tooltip content={<Tip />} />
+            </PieChart>
+          </ResponsiveContainer>
+
+          <ul className={s.legend}>
+            {data.map((d, i) => (
+              <li key={i} className={s.legendItem}>
+                <span className={s.legendDot} style={{ background: d.fill }} />
+                <span className={s.legendName}>{d.name}</span>
+                <span className={s.legendVal}>{d.value.toFixed(1)}%</span>
+              </li>
+            ))}
+          </ul>
+        </>
       ) : (
-        <div className={styles.empty}>
-          <span>💬</span>
-          <p>ถาม AI ว่า <em>"จัดพอร์ตให้หน่อย"</em><br />กราฟจะขยับอัตโนมัติ</p>
+        <div className={s.empty}>
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M12 2a10 10 0 0 1 10 10"/>
+          </svg>
+          <p>พิมพ์ <em>"จัดพอร์ตให้หน่อย"</em> ในช่าท</p>
         </div>
       )}
 
       {lastUpdated && hasData && (
-        <p className={styles.updated}>
-          อัพเดทล่าสุด {new Date(lastUpdated).toLocaleTimeString('th-TH')}
-        </p>
+        <p className={s.ts}>↺ {new Date(lastUpdated).toLocaleTimeString('th-TH')}</p>
       )}
     </div>
   )

@@ -1,94 +1,85 @@
 .card {
-  position: relative;
   display: flex;
   align-items: flex-start;
-  gap: 14px;
-  border-radius: var(--radius);
-  padding: 18px 20px;
+  gap: var(--sp-4);
   background: var(--surface);
   border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: var(--sp-5);
+  position: relative;
   overflow: hidden;
-  transition: border-color 0.2s, box-shadow 0.2s, transform 0.18s;
-  cursor: default;
+  transition: transform var(--tx), border-color var(--tx), box-shadow var(--tx);
 }
-.card:hover {
-  transform: translateY(-2px);
-  border-color: var(--border-hi);
-}
-.card.accent:hover  { box-shadow: 0 4px 24px var(--accent-glow); }
-.card.green:hover   { box-shadow: 0 4px 24px var(--green-glow); }
-.card.yellow:hover  { box-shadow: 0 4px 24px rgba(245,185,66,0.2); }
-.card.red:hover     { box-shadow: 0 4px 24px rgba(242,108,108,0.2); }
-
-/* subtle gradient noise overlay */
-.card::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: linear-gradient(135deg, rgba(255,255,255,0.025) 0%, transparent 60%);
-  pointer-events: none;
-}
+.card:hover { transform: translateY(-2px); border-color: var(--border-hi); }
 
 /* top-right glow orb */
 .card::after {
   content: '';
   position: absolute;
-  top: -20px; right: -20px;
-  width: 80px; height: 80px;
+  top: -16px; right: -16px;
+  width: 72px; height: 72px;
   border-radius: 50%;
-  opacity: 0.12;
+  opacity: 0.10;
   pointer-events: none;
+  transition: opacity var(--tx);
 }
+.card:hover::after { opacity: 0.18; }
 .card.accent::after  { background: var(--accent); }
-.card.green::after   { background: var(--green); }
+.card.green::after   { background: var(--green);  }
 .card.yellow::after  { background: var(--yellow); }
-.card.red::after     { background: var(--red); }
+.card.red::after     { background: var(--red);    }
 
-/* ── Icon ─────────────────────────────────────── */
-.icon {
-  font-size: 1.2rem;
-  width: 42px; height: 42px;
-  border-radius: 11px;
+/* hover glow on card */
+.card.accent:hover  { box-shadow: 0 4px 20px var(--accent-glow); }
+.card.green:hover   { box-shadow: 0 4px 20px var(--green-glow); }
+.card.yellow:hover  { box-shadow: 0 4px 20px rgba(232,168,37,0.2); }
+.card.red:hover     { box-shadow: 0 4px 20px rgba(232,92,92,0.2); }
+
+/* ── Icon ──────────────────────────────────── */
+.iconWrap {
+  width: 42px;
+  height: 42px;
+  border-radius: var(--r-md);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  position: relative;
-  z-index: 1;
+  font-size: 1.1rem;
+  font-weight: 700;
 }
-.icon.accent { background: var(--accent-dim); border: 1px solid rgba(100,120,249,0.2); }
-.icon.green  { background: var(--green-dim);  border: 1px solid rgba(45,212,160,0.2); }
-.icon.yellow { background: var(--yellow-dim); border: 1px solid rgba(245,185,66,0.2); }
-.icon.red    { background: var(--red-dim);    border: 1px solid rgba(242,108,108,0.2); }
+.icon_accent { background: var(--accent-dim); color: var(--accent); border: 1px solid rgba(91,115,245,0.25); }
+.icon_green  { background: var(--green-dim);  color: var(--green);  border: 1px solid rgba(35,201,125,0.25); }
+.icon_yellow { background: var(--yellow-dim); color: var(--yellow); border: 1px solid rgba(232,168,37,0.25); }
+.icon_red    { background: var(--red-dim);    color: var(--red);    border: 1px solid rgba(232,92,92,0.25); }
 
-/* ── Body ─────────────────────────────────────── */
-.body { flex: 1; min-width: 0; position: relative; z-index: 1; }
+/* ── Body ──────────────────────────────────── */
+.body  { flex: 1; min-width: 0; }
 
 .label {
-  font-size: 0.68rem;
+  font-size: 0.7rem;
   font-weight: 600;
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  margin-bottom: 6px;
+  margin-bottom: var(--sp-1);
 }
+
 .value {
-  font-size: 1.5rem;
-  font-weight: 700;
+  font-size: 1.55rem;
+  font-weight: 800;
   color: var(--text-head);
-  line-height: 1;
-  letter-spacing: -0.02em;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
 }
+
 .sub {
   font-size: 0.72rem;
   color: var(--text-muted);
-  margin-top: 5px;
+  margin-top: var(--sp-1);
+  line-height: 1.4;
 }
 
-/* skeleton */
-.skeletonLine {
-  height: 28px;
-  width: 70px;
-  border-radius: 6px;
+.skelVal {
+  height: 30px;
+  width: 80px;
 }
