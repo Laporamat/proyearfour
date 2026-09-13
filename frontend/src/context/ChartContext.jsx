@@ -84,17 +84,16 @@ export function ChartProvider({ children }) {
           break
         }
         case 'get_portfolio_summary': {
-          const raw = result.top5_weights ?? {}
           const weights = Object.fromEntries(
-            Object.entries(raw).map(([k, v]) => [k, parseFloat(v)])
+            Object.entries(result.all_weights ?? result.top5_weights ?? {}).map(([k, v]) => [k, Number(v)])
           )
           dispatch({
             type: 'SET_PORTFOLIO',
             payload: {
               weights,
-              sharpe: result.sharpe_ratio,
-              ret:    parseFloat(result.annualized_return),
-              vol:    parseFloat(result.annualized_volatility),
+              sharpe: Number(result.sharpe_ratio),
+              ret:    Number(result.annualized_return),
+              vol:    Number(result.annualized_volatility),
             },
           })
           break

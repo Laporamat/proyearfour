@@ -3,6 +3,7 @@ import StatCard          from '../components/StatCard'
 import RunButton         from '../components/RunButton'
 import PortfolioPieChart from '../components/PortfolioPieChart'
 import ReturnsLineChart  from '../components/ReturnsLineChart'
+import PriceTable        from '../components/PriceTable'
 import Chat              from './Chat'
 import { useChart }      from '../context/ChartContext'
 import { api }           from '../hooks/useApi'
@@ -19,7 +20,7 @@ export default function Dashboard() {
       const [p, r, px] = await Promise.all([
         api.portfolioLatest(),
         api.regimeLatest(),
-        api.prices(1),
+        api.prices(25),
       ])
 
       if (p && !p.status) {
@@ -148,6 +149,11 @@ export default function Dashboard() {
                 })}
               </div>
             )}
+          </div>
+
+          {/* price table */}
+          <div className={`card ${s.chartCard}`}>
+            <PriceTable />
           </div>
         </div>
 
