@@ -27,12 +27,13 @@ export default function Dashboard() {
         dispatch({
           type: 'SET_PORTFOLIO',
           payload: {
+            // top5_weights ตอนนี้เป็น float % (21.87) → หาร 100 เป็น fraction
             weights: Object.fromEntries(
-              Object.entries(raw).map(([k, v]) => [k, parseFloat(v)])
+              Object.entries(p.all_weights ?? raw).map(([k, v]) => [k, Number(v)])
             ),
-            sharpe: p.sharpe_ratio,
-            ret:    parseFloat(p.annualized_return),
-            vol:    parseFloat(p.annualized_volatility),
+            sharpe: Number(p.sharpe_ratio),
+            ret:    Number(p.annualized_return),
+            vol:    Number(p.annualized_volatility),
           },
         })
       }

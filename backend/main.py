@@ -245,12 +245,13 @@ async def execute_tool(name: str, args: dict) -> dict:
         opt = result["optimal_portfolio"]
         top5 = sorted(opt["weights"].items(), key=lambda x: -x[1])[:5]
         return {
-            "status":          "success",
-            "objective":       opt["objective"],
-            "sharpe_ratio":    opt["sharpe_ratio"],
-            "annualized_return":     f"{opt['annualized_return']}%",
-            "annualized_volatility": f"{opt['annualized_volatility']}%",
-            "top5_weights":    {t: f"{w*100:.2f}%" for t, w in top5},
+            "status":                "success",
+            "objective":             opt["objective"],
+            "sharpe_ratio":          round(float(opt["sharpe_ratio"]), 4),
+            "annualized_return":     round(float(opt["annualized_return"]), 4),
+            "annualized_volatility": round(float(opt["annualized_volatility"]), 4),
+            "top5_weights":          {t: round(w * 100, 4) for t, w in top5},
+            "all_weights":           {t: round(w, 6) for t, w in opt["weights"].items()},
             "monte_carlo_best_sharpe": result["monte_carlo_summary"]["best_sharpe_mc"],
         }
 
@@ -285,10 +286,11 @@ async def execute_tool(name: str, args: dict) -> dict:
             weights = {}
         top5 = sorted(weights.items(), key=lambda x: -x[1])[:5]
         return {
-            "sharpe_ratio":    row.get("sharpe_ratio"),
-            "annualized_return":     row.get("annualized_return"),
-            "annualized_volatility": row.get("annualized_volatility"),
-            "top5_weights":    {t: f"{w*100:.2f}%" for t, w in top5},
+            "sharpe_ratio":          round(float(row.get("sharpe_ratio", 0)), 4),
+            "annualized_return":     round(float(row.get("annualized_return", 0)), 4),
+            "annualized_volatility": round(float(row.get("annualized_volatility", 0)), 4),
+            "top5_weights":          {t: round(w * 100, 4) for t, w in top5},
+            "all_weights":           {t: round(w, 6) for t, w in list(weights.items())},
         }
 
     elif name == "get_regime_summary":

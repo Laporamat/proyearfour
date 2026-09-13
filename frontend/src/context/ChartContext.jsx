@@ -54,18 +54,17 @@ export function ChartProvider({ children }) {
 
       switch (tool) {
         case 'optimize_portfolio': {
-          // parse weights จาก "21.87%" → 21.87
           const raw = result.top5_weights ?? {}
           const weights = Object.fromEntries(
-            Object.entries(raw).map(([k, v]) => [k, parseFloat(v)])
+            Object.entries(result.all_weights ?? raw).map(([k, v]) => [k, Number(v)])
           )
           dispatch({
             type: 'SET_PORTFOLIO',
             payload: {
               weights,
-              sharpe: result.sharpe_ratio,
-              ret:    parseFloat(result.annualized_return),
-              vol:    parseFloat(result.annualized_volatility),
+              sharpe: Number(result.sharpe_ratio),
+              ret:    Number(result.annualized_return),
+              vol:    Number(result.annualized_volatility),
               objective: result.objective,
             },
           })
