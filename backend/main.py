@@ -458,7 +458,7 @@ async def api_chat(req: ChatRequest):
         try:
             client = AsyncOpenAI(
                 api_key=req.api_key or os.getenv("OPENAI_API_KEY"),
-                base_url=req.base_url,
+                base_url=req.base_url or os.getenv("OPENAI_BASE_URL"),
             )
             system_prompt = (
                 "คุณคือ Quant AI Assistant ผู้เชี่ยวชาญด้านการวิเคราะห์พอร์ตการลงทุน "
@@ -471,7 +471,7 @@ async def api_chat(req: ChatRequest):
             messages.append({"role": "user", "content": req.message})
 
             resp = await client.chat.completions.create(
-                model=req.model, messages=messages,
+                model=req.model or os.getenv("OPENAI_MODEL", "gpt-4o-mini"), messages=messages,
                 tools=TOOLS, tool_choice="auto", max_tokens=1024,
             )
             msg = resp.choices[0].message
@@ -489,7 +489,7 @@ async def api_chat(req: ChatRequest):
                         "content": json.dumps(tool_result, ensure_ascii=False),
                     })
                 resp2 = await client.chat.completions.create(
-                    model=req.model, messages=messages, max_tokens=1024,
+                    model=req.model or os.getenv("OPENAI_MODEL", "gpt-4o-mini"), messages=messages, max_tokens=1024,
                 )
                 final_reply = resp2.choices[0].message.content or ""
             else:
