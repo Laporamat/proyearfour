@@ -63,32 +63,41 @@ def _download() -> dict[str, Any]:
         if col in df.columns:
             df[col] = df[col] * fx_rate
 
-    df = df.ffill().dropna(how="all")
-    if df.empty:
+    raw = df.dropna(how="all")
+    if raw.empty:
         raise RuntimeError("No usable rows after cleaning")
-
-    last = df.iloc[-1]
-    prev = df.iloc[-2] if len(df) >= 2 else last
 
     prices: dict[str, float] = {}
     changes: dict[str, float] = {}
-    for ticker in df.columns:
-        v = last.get(ticker)
-        if pd.isna(v):
+    latest_dates: dict[str, str] = {}
+
+    # Compute per-ticker independently using its own last 2 non-null closes.
+    # Different markets (US vs .BK) trade on different calendar days, so
+    # applying ffill+iloc[-2] before this step wipes out real % changes.
+    for ticker in raw.columns:
+        s = raw[ticker].dropna()
+        if s.empty:
             continue
-        prices[ticker] = round(float(v), 2)
-        p = prev.get(ticker)
-        if p and not pd.isna(p) and p != 0:
-            changes[ticker] = round((float(v) - float(p)) / float(p) * 100, 3)
+        last_v = float(s.iloc[-1])
+        prices[ticker] = round(last_v, 2)
+        latest_dates[ticker] = str(s.index[-1].date())
+        if len(s) >= 2:
+            prev_v = float(s.iloc[-2])
+            if prev_v != 0:
+                changes[ticker] = round((last_v - prev_v) / prev_v * 100, 3)
+            else:
+                changes[ticker] = 0.0
         else:
             changes[ticker] = 0.0
 
+    # Overall "as-of" date = latest bar in the frame
     return {
         "status": "live",
-        "date": str(df.index[-1].date()),
+        "date": str(raw.index[-1].date()),
         "fx_thb_per_usd": round(fx_rate, 4),
         "prices": prices,
         "changes": changes,
+        "asof": latest_dates,
         "fetched_at": datetime.now().isoformat(timespec="seconds"),
     }
 
