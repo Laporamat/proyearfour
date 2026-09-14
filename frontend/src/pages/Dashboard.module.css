@@ -123,7 +123,6 @@
   /* sticky so it stays visible when scrolling charts */
   position: sticky;
   top: var(--sp-4);
-  /* height = viewport minus page paddings (2×32px) minus header (~70px) minus KPI (~92px) minus gaps */
   height: calc(100vh - 32px - 32px - 70px - 92px - 24px - 24px);
   min-height: 480px;
 }

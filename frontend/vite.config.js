@@ -6,7 +6,9 @@ const BACKEND = 'http://127.0.0.1:8001'
 export default defineConfig({
   plugins: [react()],
   server: {
-    port: 5173,
+    host: '0.0.0.0',
+    port: 3000,
+    allowedHosts: true,
     proxy: {
       '/api': {
         target: BACKEND,

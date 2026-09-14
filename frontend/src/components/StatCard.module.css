@@ -8,74 +8,54 @@
   padding: var(--sp-5);
   position: relative;
   overflow: hidden;
-  transition: transform var(--tx), border-color var(--tx), box-shadow var(--tx);
+  transition: border-color var(--tx), box-shadow var(--tx);
 }
-.card:hover { transform: translateY(-2px); border-color: var(--border-hi); }
+.card:hover { border-color: var(--border-hi); box-shadow: var(--shadow-sm); }
 
-/* top-right glow orb */
-.card::after {
-  content: '';
-  position: absolute;
-  top: -16px; right: -16px;
-  width: 72px; height: 72px;
-  border-radius: 50%;
-  opacity: 0.10;
-  pointer-events: none;
-  transition: opacity var(--tx);
-}
-.card:hover::after { opacity: 0.18; }
-.card.accent::after  { background: var(--accent); }
-.card.green::after   { background: var(--green);  }
-.card.yellow::after  { background: var(--yellow); }
-.card.red::after     { background: var(--red);    }
-
-/* hover glow on card */
-.card.accent:hover  { box-shadow: 0 4px 20px var(--accent-glow); }
-.card.green:hover   { box-shadow: 0 4px 20px var(--green-glow); }
-.card.yellow:hover  { box-shadow: 0 4px 20px rgba(232,168,37,0.2); }
-.card.red:hover     { box-shadow: 0 4px 20px rgba(232,92,92,0.2); }
+/* removed decorative glow orb for a cleaner surface */
+.card::after { content: none; }
 
 /* ── Icon ──────────────────────────────────── */
 .iconWrap {
-  width: 42px;
-  height: 42px;
+  width: 38px;
+  height: 38px;
   border-radius: var(--r-md);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  font-size: 1.1rem;
-  font-weight: 700;
+  font-size: 1rem;
+  font-weight: 600;
 }
-.icon_accent { background: var(--accent-dim); color: var(--accent); border: 1px solid rgba(91,115,245,0.25); }
-.icon_green  { background: var(--green-dim);  color: var(--green);  border: 1px solid rgba(35,201,125,0.25); }
-.icon_yellow { background: var(--yellow-dim); color: var(--yellow); border: 1px solid rgba(232,168,37,0.25); }
-.icon_red    { background: var(--red-dim);    color: var(--red);    border: 1px solid rgba(232,92,92,0.25); }
+.icon_accent { background: var(--accent-dim); color: var(--accent); }
+.icon_green  { background: var(--green-dim);  color: var(--green);  }
+.icon_yellow { background: var(--yellow-dim); color: var(--yellow); }
+.icon_red    { background: var(--red-dim);    color: var(--red);    }
 
 /* ── Body ──────────────────────────────────── */
 .body  { flex: 1; min-width: 0; }
 
 .label {
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   font-weight: 600;
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  margin-bottom: var(--sp-1);
+  margin-bottom: var(--sp-2);
 }
 
 .value {
   font-size: 1.55rem;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--text-head);
   line-height: 1.1;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.02em;
 }
 
 .sub {
   font-size: 0.72rem;
   color: var(--text-muted);
-  margin-top: var(--sp-1);
+  margin-top: var(--sp-2);
   line-height: 1.4;
 }
 

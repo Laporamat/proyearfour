@@ -97,7 +97,7 @@ export default function ReturnsLineChart({ height = 210 }) {
                     </linearGradient>
                   ))}
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(15,23,42,0.06)" vertical={false} />
                 <XAxis dataKey="date"
                   tick={{ fill: 'var(--text-muted)', fontSize: 10 }}
                   axisLine={false} tickLine={false} interval="preserveStartEnd"
@@ -108,9 +108,9 @@ export default function ReturnsLineChart({ height = 210 }) {
                   tickFormatter={v => `${v > 0 ? '+' : ''}${v}%`}
                 />
                 <Tooltip content={<Tip />}
-                  cursor={{ stroke: 'rgba(255,255,255,0.15)', strokeWidth: 1, strokeDasharray: '4 3' }}
+                  cursor={{ stroke: 'rgba(15,23,42,0.15)', strokeWidth: 1, strokeDasharray: '4 3' }}
                 />
-                <ReferenceLine y={0} stroke="rgba(255,255,255,0.12)" strokeDasharray="4 3" />
+                <ReferenceLine y={0} stroke="rgba(15,23,42,0.12)" strokeDasharray="4 3" />
                 {TICKERS.map((t, i) => active.has(t) && (
                   <Area key={t} type="monotone"
                     dataKey={t} name={t}

@@ -29,7 +29,6 @@
   width: 7px; height: 7px;
   border-radius: 50%;
   background: var(--green);
-  box-shadow: 0 0 8px var(--green-glow);
   flex-shrink: 0;
 }
 
@@ -72,11 +71,9 @@
   line-height: 1.35;
 }
 .chip:hover {
-  border-color: var(--accent);
-  color: var(--accent);
-  background: var(--accent-dim);
+  border-color: var(--border-hi);
+  background: var(--surface);
   transform: translateY(-1px);
-  box-shadow: 0 3px 10px var(--accent-glow);
 }
 .chipIcon { font-size: 0.9rem; flex-shrink: 0; }
 
@@ -116,8 +113,8 @@
   flex-shrink: 0;
   letter-spacing: 0;
 }
-.avatarBot  { background: var(--accent); color: #fff; box-shadow: 0 0 12px var(--accent-glow); }
-.avatarUser { background: var(--surface3); color: var(--text-muted); border: 1px solid var(--border); }
+.avatarBot  { background: var(--accent); color: #fff; }
+.avatarUser { background: var(--surface2); color: var(--text-muted); border: 1px solid var(--border); }
 
 .bContent { display: flex; flex-direction: column; gap: 4px; max-width: 88%; min-width: 0; }
 .bRowUser .bContent { align-items: flex-end; }
@@ -142,11 +139,11 @@
   color: var(--text);
 }
 .bUser {
-  background: var(--accent-dim);
-  border: 1px solid rgba(91,115,245,0.3);
+  background: var(--accent);
+  border: 1px solid var(--accent);
   border-radius: var(--r-lg);
   border-top-right-radius: var(--r-sm);
-  color: var(--text-head);
+  color: #fff;
 }
 
 /* typing */
@@ -223,7 +220,7 @@
   display: flex;
   align-items: flex-end;
   gap: var(--sp-2);
-  background: var(--surface2);
+  background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--r-lg);
   padding: var(--sp-2) var(--sp-2) var(--sp-2) var(--sp-4);
@@ -254,7 +251,7 @@
 .input::placeholder { color: var(--text-muted); }
 
 .sendBtn {
-  width: 36px; height: 36px;
+  width: 34px; height: 34px;
   border-radius: var(--r-md);
   border: none;
   background: var(--accent);
@@ -265,13 +262,10 @@
   cursor: pointer;
   flex-shrink: 0;
   transition: all var(--tx);
-  box-shadow: 0 0 12px var(--accent-glow);
 }
 .sendBtn:hover:not(:disabled) {
   background: var(--accent-light);
-  box-shadow: 0 0 20px var(--accent-glow);
-  transform: scale(1.05);
 }
-.sendBtn:active  { transform: scale(0.93); }
-.sendBtn:disabled { opacity: 0.4; cursor: not-allowed; box-shadow: none; transform: none; }
+.sendBtn:active  { transform: scale(0.95); }
+.sendBtn:disabled { opacity: 0.4; cursor: not-allowed; }
 

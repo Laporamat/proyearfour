@@ -28,15 +28,14 @@
 }
 
 .logoMark {
-  width: 36px;
-  height: 36px;
+  width: 34px;
+  height: 34px;
   border-radius: var(--r-md);
   background: var(--accent);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  box-shadow: 0 0 20px var(--accent-glow);
 }
 
 .logoName {
@@ -103,7 +102,6 @@
   width: 3px;
   border-radius: 0 3px 3px 0;
   background: var(--accent);
-  box-shadow: 0 0 8px var(--accent-glow);
 }
 
 .navIcon {
