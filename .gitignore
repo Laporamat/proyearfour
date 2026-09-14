@@ -44,3 +44,9 @@ Thumbs.db
 # ── Jupyter ────────────────────────────────────
 .ipynb_checkpoints/
 *.ipynb
+.env
+.env.*
+credentials.json
+*.pem
+*.key
+.credentials
