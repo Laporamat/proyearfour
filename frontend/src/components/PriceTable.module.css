@@ -103,6 +103,9 @@
 .arrowUp   { color: var(--green); }
 .arrowDown { color: var(--red); }
 
+.chgUp   { color: var(--green); font-weight: 700; font-variant-numeric: tabular-nums; }
+.chgDown { color: var(--red);   font-weight: 700; font-variant-numeric: tabular-nums; }
+
 .empty {
   padding: var(--sp-8) var(--sp-4);
   text-align: center;

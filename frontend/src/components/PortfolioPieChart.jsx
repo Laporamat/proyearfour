@@ -48,9 +48,10 @@ export default function PortfolioPieChart() {
   const data = useMemo(() => {
     if (!portfolio?.weights) return []
     return Object.entries(portfolio.weights)
+      .map(([k, v]) => [k, Number(v) <= 1 ? Number(v) * 100 : Number(v)])
       .filter(([, v]) => v > 0.5)
       .sort((a, b) => b[1] - a[1])
-      .map(([name, value], i) => ({ name, value: +Number(value).toFixed(2), fill: HEX[i % HEX.length] }))
+      .map(([name, value], i) => ({ name, value: +value.toFixed(2), fill: HEX[i % HEX.length] }))
   }, [portfolio])
 
   const hasData = data.length > 0

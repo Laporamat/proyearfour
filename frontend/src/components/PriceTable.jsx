@@ -19,7 +19,7 @@ function fmt(n) {
 }
 
 export default function PriceTable() {
-  const { prices, lastUpdated } = useChart()
+  const { prices, changes = {}, lastUpdated } = useChart()
   const [prevPrices, setPrevPrices] = useState({})
   const [filter, setFilter]         = useState('ALL')
   const [search, setSearch]         = useState('')
@@ -36,7 +36,8 @@ export default function PriceTable() {
       const g    = GROUP[ticker] ?? 'US'
       const prev = prevPrices[ticker]
       const diff = prev && prev !== price ? price - prev : 0
-      return { ticker, price, group: g, diff }
+      const chg  = changes[ticker]
+      return { ticker, price, group: g, diff, chg }
     })
     .filter(r => {
       if (filter !== 'ALL' && r.group !== filter) return false
@@ -89,10 +90,11 @@ export default function PriceTable() {
                 <th>Ticker</th>
                 <th>กลุ่ม</th>
                 <th className={s.right}>ราคา (THB)</th>
+                <th className={s.right}>1D</th>
               </tr>
             </thead>
             <tbody>
-              {rows.map(({ ticker, price, group, diff }) => (
+              {rows.map(({ ticker, price, group, diff, chg }) => (
                 <tr key={ticker}
                   className={`${s.row} ${diff > 0 ? s.up : diff < 0 ? s.down : ''}`}
                 >
@@ -105,6 +107,9 @@ export default function PriceTable() {
                         {diff > 0 ? '▲' : '▼'}
                       </span>
                     )}
+                  </td>
+                  <td className={`${s.right} ${chg == null ? '' : chg >= 0 ? s.chgUp : s.chgDown}`}>
+                    {chg == null ? '—' : `${chg >= 0 ? '+' : ''}${chg.toFixed(2)}%`}
                   </td>
                 </tr>
               ))}

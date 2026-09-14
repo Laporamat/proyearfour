@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from 'react'
+import { useEffect, useCallback, useRef } from 'react'
 import StatCard          from '../components/StatCard'
 import RunButton         from '../components/RunButton'
 import PortfolioPieChart from '../components/PortfolioPieChart'
@@ -13,14 +13,22 @@ const fmt = (n, d = 2) => n != null ? Number(n).toFixed(d) : '—'
 const pct = n => n != null ? `${fmt(n)}%` : '—'
 
 export default function Dashboard() {
-  const { portfolio, regime, dispatch } = useChart()
+  const { portfolio, regime, liveMeta, dispatch } = useChart()
+  const liveTimerRef = useRef(null)
+
+  /* Live prices — auto-refresh every 60s, no manual pipeline needed */
+  const loadLive = useCallback(async () => {
+    try {
+      const live = await api.livePrices()
+      if (live?.prices) dispatch({ type: 'SET_LIVE', payload: live })
+    } catch { /* backend offline */ }
+  }, [dispatch])
 
   const loadInitial = useCallback(async () => {
     try {
-      const [p, r, px] = await Promise.all([
+      const [p, r] = await Promise.all([
         api.portfolioLatest(),
         api.regimeLatest(),
-        api.prices(25),
       ])
 
       if (p && !p.status) {
@@ -28,7 +36,6 @@ export default function Dashboard() {
         dispatch({
           type: 'SET_PORTFOLIO',
           payload: {
-            // top5_weights ตอนนี้เป็น float % (21.87) → หาร 100 เป็น fraction
             weights: Object.fromEntries(
               Object.entries(p.all_weights ?? raw).map(([k, v]) => [k, Number(v)])
             ),
@@ -51,12 +58,15 @@ export default function Dashboard() {
           },
         })
       }
-
-      if (px?.prices) dispatch({ type: 'SET_PRICES', payload: px.prices })
     } catch { /* API offline */ }
   }, [dispatch])
 
-  useEffect(() => { loadInitial() }, [loadInitial])
+  useEffect(() => {
+    loadLive()
+    loadInitial()
+    liveTimerRef.current = setInterval(loadLive, 60_000)
+    return () => clearInterval(liveTimerRef.current)
+  }, [loadLive, loadInitial])
 
   const label = regime?.regime ?? ''
   const cls   = label.toLowerCase()
@@ -71,10 +81,17 @@ export default function Dashboard() {
           <h1>Dashboard</h1>
           <p className={s.headerSub}>
             25 สินทรัพย์ · หน่วย THB
-            {regime?.date && <> · <time>{regime.date}</time></>}
+            {liveMeta?.date && <> · <time>{liveMeta.date}</time></>}
+            {liveMeta && (
+              <span className={s.liveBadge} data-testid="live-badge">
+                <span className={`pulse-dot ${liveMeta.status === 'live' ? 'green' : 'red'}`} />
+                {liveMeta.status === 'live' ? 'Live' : 'Stale'}
+                {liveMeta.fx_thb_per_usd && <> · FX ฿{liveMeta.fx_thb_per_usd}</>}
+              </span>
+            )}
           </p>
         </div>
-        <RunButton onDone={loadInitial} />
+        <RunButton onDone={() => { loadInitial(); loadLive() }} />
       </header>
 
       {/* ── KPI ────────────────────────────── */}

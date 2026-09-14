@@ -90,6 +90,9 @@ export const api = {
   prices: (n = 10) =>
     apiFetch(`/api/prices?n=${n}`),
 
+  livePrices: () =>
+    apiFetch('/api/prices/live'),
+
   runPipeline: (body = {}) =>
     apiFetch('/api/pipeline', {
       method: 'POST',

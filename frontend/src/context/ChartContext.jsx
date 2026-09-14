@@ -19,6 +19,8 @@ const INIT = {
   regime:      null,
   returns:     [],
   prices:      {},
+  changes:     {},
+  liveMeta:    null,   // { date, fx_thb_per_usd, fetched_at, status }
   lastUpdated: null,
 }
 
@@ -34,6 +36,19 @@ function reducer(state, action) {
       return { ...state, returns: action.payload, lastUpdated: ts }
     case 'SET_PRICES':
       return { ...state, prices: action.payload, lastUpdated: ts }
+    case 'SET_LIVE':
+      return {
+        ...state,
+        prices:      action.payload.prices  ?? state.prices,
+        changes:     action.payload.changes ?? state.changes,
+        liveMeta:    {
+          date:            action.payload.date,
+          fx_thb_per_usd:  action.payload.fx_thb_per_usd,
+          fetched_at:      action.payload.fetched_at,
+          status:          action.payload.status,
+        },
+        lastUpdated: ts,
+      }
     case 'RESET':
       return { ...INIT }
     default:

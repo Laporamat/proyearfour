@@ -279,11 +279,10 @@ async def execute_tool(name: str, args: dict) -> dict:
             return {"status": "error", "message": "ยังไม่มีข้อมูล กรุณารัน optimize_portfolio ก่อน"}
         df = pd.read_csv(csv)
         row = df.iloc[0].to_dict()
-        # parse weights จาก string
-        try:
-            weights = json.loads(row.get("weights", "{}").replace("'", '"'))
-        except Exception:
-            weights = {}
+        # parse weights — CSV stored dict with numpy wrappers like {'AAPL': np.float64(0.1)}
+        import re
+        raw = row.get("weights", "") or ""
+        weights = {t: float(v) for t, v in re.findall(r"'([^']+)':\s*(?:np\.float64\()?(-?[\d.]+)", raw)}
         top5 = sorted(weights.items(), key=lambda x: -x[1])[:5]
         return {
             "sharpe_ratio":          round(float(row.get("sharpe_ratio", 0)), 4),
