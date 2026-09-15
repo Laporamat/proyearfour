@@ -1,11 +1,12 @@
-import { Outlet, NavLink, useLocation } from 'react-router-dom'
+import { Outlet, NavLink } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { api } from '../hooks/useApi'
+import { useAuth } from '../context/AuthContext'
 import s from './Layout.module.css'
 
 const NAV = [
   {
-    to: '/',
+    to: '/dashboard',
     label: 'Dashboard',
     icon: (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -27,6 +28,7 @@ const NAV = [
 
 export default function Layout() {
   const [online, setOnline] = useState(null)
+  const { user, logout } = useAuth()
 
   useEffect(() => {
     const check = () =>
@@ -60,7 +62,6 @@ export default function Layout() {
             <NavLink
               key={to}
               to={to}
-              end={to === '/'}
               className={({ isActive }) => `${s.navItem} ${isActive ? s.active : ''}`}
             >
               <span className={s.navIcon}>{icon}</span>
@@ -71,6 +72,25 @@ export default function Layout() {
 
         {/* ── Footer ── */}
         <div className={s.footer}>
+          {user && (
+            <div className={s.userChip} data-testid="sidebar-user">
+              {user.picture
+                ? <img src={user.picture} alt="" className={s.avatar} />
+                : <div className={`${s.avatar} ${s.avatarInit}`}>{(user.name || user.email)[0]?.toUpperCase()}</div>
+              }
+              <div className={s.userText}>
+                <div className={s.userName}>{user.name}</div>
+                <div className={s.userMail}>{user.email}</div>
+              </div>
+              <button data-testid="logout-btn" className={s.logoutBtn} title="ออกจากระบบ" onClick={logout}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                  <polyline points="16 17 21 12 16 7"/>
+                  <line x1="21" y1="12" x2="9" y2="12"/>
+                </svg>
+              </button>
+            </div>
+          )}
           <div className={s.statusRow}>
             <span className={`pulse-dot ${online ? 'green' : 'red'}`} />
             <span className={s.statusText}>

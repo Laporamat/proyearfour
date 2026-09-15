@@ -1,0 +1,26 @@
+{
+  "summary": "End-to-end testing of new Emergent Google Auth feature (backend + frontend). All 7 review items pass: landing renders unauthenticated with all data-testids, hero/landing/footer CTAs navigate to /login, Google button emits correct OAuth URL with origin+/dashboard redirect, protected /dashboard & /chat redirect to /login when unauthenticated, seeded demo cookie loads full authenticated dashboard (sidebar-user chip with Demo User/demo@quantai.local/avatar, logout-btn, live-badge showing FX ฿33.27, KPIs Sharpe 1.9285 / Return 30.96% / Vol 15.02% / Regime NEUTRAL, portfolio pie populated), logout clears cookie and redirects home then /dashboard→/login, invalid #session_id fragment triggers AuthCallback and redirects to /login?error=1 (race-condition-safe). Backend: 8/8 pytest tests pass covering /api/auth/me (cookie+Bearer, 401 without), /api/auth/session (400/401 error paths), /api/auth/logout (cookie clear + DB session deletion verified via /me re-check).",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_auth.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Frontend .env is at /app/frontend/src/.env instead of /app/frontend/.env — currently harmless (Vite exposes only VITE_* vars; API_BASE resolves to '' and relative /api paths are used, which works via the preview ingress proxy). Recommend moving to /app/frontend/.env with a VITE_BACKEND_URL key for consistency with platform conventions.",
+    "AuthContext falls back to empty API_BASE when VITE_/REACT_APP_ env vars are absent — this only works because relative paths hit the same preview origin. If backend ever moves to a separate origin, credentials:'include' will still be needed and cookies must remain cross-site (samesite=none, secure=true) — already correctly configured in auth.py."
+  ],
+  "updated_files": ["/app/backend/tests/test_auth.py"],
+  "success_rate": {"backend": "100%", "frontend": "100%"},
+  "test_credentials": "Emergent Google Auth — seeded session_token='demo_session_persistent' for user_id='user_demo' (email demo@quantai.local). Persistent in Mongo `quantai` DB; re-seed script in /app/memory/test_credentials.md.",
+  "seed_data_creation": "Re-ran mongosh seed for user_demo + demo_session_persistent (7-day TTL) at test start to ensure a clean baseline.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Auth is fully functional. Preview URL: https://clean-ui-15.preview.emergentagent.com. To test authed routes in Playwright, use `page.context.add_cookies([{name:'session_token', value:'demo_session_persistent', url: BASE, secure:True, sameSite:'None'}])` BEFORE the first navigation (adding cookie after loading /login-page keeps AuthProvider state at null=unauth until next full navigation). Backend tests are pytest-based in /app/backend/tests/test_auth.py — run: `cd /app/backend && python -m pytest tests/ -v`. Note: /api/prices/live returns 25 tickers with non-zero 1D %changes for both US and .BK Thai tickers — confirmed via curl.",
+  "rca of the issue": "No issues to RCA."
+}

@@ -30,6 +30,7 @@ async function apiFetch(path, options = {}) {
   try {
     const res = await fetch(path, {
       headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
       signal: controller.signal,
       ...options,
     })
