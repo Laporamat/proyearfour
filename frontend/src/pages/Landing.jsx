@@ -10,8 +10,8 @@ export default function Landing() {
     label: 'ไปที่ Dashboard →',
     onClick: () => navigate('/dashboard'),
   } : {
-    label: 'เข้าสู่ระบบด้วย Google',
-    onClick: () => navigate('/login'),
+    label: 'สมัครสมาชิกฟรี',
+    onClick: () => navigate('/register'),
   }
 
   return (
@@ -40,7 +40,6 @@ export default function Landing() {
           )}
         </div>
       </nav>
-
       {/* ── Hero ────────────────────────── */}
       <header className={s.hero}>
         <div className={s.heroTag}>
@@ -141,8 +140,8 @@ const FEATURES = [
     desc:'ถามเป็นภาษาไทย “จัดพอร์ตให้หน่อย” “ตลาดตอนนี้เป็นยังไง” — LLM เรียกเครื่องมือคำนวณให้เอง' },
   { icon:'📈', title:'Efficient Frontier',
     desc:'จำลอง 10,000 พอร์ตด้วย Monte Carlo แล้ววาดเส้น Frontier ให้เห็นว่าจุดที่เลือกดีที่สุดจริง' },
-  { icon:'🔐', title:'Sign-in with Google',
-    desc:'บัญชีปลอดภัยด้วย OAuth — ไม่มีรหัสให้ลืม ไม่มีฟอร์มให้กรอก เข้าครั้งแรกใช้ได้ 7 วัน' },
+  { icon:'🔐', title:'Email หรือ Google Login',
+    desc:'สมัครด้วยอีเมล + OTP ยืนยัน หรือเข้าง่ายๆ ด้วย Google — บัญชีปลอดภัย ล็อกอิน 1 ครั้งใช้ได้ 7 วัน ลืมรหัสรีเซ็ตทางเมลได้' },
 ]
 
 const STEPS = [

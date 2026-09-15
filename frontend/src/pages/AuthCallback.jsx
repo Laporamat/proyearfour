@@ -26,13 +26,21 @@ export default function AuthCallback() {
       credentials: 'include',
       body: JSON.stringify({ session_id: sessionId }),
     })
-      .then(r => r.ok ? r.json() : Promise.reject(r.status))
+      .then(async r => {
+        if (r.ok) return r.json()
+        const data = await r.json().catch(() => ({}))
+        const msg = typeof data.detail === 'string' ? data.detail : `HTTP ${r.status}`
+        throw new Error(msg)
+      })
       .then(u => {
         setUser(u)
         window.history.replaceState(null, '', '/dashboard')
         navigate('/dashboard', { replace: true, state: { user: u } })
       })
-      .catch(() => navigate('/login?error=1', { replace: true }))
+      .catch(err => {
+        const q = new URLSearchParams({ error: '1', reason: err.message || 'oauth' }).toString()
+        navigate(`/login?${q}`, { replace: true })
+      })
   }, [location.hash, navigate, setUser])
 
   return (

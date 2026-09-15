@@ -1,14 +1,62 @@
-import { Link, useSearchParams } from 'react-router-dom'
+import { useState } from 'react'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
 import s from './Login.module.css'
 
+const API_BASE = import.meta.env.VITE_BACKEND_URL || import.meta.env.REACT_APP_BACKEND_URL || ''
+
+function fmtError(detail) {
+  if (detail == null) return 'เกิดข้อผิดพลาด กรุณาลองอีกครั้ง'
+  if (typeof detail === 'string') return detail
+  if (Array.isArray(detail))
+    return detail.map(e => (e && typeof e.msg === 'string' ? e.msg : JSON.stringify(e))).join(' ')
+  if (detail && typeof detail.msg === 'string') return detail.msg
+  return String(detail)
+}
+
 export default function Login() {
-  const [sp] = useSearchParams()
-  const hasError = sp.get('error') === '1'
+  const nav        = useNavigate()
+  const location   = useLocation()
+  const { refresh } = useAuth()
+
+  const [email, setEmail]       = useState('')
+  const [password, setPassword] = useState('')
+  const [loading, setLoading]   = useState(false)
+  const [error, setError]       = useState(() => {
+    const sp = new URLSearchParams(location.search)
+    if (sp.get('error') !== '1') return ''
+    const reason = sp.get('reason')
+    return reason
+      ? `เข้าสู่ระบบผ่าน Google ไม่สำเร็จ: ${reason} — ลองใช้อีเมล/รหัสผ่านด้านล่างแทน`
+      : 'เข้าสู่ระบบผ่าน Google ไม่สำเร็จ ลองอีกครั้งหรือใช้อีเมล/รหัสผ่านด้านล่าง'
+  })
 
   const handleGoogle = () => {
     // REMINDER: DO NOT HARDCODE THE URL, OR ADD ANY FALLBACKS OR REDIRECT URLS, THIS BREAKS THE AUTH
     const redirectUrl = window.location.origin + '/dashboard'
     window.location.href = `https://auth.emergentagent.com/?redirect=${encodeURIComponent(redirectUrl)}`
+  }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    setError('')
+    setLoading(true)
+    try {
+      const r = await fetch(`${API_BASE}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ email: email.trim().toLowerCase(), password }),
+      })
+      const data = await r.json().catch(() => ({}))
+      if (!r.ok) throw new Error(fmtError(data.detail))
+      await refresh()
+      nav('/dashboard', { replace: true })
+    } catch (err) {
+      setError(err.message || 'เข้าสู่ระบบไม่สำเร็จ')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -23,14 +71,43 @@ export default function Login() {
           </svg>
         </div>
 
-        <h1 className={s.title}>ยินดีต้อนรับกลับมา</h1>
-        <p className={s.sub}>เข้าสู่ระบบด้วยบัญชี Google เพื่อเข้าถึงพอร์ตของคุณ</p>
+        <h1 className={s.title}>เข้าสู่ระบบ</h1>
+        <p className={s.sub}>ยังไม่มีบัญชี? <Link to="/register" className={s.link} data-testid="link-register">สมัครสมาชิก</Link></p>
 
-        {hasError && (
-          <div className={s.error} data-testid="login-error">
-            เข้าสู่ระบบไม่สำเร็จ ลองอีกครั้ง
+        {error && <div className={s.error} data-testid="login-error">{error}</div>}
+
+        <form onSubmit={handleSubmit} className={s.form}>
+          <label className={s.field}>
+            <span>อีเมล</span>
+            <input
+              data-testid="login-email"
+              type="email"
+              required autoComplete="email"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              placeholder="you@example.com"
+            />
+          </label>
+          <label className={s.field}>
+            <span>รหัสผ่าน</span>
+            <input
+              data-testid="login-password"
+              type="password"
+              required autoComplete="current-password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              placeholder="อย่างน้อย 8 ตัวอักษร"
+            />
+          </label>
+          <div className={s.formRow}>
+            <Link to="/forgot-password" className={s.link} data-testid="link-forgot">ลืมรหัสผ่าน?</Link>
           </div>
-        )}
+          <button data-testid="login-submit" type="submit" className={s.primary} disabled={loading}>
+            {loading ? <span className="spinner" /> : 'เข้าสู่ระบบ'}
+          </button>
+        </form>
+
+        <div className={s.divider}><span>หรือ</span></div>
 
         <button
           data-testid="google-signin-btn"
@@ -53,7 +130,7 @@ export default function Login() {
 
       <div className={s.side}>
         <blockquote>
-          <p>“จากคลิก Pipeline ทีละอันจนต้องรอเป็นนาที — เดี๋ยวนี้แค่ล็อกอินก็เห็นพอร์ตที่แนะนำเลย”</p>
+          <p>"จากคลิก Pipeline ทีละอันจนต้องรอเป็นนาที — เดี๋ยวนี้แค่ล็อกอินก็เห็นพอร์ตที่แนะนำเลย"</p>
           <cite>— นักลงทุนสาย Quant</cite>
         </blockquote>
       </div>
