@@ -1,0 +1,136 @@
+.page {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background: var(--bg);
+  position: relative;
+}
+@media (max-width: 900px) {
+  .page { grid-template-columns: 1fr; }
+  .side { display: none; }
+}
+
+.back {
+  position: absolute;
+  top: 24px;
+  left: 32px;
+  z-index: 5;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: color var(--tx);
+}
+.back:hover { color: var(--text-head); }
+
+/* ── Left column: form card ─────────────── */
+.card {
+  align-self: center;
+  justify-self: center;
+  width: 100%;
+  max-width: 420px;
+  padding: 40px;
+  animation: fadeUp 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.brandMark {
+  width: 40px; height: 40px;
+  border-radius: 10px;
+  background: var(--accent);
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 32px;
+}
+.title {
+  font-size: 1.9rem;
+  font-weight: 800;
+  color: var(--text-head);
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+  margin-bottom: 10px;
+}
+.sub {
+  font-size: 0.92rem;
+  color: var(--text-muted);
+  line-height: 1.55;
+  margin-bottom: 32px;
+}
+.error {
+  padding: 10px 14px;
+  border-radius: var(--r-md);
+  background: var(--red-dim);
+  color: var(--red);
+  font-size: 0.82rem;
+  font-weight: 500;
+  border: 1px solid rgba(214, 69, 69, 0.2);
+  margin-bottom: 20px;
+}
+.googleBtn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 14px 18px;
+  background: var(--text-head);
+  color: #fff;
+  border: none;
+  border-radius: var(--r-md);
+  font-size: 0.92rem;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background var(--tx), transform var(--tx);
+}
+.googleBtn:hover { background: #1a2131; }
+.googleBtn:active { transform: scale(0.98); }
+.googleBtn svg { background: #fff; border-radius: 4px; padding: 2px; }
+
+.legal {
+  margin-top: 24px;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  text-align: center;
+  line-height: 1.6;
+}
+.legal a {
+  color: var(--text);
+  text-decoration: underline;
+  text-decoration-color: var(--border-hi);
+  text-underline-offset: 3px;
+}
+
+/* ── Right column: testimonial ──────────── */
+.side {
+  background: var(--text-head);
+  color: #fff;
+  padding: 60px;
+  display: flex;
+  align-items: flex-end;
+  position: relative;
+  overflow: hidden;
+}
+.side::before {
+  content: '';
+  position: absolute;
+  top: -100px; right: -100px;
+  width: 500px; height: 500px;
+  background: radial-gradient(circle, rgba(47,91,214,0.4), transparent 60%);
+  pointer-events: none;
+}
+.side blockquote {
+  position: relative;
+  z-index: 1;
+  max-width: 440px;
+}
+.side blockquote p {
+  font-size: 1.4rem;
+  line-height: 1.4;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  margin-bottom: 16px;
+  color: #fff;
+}
+.side blockquote cite {
+  font-style: normal;
+  font-size: 0.85rem;
+  color: rgba(255,255,255,0.6);
+  letter-spacing: 0.04em;
+}
