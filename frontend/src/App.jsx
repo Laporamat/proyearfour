@@ -6,19 +6,23 @@ import Dashboard       from './pages/Dashboard'
 import Chat            from './pages/Chat'
 import Landing         from './pages/Landing'
 import Login           from './pages/Login'
+import Register        from './pages/Register'
 import AuthCallback    from './pages/AuthCallback'
+import { ForgotPassword, ResetPassword } from './pages/PasswordFlow'
 import ProtectedRoute  from './components/ProtectedRoute'
 
 function AppRouter() {
   const location = useLocation()
   // CRITICAL: detect OAuth callback FIRST (during render, before any route/effect)
-  // to avoid race conditions with the AuthProvider /me check.
   if (location.hash?.includes('session_id=')) return <AuthCallback />
 
   return (
     <Routes>
-      <Route path="/"       element={<Landing />} />
-      <Route path="/login"  element={<Login />} />
+      <Route path="/"                 element={<Landing />} />
+      <Route path="/login"            element={<Login />} />
+      <Route path="/register"         element={<Register />} />
+      <Route path="/forgot-password"  element={<ForgotPassword />} />
+      <Route path="/reset-password"   element={<ResetPassword />} />
       <Route
         element={
           <ProtectedRoute>
