@@ -268,13 +268,13 @@ LLM อ่านคำถามภาษาไทย → เลือก tool �
 | Market Regime ล่าสุด | **Neutral (96.2%)** | ประเมินผ่านโมเดลจำแนกประเภท (Classification Model) |
 | CV F1-macro (Random Forest) | **0.94** | $\text{F1} = 2 \times \frac{\text{Precision} \times \text{Recall}}{\text{Precision} + \text{Recall}}$ และหาค่าเฉลี่ยข้ามคลาส |
 | Live refresh latency | **< 10 s** (cached 60 s) | วัดเวลาตอบสนองของระบบ |
-| ช่วงข้อมูล | 2020-01 → 2026-09 (~1,700 วัน) | ระยะเวลาข้อมูลย้อนหลัง |
+| ช่วงข้อมูล | 2020-01 → 2026-09 | ระยะเวลาข้อมูลย้อนหลัง (~1,700 วัน) |
 
 ### Top-5 Portfolio Weights (Max Sharpe)
 ## $$\text{Sharpe Ratio} = \frac{R_p - R_f}{\sigma_p}$$
 | Ticker | น้ำหนัก | กลุ่ม |
 |---|---|---|
-| GLD | 21.9% | 🏦 Safe |
+| GLD | 21.9% | 🏦 Bond |
 | SCB.BK | 20.1% | 🇹🇭 Thai |
 | JNJ | 14.5% | 🇺🇸 US |
 | NVDA | 13.6% | 🇺🇸 US |
