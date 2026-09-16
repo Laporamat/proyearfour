@@ -260,15 +260,15 @@ LLM อ่านคำถามภาษาไทย → เลือก tool �
 
 ## 📊 ผลลัพธ์จริง (ข้อมูล Jan 2020 – Sep 2026)
 
-| ตัวชี้วัด | ค่า |
-|---|---|
-| Sharpe Ratio (Max Sharpe Portfolio) | **1.94** |
-| Annualized Return | **31.3%** |
-| Annualized Volatility | **15.1%** |
-| Market Regime ล่าสุด | **Neutral (96.2%)** |
-| CV F1-macro (Random Forest) | **0.94** |
-| Live refresh latency | **< 2 s** (cached 60 s) |
-| ช่วงข้อมูล | 2020-01 → 2026-09 (~1,700 วัน) |
+| ตัวชี้วัด | ค่า | สูตรคำนวณ | 
+|---|---|---|
+| Sharpe Ratio (Max Sharpe Portfolio) | **1.94** | $\text{Sharpe} = \frac{R_p - R_f}{\sigma_p}$(ผลตอบแทนพอร์ต - อัตราดอกเบี้ยไร้ความเสี่ยง) / ความผันผวนพอร์ต |
+| Annualized Return | **31.3%** |$\text{Ann. Return} = \left( 1 + R_{\text{total}} \right)^{\frac{365}{N}} - 1$(แปลงผลตอบแทนสะสมตลอดช่วงเวลาให้อยู่ในรูปอัตราต่อปี)|
+| Annualized Volatility | **15.1%** | $\text{Ann. Volatility} = \sigma_{\text{daily}} \times \sqrt{252}$(ค่าเบี่ยงเบนมาตรฐานของผลตอบแทนรายวัน คูณด้วยรากที่สองของ 252 วันทำการ) |
+| Market Regime ล่าสุด | **Neutral (96.2%)** | ประเมินผ่านโมเดลจำแนกประเภท (Classification Model) |
+| CV F1-macro (Random Forest) | **0.94** | $\text{F1} = 2 \times \frac{\text{Precision} \times \text{Recall}}{\text{Precision} + \text{Recall}}$ และหาค่าเฉลี่ยข้ามคลาส |
+| Live refresh latency | **< 10 s** (cached 60 s) | วัดเวลาตอบสนองของระบบ |
+| ช่วงข้อมูล | 2020-01 → 2026-09 (~1,700 วัน) | ระยะเวลาข้อมูลย้อนหลัง |
 
 ### Top-5 Portfolio Weights (Max Sharpe)
 ## $$\text{Sharpe Ratio} = \frac{R_p - R_f}{\sigma_p}$$
