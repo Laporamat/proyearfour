@@ -271,6 +271,7 @@ LLM อ่านคำถามภาษาไทย → เลือก tool �
 | ช่วงข้อมูล | 2020-01 → 2026-09 (~1,700 วัน) |
 
 ### Top-5 Portfolio Weights (Max Sharpe)
+## $$\text{Sharpe Ratio} = \frac{R_p - R_f}{\sigma_p}$$
 | Ticker | น้ำหนัก | กลุ่ม |
 |---|---|---|
 | GLD | 21.9% | 🏦 Safe |
