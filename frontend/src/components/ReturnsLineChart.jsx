@@ -9,7 +9,7 @@ import s from './ReturnsLineChart.module.css'
 
 const TICKERS = ['NVDA', 'AAPL', 'DELTA.BK', 'GLD', 'KBANK.BK']
 const HEX     = ['#5b73f5','#23c97d','#e8a825','#e85c5c','#a78bfa']
-const PERIODS = ['6m','1y','3y','all']
+const PERIODS = ['1d','1w','1m','3m','6m','1y','3y','all']
 
 /* sort payload highest → lowest for tooltip */
 function Tip({ active, payload, label }) {

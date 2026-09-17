@@ -3,7 +3,7 @@ import os
 import requests
 import pytest
 
-BASE_URL = "https://clean-ui-15.preview.emergentagent.com"
+BASE_URL = "https://wealth-monitor-256.preview.emergentagent.com"
 API = f"{BASE_URL}/api"
 
 # Pre-seeded persistent demo session token

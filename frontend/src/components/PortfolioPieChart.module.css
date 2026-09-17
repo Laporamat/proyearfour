@@ -1,64 +1,131 @@
 .wrap {
   display: flex;
   flex-direction: column;
-  gap: var(--sp-3);
+  gap: var(--sp-4);
 }
 
 .header {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: var(--sp-3);
   flex-wrap: wrap;
 }
 .header h3 { margin: 0; }
 
-.stats { display: flex; gap: var(--sp-3); align-items: center; }
+.stats { display: flex; gap: var(--sp-2); align-items: stretch; }
 .stat {
-  font-size: 0.72rem;
-  color: var(--text-muted);
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  font-size: 0.85rem;
   background: var(--surface2);
   border: 1px solid var(--border);
-  border-radius: var(--r-sm);
-  padding: 2px var(--sp-2);
+  border-radius: var(--r-md);
+  padding: 4px var(--sp-3);
+  line-height: 1.25;
 }
-.stat strong { color: var(--text-head); font-weight: 700; }
+.statLabel {
+  font-size: 0.6rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 600;
+}
+.stat strong { font-weight: 800; font-size: 0.9rem; }
 
-/* legend */
-.legend {
+/* body: donut + ranked list */
+.body {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-5);
+  flex-wrap: wrap;
+}
+.donutBox {
+  flex: 0 0 168px;
+  width: 168px;
+  position: relative;
+}
+.center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  gap: 1px;
+}
+.centerVal {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--text-head);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.centerLbl {
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+}
+
+/* ranked list */
+.ranks {
+  flex: 1 1 200px;
   list-style: none;
   display: flex;
-  flex-wrap: wrap;
-  gap: 4px 12px;
-  justify-content: center;
+  flex-direction: column;
+  gap: 9px;
   margin: 0;
   padding: 0;
+  min-width: 190px;
 }
-.legendItem {
+.rankRow {
+  display: grid;
+  grid-template-columns: 74px 1fr 46px;
+  align-items: center;
+  gap: var(--sp-3);
+}
+.rankName {
   display: flex;
   align-items: center;
-  gap: 5px;
-  font-size: 0.72rem;
+  gap: 6px;
+  font-size: 0.74rem;
+  font-family: 'Geist Mono', monospace;
+  font-weight: 600;
+  color: var(--text-head);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
-.legendDot  { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
-.legendName { color: var(--text-muted); }
-.legendVal  { color: var(--text-head); font-weight: 700; }
+.rankDot { width: 8px; height: 8px; border-radius: 3px; flex-shrink: 0; }
 
-/* tooltip */
-.tip {
-  background: var(--surface3);
-  border: 1px solid var(--border-hi);
-  border-radius: var(--r-md);
-  padding: 8px 12px;
-  display: flex;
-  align-items: center;
-  gap: var(--sp-2);
-  box-shadow: var(--shadow-md);
-  font-size: 0.8rem;
+.rankTrack {
+  height: 7px;
+  background: var(--surface2);
+  border-radius: var(--r-pill);
+  overflow: hidden;
 }
-.tipDot  { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-.tipName { color: var(--text-muted); }
-.tipVal  { font-weight: 700; color: var(--text-head); margin-left: auto; padding-left: var(--sp-3); }
+.rankFill {
+  display: block;
+  height: 100%;
+  border-radius: var(--r-pill);
+  transform-origin: left center;
+  animation: growBar 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes growBar {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+
+.rankVal {
+  font-size: 0.76rem;
+  font-weight: 800;
+  color: var(--text-head);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
 
 /* empty */
 .empty {

@@ -395,8 +395,9 @@ async def api_prices(n: int = 5):
 @app.get("/api/returns-history")
 async def api_returns_history(period: str = "1y"):
     """
-    คืน cumulative return (%) รายเดือน สำหรับ line chart
-    period: '6m' | '1y' | '3y' | 'all'
+    คืน cumulative return (%) จริง (rebased เป็น 0% ณ ต้นช่วง) สำหรับ line chart
+    period: '1d' | '1w' | '1m' | '3m' | '6m' | '1y' | '3y' | 'all'
+    ข้อมูลเป็น end-of-day ต่อวัน — คำนวณด้วย compounding จาก daily returns จริง
     """
     csv = OUTPUT_DIR / "daily_returns.csv"
     if not csv.exists():
@@ -405,39 +406,55 @@ async def api_returns_history(period: str = "1y"):
             detail="ไม่พบ daily_returns.csv — กรุณารัน /api/pipeline ก่อน"
         )
 
-    df = pd.read_csv(csv, index_col=0, parse_dates=True)
+    df = pd.read_csv(csv, index_col=0, parse_dates=True).sort_index()
 
-    # กรองช่วงเวลา
-    now = pd.Timestamp.today()
+    # เลือกเฉพาะตัวที่น่าสนใจ (ตรงกับ chips บน frontend)
+    FEATURED = ["NVDA", "AAPL", "DELTA.BK", "GLD", "KBANK.BK"]
+    cols = [c for c in FEATURED if c in df.columns]
+    df = df[cols].copy()
+
+    # daily_returns.csv เก็บเป็น decimal (0.01 = 1%) — guard เผื่อเก็บเป็น %
+    if not df.empty and df.abs().mean().mean() > 1:
+        df = df / 100
+
+    if df.empty:
+        return {"period": period, "data": []}
+
+    # กรองช่วงเวลา (อ้างอิงจากวันข้อมูลล่าสุด ไม่ใช่ today เพื่อไม่ให้ช่วงว่าง)
+    now = df.index.max()
     cutoff_map = {
+        "1d":  now - pd.Timedelta(days=1),
+        "1w":  now - pd.Timedelta(weeks=1),
+        "1m":  now - pd.DateOffset(months=1),
+        "3m":  now - pd.DateOffset(months=3),
         "6m":  now - pd.DateOffset(months=6),
         "1y":  now - pd.DateOffset(years=1),
         "3y":  now - pd.DateOffset(years=3),
         "all": df.index.min(),
     }
     cutoff = cutoff_map.get(period, cutoff_map["1y"])
-    df = df[df.index >= cutoff]
+    sliced = df[df.index >= cutoff]
+    if len(sliced) < 2:
+        sliced = df.tail(2)
 
-    if df.empty:
-        return {"period": period, "data": []}
+    # cumulative return จริงด้วย compounding แล้ว rebase ให้เริ่มที่ 0% ณ ต้นช่วง
+    growth = (1 + sliced).cumprod()
+    cum = (growth.div(growth.iloc[0], axis=1) - 1) * 100
 
-    # เลือกเฉพาะตัวที่น่าสนใจ
-    FEATURED = ["NVDA", "AAPL", "DELTA.BK", "GLD", "KBANK.BK",
-                "MSFT", "PTT.BK", "TLT", "SCB.BK", "TSLA"]
-    cols = [c for c in FEATURED if c in df.columns]
-    df = df[cols].copy()
+    # ลดจำนวนจุดให้กราฟอ่านง่าย ตามความยาวของช่วง
+    gran = {
+        "1d": "D", "1w": "D", "1m": "D", "3m": "D", "6m": "D",
+        "1y": "W", "3y": "ME", "all": "ME",
+    }.get(period, "W")
+    if gran != "D":
+        cum = cum.resample(gran).last().dropna(how="all")
 
-    # resample เป็นรายเดือน (mean ของ daily return)
-    monthly = df.resample("ME").sum()
-
-    # cumulative return (%)
-    cum = (1 + monthly / 100).cumprod() - 1
-    cum = (cum * 100).round(4)
-    cum.index = cum.index.strftime("%Y-%m")
+    fmt = "%b %y" if gran == "ME" else "%d %b"
+    labels = cum.index.strftime(fmt)
 
     records = []
-    for date, row in cum.iterrows():
-        entry = {"date": date}
+    for lbl, (_, row) in zip(labels, cum.iterrows()):
+        entry = {"date": lbl}
         entry.update({k: round(float(v), 2) for k, v in row.items() if pd.notna(v)})
         records.append(entry)
 

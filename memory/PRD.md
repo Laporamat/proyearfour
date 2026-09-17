@@ -42,3 +42,10 @@
 - P2: Dark mode toggle
 - P2: WebSocket price push instead of 60 s polling
 - P2: Sortable price table with sticky header + sparkline
+
+## Update — 2026-09-17
+- **CRITICAL FIX**: yfinance was broken (missing pytz, bs4, multitasking, peewee, lxml, html5lib) → no real data generated at all. Reinstalled deps + froze requirements.txt.
+- **Restored backend/.env** (MONGO_URL, DB_NAME) — was empty, causing crash-loop.
+- **Cumulative Return bug fixed** (`/api/returns-history`): removed erroneous `/100` double-scaling; now computes REAL cumulative return via compounding `(1+r).cumprod()`, rebased to 0% at window start.
+- **Added periods**: 1d, 1w, 1m, 3m, 6m, 1y, 3y, all (daily granularity for short windows, weekly for 1y, monthly for 3y/all) — all real data.
+- **Portfolio Allocation redesigned**: donut + center Sharpe + ranked weight-bar list (sorted high→low) + Return/Volatility pills. Much more readable.
