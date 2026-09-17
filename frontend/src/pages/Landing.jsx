@@ -28,22 +28,22 @@ export default function Landing() {
           <span>QuantAI</span>
         </div>
         <div className={s.navLinks}>
-          <a href="#features">Features</a>
-          <a href="#how">How it works</a>
-          <a href="#stack">Stack</a>
+          <a href="#features">ฟีเจอร์</a>
+          <a href="#how">วิธีใช้งาน</a>
+          <a href="#stack">เทคโนโลยี</a>
           {user ? (
             <button data-testid="landing-dashboard-btn" className={s.btnDark} onClick={() => navigate('/dashboard')}>
               Dashboard →
             </button>
           ) : (
-            <Link data-testid="landing-login-btn" to="/login" className={s.btnDark}>Sign in</Link>
+            <Link data-testid="landing-login-btn" to="/login" className={s.btnDark}>เข้าสู่ระบบ</Link>
           )}
         </div>
       </nav>
       {/* ── Hero ────────────────────────── */}
       <header className={s.hero}>
         <div className={s.heroTag}>
-          <span className="pulse-dot green" /> Live · 25 assets · THB
+          <span className="pulse-dot green" /> สด · 25 สินทรัพย์ · THB
         </div>
         <h1 className={s.heroTitle}>
           จัดพอร์ตอัจฉริยะด้วย <span className={s.accent}>AI + Quant</span>
@@ -62,9 +62,9 @@ export default function Landing() {
         </div>
         <div className={s.heroStats}>
           <div><b>1.94</b><span>Sharpe Ratio</span></div>
-          <div><b>25</b><span>Assets</span></div>
-          <div><b>60s</b><span>Auto refresh</span></div>
-          <div><b>3</b><span>Regime states</span></div>
+          <div><b>25</b><span>สินทรัพย์</span></div>
+          <div><b>60s</b><span>รีเฟรชอัตโนมัติ</span></div>
+          <div><b>3</b><span>สภาวะตลาด</span></div>
         </div>
       </header>
 
@@ -104,7 +104,7 @@ export default function Landing() {
 
       {/* ── Stack strip ──────────────────── */}
       <section id="stack" className={s.stackStrip}>
-        <span className={s.stackLabel}>Powered by</span>
+        <span className={s.stackLabel}>ขับเคลื่อนโดย</span>
         <div className={s.stackTags}>
           {['Yahoo Finance', 'FastAPI', 'React 19', 'Recharts', 'scikit-learn', 'SciPy Optimize', 'GPT-4o-mini'].map(t => (
             <span className={s.tag} key={t}>{t}</span>
@@ -123,30 +123,30 @@ export default function Landing() {
 
       <footer className={s.footer}>
         <span>© 2026 QuantAI · Portfolio System</span>
-        <span>Not investment advice · Data delayed 15 min</span>
+        <span>ไม่ใช่คำแนะนำการลงทุน · ข้อมูลล่าช้า 15 นาที</span>
       </footer>
     </div>
   )
 }
 
 const FEATURES = [
-  { icon:'📊', title:'Auto Portfolio Optimizer',
+  { icon:'📊', title:'จัดพอร์ตอัตโนมัติ',
     desc:'Modern Portfolio Theory หา Max Sharpe / Min Vol ให้อัตโนมัติ จากสินทรัพย์ 25 ตัว รวมหุ้นไทย + เทศ + ทอง + พันธบัตร' },
-  { icon:'🎯', title:'Market Regime Detection',
+  { icon:'🎯', title:'ตรวจจับสภาวะตลาด',
     desc:'Random Forest แยกภาวะตลาดเป็น Bull / Neutral / Bear พร้อมค่าความน่าจะเป็นแบบเรียลไทม์' },
-  { icon:'⚡', title:'Live Prices in THB',
+  { icon:'⚡', title:'ราคาสดในหน่วยบาท',
     desc:'ดึงราคาสดจาก Yahoo Finance ทุก 60 วิ พร้อมแปลงเป็นบาทด้วยอัตราแลกเปลี่ยนล่าสุด ไม่ต้องกดโหลด' },
-  { icon:'💬', title:'AI Chat Assistant',
+  { icon:'💬', title:'ผู้ช่วย AI แชท',
     desc:'ถามเป็นภาษาไทย “จัดพอร์ตให้หน่อย” “ตลาดตอนนี้เป็นยังไง” — LLM เรียกเครื่องมือคำนวณให้เอง' },
   { icon:'📈', title:'Efficient Frontier',
     desc:'จำลอง 10,000 พอร์ตด้วย Monte Carlo แล้ววาดเส้น Frontier ให้เห็นว่าจุดที่เลือกดีที่สุดจริง' },
-  { icon:'🔐', title:'Email หรือ Google Login',
+  { icon:'🔐', title:'เข้าสู่ระบบด้วย Email หรือ Google',
     desc:'สมัครด้วยอีเมล + OTP ยืนยัน หรือเข้าง่ายๆ ด้วย Google — บัญชีปลอดภัย ล็อกอิน 1 ครั้งใช้ได้ 7 วัน ลืมรหัสรีเซ็ตทางเมลได้' },
 ]
 
 const STEPS = [
-  { title:'Sign in ด้วย Google',
-    desc:'คลิกปุ่ม Sign in — จัดการโดย Emergent OAuth ปลอดภัย ไม่ต้องกรอกรหัสในแอพ' },
+  { title:'เข้าสู่ระบบด้วย Google',
+    desc:'คลิกปุ่มเข้าสู่ระบบ — จัดการโดย Emergent OAuth ปลอดภัย ไม่ต้องกรอกรหัสในแอพ' },
   { title:'เปิด Dashboard',
     desc:'ระบบดึงราคา 25 สินทรัพย์ + คำนวณพอร์ตที่แนะนำ + วิเคราะห์สภาวะตลาดให้อัตโนมัติ' },
   { title:'ถาม AI ต่อ',
