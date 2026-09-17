@@ -12,6 +12,8 @@
 - 🏠 **Landing page** ที่ `/` — hero, 6 features, 3-step how-it-works, stack strip, final CTA
 - 🔐 **Google OAuth (จริง)** ผ่าน Emergent-managed Auth — session 7 วัน, httpOnly cookie, `ProtectedRoute` กันเข้าโดยไม่ล็อกอิน
 - ⚡ **Live prices auto-fetch** — ยิงตรง Yahoo Finance ทุก 60 วิ ไม่ต้องกด Pipeline, มี Live badge + FX rate + 1D % change column
+- 📈 **Cumulative Return chart (ข้อมูลจริง)** — คิดผลตอบแทนแบบทบต้นจริง rebase เริ่มที่ 0% ณ ต้นช่วง เลือกช่วงได้ **1d · 1w · 1m · 3m · 6m · 1y · 3y · all**
+- 🥧 **Portfolio Allocation (ออกแบบใหม่)** — โดนัท + Sharpe ตรงกลาง + รายการอันดับพร้อมแถบน้ำหนัก เรียงมาก→น้อย อ่านง่าย
 - 🚀 **Auto-bootstrap pipeline** — เมื่อ backend start จะ run pipeline + MPT + Regime ในพื้นหลังทีเดียว dashboard พร้อมใช้เอง
 - 💬 **AI Chat with Function Calling** — คุยเป็นภาษาไทย, LLM เรียก tool เอง, กราฟขยับตาม tool results
 
@@ -234,7 +236,7 @@ db.user_sessions.insertOne({
 | `POST` | `/api/regime` | manual re-run regime classifier |
 | `GET`  | `/api/portfolio/latest` | พอร์ตล่าสุด |
 | `GET`  | `/api/regime/latest` | Regime + probability ล่าสุด |
-| `GET`  | `/api/returns-history?period=1y` | Cumulative return (6m/1y/3y/all) |
+| `GET`  | `/api/returns-history?period=1y` | Cumulative return จริง (compounding, rebase 0%) — `1d`/`1w`/`1m`/`3m`/`6m`/`1y`/`3y`/`all` |
 | `POST` | `/api/chat` | AI chat + Function Calling |
 
 ### Auth (ดูหัวข้อด้านบน)
@@ -323,7 +325,17 @@ curl -H "Cookie: session_token=demo_session_persistent" \
 - **API Key**: `.env` อยู่ใน `.gitignore` — อย่า commit ขึ้น repo
 - **Ports**: Backend `:8001` · Frontend `:3000` (dev) — same-origin ในการ deploy จริง (nginx / preview) เพื่อให้ cookies ทำงาน
 - **Regime probs**: เก็บเป็น fraction (0.962 = 96.2%) — frontend คูณ 100 ครั้งเดียว
+- **Cumulative Return**: คำนวณจาก `daily_returns.csv` (decimal) แบบทบต้น `(1+r).cumprod()` แล้ว rebase ให้เริ่มที่ 0% ณ ต้นช่วง — ช่วงสั้น (1d–6m) เป็นจุดรายวัน, `1y` รายสัปดาห์, `3y`/`all` รายเดือน (ข้อมูล end-of-day, ไม่มี intraday)
 - **Live cache TTL**: 60 s — แก้ได้ที่ `backend/live.py` (`CACHE_TTL`)
 - **Session TTL**: 7 วัน — แก้ได้ที่ `backend/auth.py` (`SESSION_TTL_DAYS`)
 - **Deployment**: ใช้ `server:app` เป็น entrypoint (ไม่ใช่ `main:app`) เพราะ `server.py` ต้อง register `live` และ `auth` modules
 - **Not investment advice** — ข้อมูลจาก Yahoo Finance อาจ delay 15 นาที
+
+---
+
+## 🔧 Changelog (ล่าสุด 2026-09)
+
+- แก้บั๊ก **Cumulative Return** ที่หารด้วย 100 ซ้ำซ้อนจนค่าเพี้ยน → เปลี่ยนเป็นทบต้นจริง + rebase 0% ณ ต้นช่วง
+- เพิ่มช่วงเวลา **1d / 1w / 1m / 3m / 6m / 1y / 3y / all** (เดิมมีแค่ 6m/1y/3y/all)
+- ออกแบบ **Portfolio Allocation** ใหม่ (โดนัท + Sharpe กลาง + ranked weight bars)
+- ซ่อม dependency ของ `yfinance` ที่หายไป (`pytz`, `beautifulsoup4`, `multitasking`, `peewee`, `lxml`, `html5lib`) — pipeline ดึงข้อมูลจริงได้แล้ว
