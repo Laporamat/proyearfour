@@ -408,8 +408,12 @@ async def api_returns_history(period: str = "1y"):
     df = pd.read_csv(csv, index_col=0, parse_dates=True)
 
     # กรองช่วงเวลา
-    now = pd.Timestamp.today()
+    now = pd.Timestamp.today().normalize()
     cutoff_map = {
+        "1d":  now - pd.Timedelta(days=1),
+        "1w":  now - pd.Timedelta(weeks=1),
+        "1m":  now - pd.DateOffset(months=1),
+        "3m":  now - pd.DateOffset(months=3),
         "6m":  now - pd.DateOffset(months=6),
         "1y":  now - pd.DateOffset(years=1),
         "3y":  now - pd.DateOffset(years=3),
@@ -427,13 +431,21 @@ async def api_returns_history(period: str = "1y"):
     cols = [c for c in FEATURED if c in df.columns]
     df = df[cols].copy()
 
-    # resample เป็นรายเดือน (mean ของ daily return)
-    monthly = df.resample("ME").sum()
+    # resample ตามช่วงเวลา — สั้นใช้ daily, กลางใช้ weekly, ยาวใช้ monthly
+    if period in ("1d", "1w", "1m", "3m"):
+        resampled = df
+        date_fmt = "%Y-%m-%d"
+    elif period in ("6m", "1y"):
+        resampled = df.resample("W").sum()
+        date_fmt = "%Y-%m-%d"
+    else:
+        resampled = df.resample("ME").sum()
+        date_fmt = "%Y-%m"
 
     # cumulative return (%)
-    cum = (1 + monthly / 100).cumprod() - 1
+    cum = (1 + resampled / 100).cumprod() - 1
     cum = (cum * 100).round(4)
-    cum.index = cum.index.strftime("%Y-%m")
+    cum.index = cum.index.strftime(date_fmt)
 
     records = []
     for date, row in cum.iterrows():

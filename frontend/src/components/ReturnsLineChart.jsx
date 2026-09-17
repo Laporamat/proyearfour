@@ -9,7 +9,10 @@ import s from './ReturnsLineChart.module.css'
 
 const TICKERS = ['NVDA', 'AAPL', 'DELTA.BK', 'GLD', 'KBANK.BK']
 const HEX     = ['#5b73f5','#23c97d','#e8a825','#e85c5c','#a78bfa']
-const PERIODS = ['6m','1y','3y','all']
+const PERIODS = [
+  { v: '1d', l: '1D' }, { v: '1w', l: '1W' }, { v: '1m', l: '1M' }, { v: '3m', l: '3M' },
+  { v: '6m', l: '6M' }, { v: '1y', l: '1Y' }, { v: '3y', l: '3Y' }, { v: 'all', l: 'ALL' },
+]
 
 /* sort payload highest → lowest for tooltip */
 function Tip({ active, payload, label }) {
@@ -62,9 +65,9 @@ export default function ReturnsLineChart({ height = 210 }) {
         <h3>Cumulative Return</h3>
         <div className={s.periods}>
           {PERIODS.map(p => (
-            <button key={p}
-              className={`${s.pBtn} ${period === p ? s.pActive : ''}`}
-              onClick={() => setPeriod(p)}>{p}
+            <button key={p.v}
+              className={`${s.pBtn} ${period === p.v ? s.pActive : ''}`}
+              onClick={() => setPeriod(p.v)}>{p.l}
             </button>
           ))}
         </div>
