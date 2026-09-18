@@ -101,16 +101,19 @@ export default function Dashboard() {
           icon="◈" label="Sharpe Ratio" color="accent" loading={loading}
           value={fmt(portfolio?.sharpe, 4)}
           sub="Max Sharpe Portfolio"
+          to="/analysis/sharpe"
         />
         <StatCard
           icon="↑" label="Annual Return" color="green" loading={loading}
           value={pct(portfolio?.ret)}
           sub="ผลตอบแทนต่อปี"
+          to="/analysis/return"
         />
         <StatCard
           icon="~" label="Volatility" color="yellow" loading={loading}
           value={pct(portfolio?.vol)}
           sub="ความผันผวนต่อปี"
+          to="/analysis/volatility"
         />
         <StatCard
           icon="◉" label="Market Regime"
@@ -121,6 +124,7 @@ export default function Dashboard() {
             ? `🐂 ${(regime.prob_bull * 100).toFixed(1)}%  🐻 ${(regime.prob_bear * 100).toFixed(1)}%`
             : undefined
           }
+          to="/analysis/regime"
         />
       </div>
 

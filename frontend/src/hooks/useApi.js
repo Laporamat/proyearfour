@@ -123,4 +123,10 @@ export const api = {
 
   news: (limit = 30) =>
     apiFetch(`/api/news?limit=${limit}`),
+
+  analysisMpt: () =>
+    apiFetch('/api/analysis/mpt'),
+
+  analysisRegime: () =>
+    apiFetch('/api/analysis/regime'),
 }

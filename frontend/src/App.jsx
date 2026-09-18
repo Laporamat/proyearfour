@@ -4,6 +4,7 @@ import { AuthProvider }  from './context/AuthContext'
 import Layout          from './components/Layout'
 import Dashboard       from './pages/Dashboard'
 import Chat            from './pages/Chat'
+import MetricAnalysis  from './pages/MetricAnalysis'
 import Landing         from './pages/Landing'
 import Login           from './pages/Login'
 import Register        from './pages/Register'
@@ -34,6 +35,7 @@ function AppRouter() {
       >
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/chat"      element={<Chat />} />
+        <Route path="/analysis/:metric" element={<MetricAnalysis />} />
       </Route>
     </Routes>
   )

@@ -15,3 +15,7 @@ auth.register(app)
 # Register aggregated portfolio news endpoint (Yahoo Finance).
 import news  # noqa: E402, F401
 news.register(app)
+
+# Register detail-page analysis endpoints (MPT + Regime real data).
+import analysis  # noqa: E402, F401
+analysis.register(app)
