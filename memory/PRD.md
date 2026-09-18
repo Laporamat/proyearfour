@@ -52,3 +52,7 @@
 
 ## Update — 2026-09-18
 - **NEW: Portfolio News** — `backend/news.py` (`GET /api/news`) aggregates Yahoo Finance news across all 25 tickers (concurrent fetch, dedupe by id, sort newest-first, 10-min TTL cache, startup warm). Frontend `NewsFeed.jsx` card added to Dashboard under the price table (thumbnails, ticker badge fallback, publisher, Thai relative time, external links). Registered in server.py.
+
+## Update — 2026-09-18 (layout)
+- Portfolio Allocation changed from donut → vertical bar chart (recharts BarChart), now full-width and height-matched (210px chart) to Cumulative Return. Kept Sharpe/Return/Volatility pills + tooltip.
+- News moved from left column to right sidebar under the AI Chat (new `.side` wrapper in Dashboard.module.css; chat height fixed at 560px).

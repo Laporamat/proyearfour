@@ -133,56 +133,55 @@ export default function Dashboard() {
             <ReturnsLineChart height={210} />
           </div>
 
-          <div className={s.chartRow}>
-            <div className={`card ${s.chartCard}`}>
-              <PortfolioPieChart />
-            </div>
-
-            {regime && (
-              <div className={`card ${s.regimeCard}`}>
-                <div className={s.regimeHead}>
-                  <h3>Regime</h3>
-                  <span className={s.regimeDate}>{regime.date}</span>
-                </div>
-                {[
-                  { key: 'prob_bull',    label: 'Bull',    color: 'var(--green)'  },
-                  { key: 'prob_neutral', label: 'Neutral', color: 'var(--yellow)' },
-                  { key: 'prob_bear',    label: 'Bear',    color: 'var(--red)'    },
-                ].map(({ key, label, color }) => {
-                  const pct = ((regime[key] ?? 0) * 100)
-                  return (
-                    <div key={key} className={s.regimeRow}>
-                      <span className={s.regimeLbl}>{label}</span>
-                      <div className={s.regimeBg}>
-                        <div
-                          className={s.regimeFill}
-                          style={{ width: `${pct.toFixed(1)}%`, background: color }}
-                        />
-                      </div>
-                      <span className={s.regimePct} style={{ color }}>
-                        {pct.toFixed(1)}%
-                      </span>
-                    </div>
-                  )
-                })}
-              </div>
-            )}
+          {/* portfolio allocation — full width, same size as Cumulative Return */}
+          <div className={`card ${s.chartCard}`}>
+            <PortfolioPieChart />
           </div>
+
+          {regime && (
+            <div className={`card ${s.regimeCard}`}>
+              <div className={s.regimeHead}>
+                <h3>Regime</h3>
+                <span className={s.regimeDate}>{regime.date}</span>
+              </div>
+              {[
+                { key: 'prob_bull',    label: 'Bull',    color: 'var(--green)'  },
+                { key: 'prob_neutral', label: 'Neutral', color: 'var(--yellow)' },
+                { key: 'prob_bear',    label: 'Bear',    color: 'var(--red)'    },
+              ].map(({ key, label, color }) => {
+                const pct = ((regime[key] ?? 0) * 100)
+                return (
+                  <div key={key} className={s.regimeRow}>
+                    <span className={s.regimeLbl}>{label}</span>
+                    <div className={s.regimeBg}>
+                      <div
+                        className={s.regimeFill}
+                        style={{ width: `${pct.toFixed(1)}%`, background: color }}
+                      />
+                    </div>
+                    <span className={s.regimePct} style={{ color }}>
+                      {pct.toFixed(1)}%
+                    </span>
+                  </div>
+                )
+              })}
+            </div>
+          )}
 
           {/* price table */}
           <div className={`card ${s.chartCard}`}>
             <PriceTable />
           </div>
+        </div>
 
-          {/* portfolio news */}
+        {/* right — chat + news */}
+        <div className={s.side}>
+          <div className={s.chatWrap}>
+            <Chat embedded />
+          </div>
           <div className={`card ${s.chartCard}`}>
             <NewsFeed />
           </div>
-        </div>
-
-        {/* right — chat */}
-        <div className={s.chatWrap}>
-          <Chat embedded />
         </div>
 
       </div>
