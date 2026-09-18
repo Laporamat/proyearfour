@@ -64,3 +64,7 @@
   - Backend analysis.py: GET /api/analysis/mpt (Efficient Frontier upper-envelope + 2.5k Monte Carlo cloud + optimal point + monthly portfolio-vs-benchmark growth + weights) and GET /api/analysis/regime (current probs + weekly probability timeline + regime day-distribution + RandomForest feature importance from the saved .pkl).
   - sharpe/return/volatility → MPT charts; regime → regime charts. Back button returns to dashboard.
 - Testing: iteration_2.json — backend 100%, frontend 100%, retest_needed=false.
+
+## Update — 2026-09-18 (Cumulative Return: all tickers selectable)
+- /api/returns-history now returns ALL 25 tickers (removed FEATURED 5 filter) + "tickers" list; per-column rebase from first valid value (supports later-listed assets).
+- ReturnsLineChart: dynamic chips for all tickers with select-all (ทั้งหมด) / clear (ล้าง) + counter; 25-color palette; testids ticker-chip-<T>, tickers-select-all, tickers-clear, period-<p>. Verified via screenshots (default 5, all 25, custom TSLA+META).

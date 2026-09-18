@@ -27,7 +27,37 @@
 .pBtn:hover { border-color: var(--accent); color: var(--accent); }
 .pActive    { background: var(--accent-dim); border-color: var(--accent) !important; color: var(--accent) !important; }
 
-.chips { display: flex; flex-wrap: wrap; gap: 5px; }
+.chipBar { display: flex; flex-direction: column; gap: 6px; }
+.chipActions { display: flex; align-items: center; gap: 6px; }
+.chipAction {
+  padding: 2px 10px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.68rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all var(--tx);
+}
+.chipAction:hover { border-color: var(--accent); color: var(--accent); }
+.chipCount {
+  margin-left: auto;
+  font-size: 0.66rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  font-family: monospace;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  max-height: 66px;
+  overflow-y: auto;
+  padding-right: 2px;
+}
 .chip {
   padding: 2px 10px;
   border-radius: var(--r-pill);
@@ -38,6 +68,7 @@
   font-weight: 600;
   font-family: monospace;
   cursor: pointer;
+  white-space: nowrap;
   transition: all var(--tx);
 }
 .chipOn { background: var(--surface2); font-weight: 700; }

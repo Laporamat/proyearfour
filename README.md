@@ -12,7 +12,7 @@
 - 🏠 **Landing page** ที่ `/` — hero, 6 features, 3-step how-it-works, stack strip, final CTA
 - 🔐 **Google OAuth (จริง)** ผ่าน Emergent-managed Auth — session 7 วัน, httpOnly cookie, `ProtectedRoute` กันเข้าโดยไม่ล็อกอิน
 - ⚡ **Live prices auto-fetch** — ยิงตรง Yahoo Finance ทุก 60 วิ ไม่ต้องกด Pipeline, มี Live badge + FX rate + 1D % change column
-- 📈 **Cumulative Return chart (ข้อมูลจริง)** — คิดผลตอบแทนแบบทบต้นจริง rebase เริ่มที่ 0% ณ ต้นช่วง เลือกช่วงได้ **1d · 1w · 1m · 3m · 6m · 1y · 3y · all**
+- 📈 **Cumulative Return chart (ข้อมูลจริง)** — คิดผลตอบแทนแบบทบต้นจริง rebase เริ่มที่ 0% ณ ต้นช่วง เลือกช่วงได้ **1d · 1w · 1m · 3m · 6m · 1y · 3y · all** และเลือกแสดง **หุ้นได้ทุกตัว (25 ตัว)** พร้อมปุ่มเลือกทั้งหมด/ล้าง
 - 🥧 **Portfolio Allocation (แผนภูมิแท่ง)** — bar chart เต็มความกว้าง ขนาดเท่ากับ Cumulative Return เรียงน้ำหนักมาก→น้อย + แถบ Sharpe/Return/Volatility
 - 🔎 **KPI Detail Pages (ข้อมูลจริง)** — กดการ์ด KPI ทั้ง 4 ใบเปิดหน้า `/analysis/<metric>` แสดงกราฟจริง: Efficient Frontier + Monte Carlo 10,000 พอร์ต, การเติบโตสะสมเทียบ benchmark, Regime probability timeline และ Random Forest feature importance
 - 📰 **ข่าวหุ้นรวมทั้งพอร์ต** — การ์ด "ข่าวล่าสุด" ใต้ AI Chat ดึงจาก Yahoo Finance (25 ตัว) รวม + dedupe + เรียงตามเวลา พร้อม thumbnail/แหล่งที่มา/ลิงก์
@@ -340,6 +340,7 @@ curl -H "Cookie: session_token=demo_session_persistent" \
 
 ## 🔧 Changelog (ล่าสุด 2026-09)
 
+- **Cumulative Return เลือกหุ้นได้ทุกตัว** — endpoint คืน 25 tickers, chart มี chips เลือกได้ทุกตัว + ปุ่มทั้งหมด/ล้าง + ตัวนับ (เดิม fix ไว้แค่ 5 ตัว)
 - แก้บั๊ก **Market Regime ไม่ขึ้นข้อมูล** — ต้นเหตุคือ dependency หาย (`cloudpickle`, `narwhals`, `threadpoolctl`) ทำให้ Random Forest classifier crash และไม่สร้าง `regime_predictions.csv`; ติดตั้งครบแล้ว regime ทำงานปกติ
 - เพิ่ม **KPI Detail Pages** — กดการ์ด Sharpe/Return/Volatility/Regime เปิดหน้า `/analysis/<metric>` แสดงกราฟข้อมูลจริง (`backend/analysis.py` + `frontend/src/pages/MetricAnalysis.jsx`, StatCard คลิกได้ผ่าน prop `to`)
 - ปรับ **Portfolio Allocation** เป็นแผนภูมิแท่งเต็มความกว้าง (ขนาดเท่า Cumulative Return) และย้าย **ข่าวล่าสุด** ไปใต้ AI Chat

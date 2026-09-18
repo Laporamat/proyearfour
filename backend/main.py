@@ -408,17 +408,16 @@ async def api_returns_history(period: str = "1y"):
 
     df = pd.read_csv(csv, index_col=0, parse_dates=True).sort_index()
 
-    # เลือกเฉพาะตัวที่น่าสนใจ (ตรงกับ chips บน frontend)
-    FEATURED = ["NVDA", "AAPL", "DELTA.BK", "GLD", "KBANK.BK"]
-    cols = [c for c in FEATURED if c in df.columns]
-    df = df[cols].copy()
+    # ใช้ได้ทุกตัว (เลือกแสดงฝั่ง frontend) — เรียงชื่อให้คงที่
+    df = df.reindex(sorted(df.columns), axis=1)
+    all_tickers = list(df.columns)
 
     # daily_returns.csv เก็บเป็น decimal (0.01 = 1%) — guard เผื่อเก็บเป็น %
     if not df.empty and df.abs().mean().mean() > 1:
         df = df / 100
 
     if df.empty:
-        return {"period": period, "data": []}
+        return {"period": period, "tickers": [], "data": []}
 
     # กรองช่วงเวลา (อ้างอิงจากวันข้อมูลล่าสุด ไม่ใช่ today เพื่อไม่ให้ช่วงว่าง)
     now = df.index.max()
@@ -438,8 +437,11 @@ async def api_returns_history(period: str = "1y"):
         sliced = df.tail(2)
 
     # cumulative return จริงด้วย compounding แล้ว rebase ให้เริ่มที่ 0% ณ ต้นช่วง
+    # (rebase แต่ละคอลัมน์จากค่าแรกที่ valid — รองรับหุ้นที่เริ่มมีข้อมูลทีหลัง)
     growth = (1 + sliced).cumprod()
-    cum = (growth.div(growth.iloc[0], axis=1) - 1) * 100
+    base = {c: growth[c].loc[growth[c].first_valid_index()]
+            for c in growth.columns if growth[c].first_valid_index() is not None}
+    cum = (growth.div(pd.Series(base), axis=1) - 1) * 100
 
     # ลดจำนวนจุดให้กราฟอ่านง่าย ตามความยาวของช่วง
     gran = {
@@ -458,7 +460,7 @@ async def api_returns_history(period: str = "1y"):
         entry.update({k: round(float(v), 2) for k, v in row.items() if pd.notna(v)})
         records.append(entry)
 
-    return {"period": period, "data": records}
+    return {"period": period, "tickers": all_tickers, "data": records}
 
 
 @app.post("/api/chat", response_model=ChatResponse)
