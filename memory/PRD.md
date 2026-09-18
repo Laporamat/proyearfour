@@ -56,3 +56,11 @@
 ## Update — 2026-09-18 (layout)
 - Portfolio Allocation changed from donut → vertical bar chart (recharts BarChart), now full-width and height-matched (210px chart) to Cumulative Return. Kept Sharpe/Return/Volatility pills + tooltip.
 - News moved from left column to right sidebar under the AI Chat (new `.side` wrapper in Dashboard.module.css; chat height fixed at 560px).
+
+## Update — 2026-09-18 (KPI detail pages + Regime fix)
+- **BUG FIX (verified by testing agent)**: Market Regime KPI was empty because run_regime crashed on missing deps (cloudpickle → narwhals/threadpoolctl for scikit-learn 1.9.1). Installed + froze requirements.txt; output/regime_predictions.csv now generated; /api/regime/latest returns real data (Neutral 93.6%).
+- **NEW: Clickable KPI cards → detail analysis pages** proving real data:
+  - StatCard now accepts `to` prop (clickable, testid statcard-<metric>); route /analysis/:metric (MetricAnalysis.jsx).
+  - Backend analysis.py: GET /api/analysis/mpt (Efficient Frontier upper-envelope + 2.5k Monte Carlo cloud + optimal point + monthly portfolio-vs-benchmark growth + weights) and GET /api/analysis/regime (current probs + weekly probability timeline + regime day-distribution + RandomForest feature importance from the saved .pkl).
+  - sharpe/return/volatility → MPT charts; regime → regime charts. Back button returns to dashboard.
+- Testing: iteration_2.json — backend 100%, frontend 100%, retest_needed=false.

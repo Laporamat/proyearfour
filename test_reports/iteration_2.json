@@ -1,0 +1,22 @@
+{
+  "summary": "All review items PASS. Backend (3/3 pytest): GET /api/regime/latest returns real regime data (Neutral, 2026-09-17, prob_bull=0/prob_neutral=93.6/prob_bear=6.4) — NOT the 'ยังไม่มีข้อมูล' fallback. GET /api/analysis/mpt returns optimal{ret:31.0,vol:14.99,sharpe:1.935}, non-empty monte_carlo, frontier, performance (monthly), weights arrays. GET /api/analysis/regime returns current{regime:Neutral}, non-empty timeline, distribution with Bull/Neutral/Bear, and non-empty importance array. Frontend (Playwright, authed via seeded demo cookie): Dashboard renders 4 KPI cards; Market Regime card shows 'NEUTRAL' badge + probs (🐂 0.0% 🐻 6.4%). All 4 cards clickable via data-testid statcard-{sharpe|return|volatility|regime}, navigation to /analysis/{metric} works. MPT pages render mpt-frontier-chart, mpt-performance-chart, mpt-weights-chart + hero value (1.935 / 31% / 14.99%). Regime page renders regime-current, regime-distribution, regime-timeline, regime-importance + hero 'Neutral'. Back button (analysis-back-btn) returns to /dashboard.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/test_analysis.py",
+    "/app/test_reports/pytest/pytest_analysis.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "analysis.py._parse_optimal_weights uses regex on a stringified dict from CSV — fragile if pipeline changes serialization. Consider persisting weights as JSON.",
+    "Feature-importance mapping assumes REGIME_FEATURES order matches training order. If regime.build_features ever reorders, importance labels would silently drift — pull feature_names_in_ from the sklearn pipeline instead."
+  ],
+  "updated_files": ["/app/backend/tests/test_analysis.py"],
+  "success_rate": {"backend": "100%", "frontend": "100%"},
+  "test_credentials": "session_token=demo_session_persistent (user_demo / demo@quantai.local); pre-seeded.",
+  "seed_data_creation": "None (demo session already seeded from iteration 1).",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Preview URL: https://wealth-monitor-256.preview.emergentagent.com. Auth via cookie session_token=demo_session_persistent (add via page.context.add_cookies BEFORE first navigation). Backend regime pipeline healthy — output/regime_predictions.csv (1684 rows) and regime_model_random_forest.pkl present. New analysis endpoints /api/analysis/mpt and /api/analysis/regime and route /analysis/:metric all working.",
+  "rca of the issue": "Prior root cause (missing cloudpickle/narwhals/threadpoolctl blocking regime classifier) is verified fixed — regime_predictions.csv now exists, /api/regime/latest returns real data (regime=Neutral, prob_neutral=93.6%), and Market Regime KPI card is populated."
+}
