@@ -4,6 +4,7 @@ import RunButton         from '../components/RunButton'
 import PortfolioPieChart from '../components/PortfolioPieChart'
 import ReturnsLineChart  from '../components/ReturnsLineChart'
 import PriceTable        from '../components/PriceTable'
+import NewsFeed          from '../components/NewsFeed'
 import Chat              from './Chat'
 import { useChart }      from '../context/ChartContext'
 import { api }           from '../hooks/useApi'
@@ -171,6 +172,11 @@ export default function Dashboard() {
           {/* price table */}
           <div className={`card ${s.chartCard}`}>
             <PriceTable />
+          </div>
+
+          {/* portfolio news */}
+          <div className={`card ${s.chartCard}`}>
+            <NewsFeed />
           </div>
         </div>
 

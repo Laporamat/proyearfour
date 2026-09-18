@@ -120,4 +120,7 @@ export const api = {
 
   returnsHistory: (period = '1y') =>
     apiFetch(`/api/returns-history?period=${period}`),
+
+  news: (limit = 30) =>
+    apiFetch(`/api/news?limit=${limit}`),
 }

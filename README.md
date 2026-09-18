@@ -14,6 +14,7 @@
 - ⚡ **Live prices auto-fetch** — ยิงตรง Yahoo Finance ทุก 60 วิ ไม่ต้องกด Pipeline, มี Live badge + FX rate + 1D % change column
 - 📈 **Cumulative Return chart (ข้อมูลจริง)** — คิดผลตอบแทนแบบทบต้นจริง rebase เริ่มที่ 0% ณ ต้นช่วง เลือกช่วงได้ **1d · 1w · 1m · 3m · 6m · 1y · 3y · all**
 - 🥧 **Portfolio Allocation (ออกแบบใหม่)** — โดนัท + Sharpe ตรงกลาง + รายการอันดับพร้อมแถบน้ำหนัก เรียงมาก→น้อย อ่านง่าย
+- 📰 **ข่าวหุ้นรวมทั้งพอร์ต** — การ์ด "ข่าวล่าสุด" ในหน้า Dashboard ดึงจาก Yahoo Finance (25 ตัว) รวม + dedupe + เรียงตามเวลา พร้อม thumbnail/แหล่งที่มา/ลิงก์
 - 🚀 **Auto-bootstrap pipeline** — เมื่อ backend start จะ run pipeline + MPT + Regime ในพื้นหลังทีเดียว dashboard พร้อมใช้เอง
 - 💬 **AI Chat with Function Calling** — คุยเป็นภาษาไทย, LLM เรียก tool เอง, กราฟขยับตาม tool results
 
@@ -237,6 +238,7 @@ db.user_sessions.insertOne({
 | `GET`  | `/api/portfolio/latest` | พอร์ตล่าสุด |
 | `GET`  | `/api/regime/latest` | Regime + probability ล่าสุด |
 | `GET`  | `/api/returns-history?period=1y` | Cumulative return จริง (compounding, rebase 0%) — `1d`/`1w`/`1m`/`3m`/`6m`/`1y`/`3y`/`all` |
+| `GET`  | `/api/news?limit=30` | **NEW** ข่าวรวมทั้งพอร์ต (Yahoo, dedupe + sort ตามเวลา, cache 10 นาที) |
 | `POST` | `/api/chat` | AI chat + Function Calling |
 
 ### Auth (ดูหัวข้อด้านบน)
@@ -335,6 +337,7 @@ curl -H "Cookie: session_token=demo_session_persistent" \
 
 ## 🔧 Changelog (ล่าสุด 2026-09)
 
+- เพิ่มการ์ด **ข่าวล่าสุด** ในหน้า Dashboard — รวมข่าวทั้ง 25 ตัวจาก Yahoo Finance, dedupe, เรียงตามเวลา (`backend/news.py` + `frontend/src/components/NewsFeed.jsx`)
 - แก้บั๊ก **Cumulative Return** ที่หารด้วย 100 ซ้ำซ้อนจนค่าเพี้ยน → เปลี่ยนเป็นทบต้นจริง + rebase 0% ณ ต้นช่วง
 - เพิ่มช่วงเวลา **1d / 1w / 1m / 3m / 6m / 1y / 3y / all** (เดิมมีแค่ 6m/1y/3y/all)
 - ออกแบบ **Portfolio Allocation** ใหม่ (โดนัท + Sharpe กลาง + ranked weight bars)

@@ -11,3 +11,7 @@ live.register(app)
 # Register auth endpoints (Emergent-managed Google OAuth).
 import auth  # noqa: E402, F401
 auth.register(app)
+
+# Register aggregated portfolio news endpoint (Yahoo Finance).
+import news  # noqa: E402, F401
+news.register(app)
