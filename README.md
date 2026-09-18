@@ -347,3 +347,30 @@ curl -H "Cookie: session_token=demo_session_persistent" \
 - แก้บั๊ก **Cumulative Return** ที่หารด้วย 100 ซ้ำซ้อนจนค่าเพี้ยน → เปลี่ยนเป็นทบต้นจริง + rebase 0% ณ ต้นช่วง
 - เพิ่มช่วงเวลา **1d / 1w / 1m / 3m / 6m / 1y / 3y / all** (เดิมมีแค่ 6m/1y/3y/all)
 - ซ่อม dependency ของ `yfinance` ที่หายไป (`pytz`, `beautifulsoup4`, `multitasking`, `peewee`, `lxml`, `html5lib`) — pipeline ดึงข้อมูลจริงได้แล้ว
+### ที่ทำเสร็จแล้ว
+Frontend (React + Vite)
+Cumulative Return chart — คำนวณผลตอบแทนทบต้นจริง, rebase 0% ณ ต้นช่วง, เลือกช่วงเวลาได้ 1d·1w·1m·3m·6m·1y·3y·all และ เลือกแสดงหุ้นได้ทุกตัว (25 ตัว) พร้อมปุ่มทั้งหมด/ล้าง + ตัวนับ
+Portfolio Allocation — เปลี่ยนเป็นแผนภูมิแท่งเต็มความกว้าง (ขนาดเท่ากราฟ Return) + แถบ Sharpe/Return/Volatility
+KPI Detail Pages — การ์ด KPI ทั้ง 4 ใบกดเข้าหน้า /analysis/<metric> แสดงกราฟข้อมูลจริง (Efficient Frontier, Monte Carlo, growth vs benchmark, regime timeline, feature importance)
+ข่าวหุ้นล่าสุด — การ์ดข่าวใต้ AI Chat (thumbnail + แหล่งที่มา + เวลาแบบไทย)
+Live prices auto-refresh 60 วิ + FX badge, ตารางราคา, AI Chat panel
+Landing page, Google login, ProtectedRoute, ธีม minimal สีฟ้า
+⚙️ Backend (FastAPI + MongoDB)
+Endpoints: /api/pipeline, /api/mpt, /api/regime, /api/portfolio/latest, /api/regime/latest, /api/returns-history, /api/prices/live, /api/news, /api/analysis/mpt, /api/analysis/regime
+AI Chat + Function Calling (LLM เรียก tool เอง)
+Auto-bootstrap — start server แล้วรัน pipeline + MPT + Regime อัตโนมัติ
+ซ่อม dependency ที่หายไปทั้งหมด: yfinance stack (pytz, bs4, ฯลฯ) + ML stack (cloudpickle, narwhals, threadpoolctl) → ระบบดึงข้อมูลจริงและประมวลผลได้
+Emergent Google OAuth (session 7 วัน, httpOnly cookie)
+🤖 ML / Quant
+Data pipeline (yh.py) — ดึงราคา US/Thai/Bonds 25 สินทรัพย์จาก Yahoo, แปลง THB, clean → daily returns จริง
+MPT Optimizer (mpt.py) — Max-Sharpe portfolio + Efficient Frontier + Monte Carlo 10,000 พอร์ต (Sharpe 1.93, Return 31%, Vol 15%)
+Market Regime Classifier (regime.py) — Random Forest จาก 11 ฟีเจอร์ (momentum, volatility, breadth, RSI ฯลฯ), TimeSeriesSplit CV F1 = 0.93, ทำนาย Bull/Neutral/Bear รายวัน (ล่าสุด: Neutral 93.6%)
+✅ สถานะการทดสอบ
+testing agent ผ่าน 100% ทั้ง backend & frontend (iteration ล่าสุด)
+ข้อมูลทั้งหมดเป็น ข้อมูลจริง ไม่มี mock
+📋 ที่ยังทำได้ต่อ (backlog)
+Group filter (US/Thai/Bond) ในกราฟ Return
+แสดงเส้นพอร์ตรวมทับกราฟรายตัว
+Model card (confusion matrix) ในหน้า Regime
+เทียบพอร์ต Min-Vol / Max-Return บน Efficient Frontier
+Export หน้าวิเคราะห์เป็น PDF
