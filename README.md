@@ -347,4 +347,51 @@ curl -H "Cookie: session_token=demo_session_persistent" \
 - แก้บั๊ก **Cumulative Return** ที่หารด้วย 100 ซ้ำซ้อนจนค่าเพี้ยน → เปลี่ยนเป็นทบต้นจริง + rebase 0% ณ ต้นช่วง
 - เพิ่มช่วงเวลา **1d / 1w / 1m / 3m / 6m / 1y / 3y / all** (เดิมมีแค่ 6m/1y/3y/all)
 - ซ่อม dependency ของ `yfinance` ที่หายไป (`pytz`, `beautifulsoup4`, `multitasking`, `peewee`, `lxml`, `html5lib`) — pipeline ดึงข้อมูลจริงได้แล้ว
-🚀 QuantAI Portfolio SystemA Production-Ready Quantitative Investment & Asset Management Platform🌟 ภาพรวมระบบ (System Overview)QuantAI Portfolio System เป็นแพลตฟอร์มวิเคราะห์การลงทุนและพอร์ตสินทรัพย์ระดับโปรดักชัน ที่ผสานรวมเทคโนโลยี Frontend ทันสมัย (React + Vite) เข้ากับ Backend ประสิทธิภาพสูง (FastAPI + MongoDB) พร้อมขับเคลื่อนด้วยโมเดล Machine Learning & Quantitative Finance ที่ประมวลผลจากข้อมูลจริงแบบ Real-time ไม่มี Mock Data🛠️ รายละเอียดสถาปัตยกรรมและฟีเจอร์1. 🖥️ Frontend (React + Vite)Cumulative Return Chart: กราฟผลตอบแทนทบต้นคำนวณจากข้อมูลจริง Rebase ที่ 0% ณ ต้นช่วง สามารถเลือกช่วงเวลาได้หลากหลาย ($1d, 1w, 1m, 3m, 6m, 1y, 3y, \text{all}$) พร้อมตัวเลือกแสดงหุ้นครบทั้ง 25 ตัว ปุ่มเลือกทั้งหมด/ล้าง และตัวนับจำนวนPortfolio Allocation: แผนภูมิแท่งเต็มความกว้าง ดีไซน์สมמתกับกราฟผลตอบแทน พร้อมแถบสรุปค่า Sharpe, Return และ VolatilityKPI Detail Pages: หน้าวิเคราะห์เชิงลึกสำหรับการ์ด KPI ทั้ง 4 ใบ (กดเข้าผ่าน /analysis/<metric>) แสดงกราฟข้อมูลจริง เช่น Efficient Frontier, Monte Carlo Simulation, Growth vs Benchmark, Regime Timeline และ Feature ImportanceLive News Feed: การ์ดข่าวหุ้นล่าสุดใต้ AI Chat พร้อม Thumbnail, แหล่งที่มา และเวลาแสดงผลภาษาไทยReal-time Engine: ระบบราคาอัตโนมัติ (Live Prices Auto-refresh ทุก 60 วินาที) พร้อม FX Badge, ตารางราคา และ AI Chat PanelSecurity & UI: หน้า Landing Page, ระบบ Google Login, ProtectedRoute และธีม Minimal โทนสีฟ้าสะอาดตา2. ⚙️ Backend (FastAPI + MongoDB)API Endpoints ครบครัน: รองรับ /api/pipeline, /api/mpt, /api/regime, /api/portfolio/latest, /api/regime/latest, /api/returns-history, /api/prices/live, /api/news, /api/analysis/mpt และ /api/analysis/regimeAI Chat with Function Calling: ระบบผู้ช่วยอัจฉริยะที่ให้ LLM สามารถเรียกใช้เครื่องมือ (Tools) ในระบบได้ด้วยตัวเองAuto-bootstrap: เริ่มต้นระบบเซิร์ฟเวอร์พร้อมรัน Data Pipeline, MPT และ Regime ทันทีโดยอัตโนมัติDependency Stability: แก้ไขปัญหาการติดตั้งระบบพึ่งพา (yfinance stack, ML stack เช่น cloudpickle, narwhals, threadpoolctl) เพื่อความเสถียรสูงสุดในการดึงข้อมูลจริงAuthentication: ระบบ Emergent Google OAuth (Session อายุ 7 วัน พร้อม HTTP-Only Cookie)3. 🤖 Machine Learning & Quant EngineData Pipeline (yh.py): ดึงข้อมูลราคาหุ้น US, หุ้นไทย (.BK) และพันธบัตร รวม 25 สินทรัพย์จาก Yahoo Finance แปลงค่าเงินเป็น THB และทำ Data Cleaning จนได้ Daily Returns จริงMPT Optimizer (mpt.py): คำนวณ Max-Sharpe Portfolio, Efficient Frontier และจำลอง Monte Carlo Simulation กว่า $10,000$ พอร์ต (ให้ผลลัพธ์เด่น: Sharpe $1.93$, Return $31\%$, Volatility $15\%$)Market Regime Classifier (regime.py): โมเดล Random Forest วิเคราะห์จาก $11$ ฟีเจอร์หลัก (Momentum, Volatility, Breadth, RSI ฯลฯ) ทำการทดสอบด้วย TimeSeriesSplit CV ได้ค่า F1 Score สูงถึง $0.93$ ทำนายภาวะตลาด Bull / Neutral / Bear รายวัน (สถานะล่าสุด: Neutral $93.6\%$)✅ สถานะการดำเนินงาน (Status)Testing: ผ่านการทดสอบโดย Testing Agent เต็มรูปแบบ $100\%$ ทั้งในส่วนของ Backend และ Frontend ในรอบล่าสุดData Integrity: ข้อมูลทั้งหมดเป็น ข้อมูลจริง (Real Data) จากตลาดการเงิน ไม่มีข้อมูลจำลอง (No Mock Data)📋 แผนงานในอนาคต (Backlog)รายการฟีเจอร์เสริมที่เตรียมพัฒนาต่อในเฟสถัดไป:Group Filter: ตัวกรองแยกกลุ่มสินทรัพย์ (US / Thai / Bond) บนกราฟ ReturnBenchmark Overlay: แสดงเส้นพอร์ตรวมทับลงบนกราฟรายตัวModel Card: เพิ่มการแสดง Confusion Matrix สำหรับหน้า Market RegimeAdvanced MPT: เปรียบเทียบพอร์ต Min-Vol / Max-Return บน Efficient FrontierPDF Export: ฟังก์ชันส่งออกหน้าวิเคราะห์รายงานเป็นไฟล์ PDF
+
+# 🚀 QuantAI Portfolio System
+A Production-Ready Quantitative Investment & Asset Management Platform
+
+---
+
+## 🌟 ภาพรวมระบบ (System Overview)
+**QuantAI Portfolio System** เป็นแพลตฟอร์มวิเคราะห์การลงทุนและพอร์ตสินทรัพย์ระดับโปรดักชัน ที่ผสานรวมเทคโนโลยี Frontend ทันสมัย (`React` + `Vite`) เข้ากับ Backend ประสิทธิภาพสูง (`FastAPI` + `MongoDB`) พร้อมขับเคลื่อนด้วยโมเดล Machine Learning & Quantitative Finance ที่ประมวลผลจากข้อมูลจริงแบบ Real-time ไม่มี Mock Data
+
+---
+
+## 🛠️ รายละเอียดสถาปัตยกรรมและฟีเจอร์
+
+### 1. 🖥️ Frontend (`React` + `Vite`)
+* **Cumulative Return Chart:** กราฟผลตอบแทนทบต้นคำนวณจากข้อมูลจริง Rebase ที่ $0\%$ ณ ต้นช่วง สามารถเลือกช่วงเวลาได้หลากหลาย ($1d, 1w, 1m, 3m, 6m, 1y, 3y, \text{all}$) พร้อมตัวเลือกแสดงหุ้นครบทั้ง $25$ ตัว ปุ่มเลือกทั้งหมด/ล้าง และตัวนับจำนวน
+* **Portfolio Allocation:** แผนภูมิแท่งเต็มความกว้าง ดีไซน์สมมาตรกับกราฟผลตอบแทน พร้อมแถบสรุปค่า Sharpe, Return และ Volatility
+* **KPI Detail Pages:** หน้าวิเคราะห์เชิงลึกสำหรับการ์ด KPI ทั้ง $4$ ใบ (กดเข้าผ่าน `/analysis/<metric>`) แสดงกราฟข้อมูลจริง เช่น Efficient Frontier, Monte Carlo Simulation, Growth vs Benchmark, Regime Timeline และ Feature Importance
+* **Live News Feed:** การ์ดข่าวหุ้นล่าสุดใต้ AI Chat พร้อม Thumbnail, แหล่งที่มา และเวลาแสดงผลภาษาไทย
+* **Real-time Engine:** ระบบราคาอัตโนมัติ (Live Prices Auto-refresh ทุก $60$ วินาที) พร้อม FX Badge, ตารางราคา และ AI Chat Panel
+* **Security & UI:** หน้า Landing Page, ระบบ Google Login, ProtectedRoute และธีม Minimal โทนสีฟ้าสะอาดตา
+
+### 2. ⚙️ Backend (`FastAPI` + `MongoDB`)
+* **API Endpoints ครบครัน:** รองรับ `/api/pipeline`, `/api/mpt`, `/api/regime`, `/api/portfolio/latest`, `/api/regime/latest`, `/api/returns-history`, `/api/prices/live`, `/api/news`, `/api/analysis/mpt` และ `/api/analysis/regime`
+* **AI Chat with Function Calling:** ระบบผู้ช่วยอัจฉริยะที่ให้ LLM สามารถเรียกใช้เครื่องมือ (Tools) ในระบบได้ด้วยตัวเอง
+* **Auto-bootstrap:** เริ่มต้นระบบเซิร์ฟเวอร์พร้อมรัน Data Pipeline, MPT และ Regime ทันทีโดยอัตโนมัติ
+* **Dependency Stability:** แก้ไขปัญหาการติดตั้งระบบพึ่งพา (yfinance stack, ML stack เช่น `cloudpickle`, `narwhals`, `threadpoolctl`) เพื่อความเสถียรสูงสุดในการดึงข้อมูลจริง
+* **Authentication:** ระบบ Emergent Google OAuth (Session อายุ $7$ วัน พร้อม HTTP-Only Cookie)
+
+### 3. 🤖 Machine Learning & Quant Engine
+* **Data Pipeline (`yh.py`):** ดึงข้อมูลราคาหุ้น US, หุ้นไทย (`.BK`) และพันธบัตร รวม $25$ สินทรัพย์จาก Yahoo Finance แปลงค่าเงินเป็น THB และทำ Data Cleaning จนได้ Daily Returns จริง
+* **MPT Optimizer (`mpt.py`):** คำนวณ Max-Sharpe Portfolio, Efficient Frontier และจำลอง Monte Carlo Simulation กว่า $10,000$ พอร์ต (ให้ผลลัพธ์เด่น: Sharpe $1.93$, Return $31\%$, Volatility $15\%$)
+* **Market Regime Classifier (`regime.py`):** โมเดล Random Forest วิเคราะห์จาก $11$ ฟีเจอร์หลัก (Momentum, Volatility, Breadth, RSI ฯลฯ) ทำการทดสอบด้วย TimeSeriesSplit CV ได้ค่า F1 Score สูงถึง $0.93$ ทำนายภาวะตลาด Bull / Neutral / Bear รายวัน (สถานะล่าสุด: Neutral $93.6\%$)
+
+---
+
+## ✅ สถานะการดำเนินงาน (Status)
+* **Testing:** ผ่านการทดสอบโดย Testing Agent เต็มรูปแบบ $100\%$ ทั้งในส่วนของ Backend และ Frontend ในรอบล่าสุด
+* **Data Integrity:** ข้อมูลทั้งหมดเป็น **ข้อมูลจริง (Real Data)** จากตลาดการเงิน ไม่มีข้อมูลจำลอง (No Mock Data)
+
+---
+
+## 📋 แผนงานในอนาคต (Backlog)
+รายการฟีเจอร์เสริมที่เตรียมพัฒนาต่อในเฟสถัดไป:
+* **Group Filter:** ตัวกรองแยกกลุ่มสินทรัพย์ (US / Thai / Bond) บนกราฟ Return
+* **Benchmark Overlay:** แสดงเส้นพอร์ตรวมทับลงบนกราฟรายตัว
+* **Model Card:** เพิ่มการแสดง Confusion Matrix สำหรับหน้า Market Regime
+* **Advanced MPT:** เปรียบเทียบพอร์ต Min-Vol / Max-Return บน Efficient Frontier
+* **PDF Export:** ฟังก์ชันส่งออกหน้าวิเคราะห์รายงานเป็นไฟล์ PDF
