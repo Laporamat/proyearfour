@@ -397,44 +397,63 @@ A Production-Ready Quantitative Investment & Asset Management Platform
 * **PDF Export:** ฟังก์ชันส่งออกหน้าวิเคราะห์รายงานเป็นไฟล์ PDF
 
 
-# 🚀 Project Roadmap & Backlog
+# 📈 Quantitative Portfolio Engine & Market Regime Framework
 
-รายการฟีเจอร์และแผนการพัฒนาระบบ Quant ML & Portfolio Optimization Framework
+แพลตฟอร์มวิเคราะห์การลงทุนเชิงปริมาณ (Quant Platform) แบบครบวงจร ครอบคลุมตั้งแต่นำเข้าข้อมูลจริง, คำนวณ MPT Portfolio Optimization, วิเคราะห์สภาวะตลาดด้วย ML Engine ไปจนถึงระบบผู้ช่วยอัจฉริยะ (AI Chat Tool Calling)
 
 ---
 
-## 📌 Phase 1: High Priority (UX/UI & Quant Core)
+## ✅ Completed Features (Phase 1 Delivered)
+
+### 🖥️ Frontend Stack (`React` + `Vite`)
+- [x] **Cumulative Return Chart**: กราฟผลตอบแทนทบต้นคำนวณจากข้อมูลจริง Rebase ที่ $0\%$ ณ ต้นช่วง ปรับช่วงเวลาได้ ($1d$ ถึง $\text{all}$) พร้อม Toggle เลือกหุ้น 25 ตัวครบถ้วน
+- [x] **Portfolio Allocation**: แผนภูมิแท่งเต็มความกว้าง แสดงสัดส่วนการลงทุนพร้อม แถบสรุปค่า Sharpe, Return และ Volatility
+- [x] **KPI Detail Pages**: หน้าวิเคราะห์เชิงลึกสำหรับ KPI Cards ผ่าน Route `/analysis/<metric>` (Efficient Frontier, Monte Carlo Simulation, Growth vs Benchmark, Regime Timeline, Feature Importance)
+- [x] **Live News Feed & Price Engine**: ข่าวหุ้นล่าสุดและราคา Real-time Auto-refresh ทุก 60 วินาที พร้อม FX Badge และตารางราคา
+- [x] **Security & UI Core**: หน้า Landing Page, ระบบ Google Login, ProtectedRoute ในดีไซน์ Minimal โทนสีฟ้า
+
+### ⚙️ Backend & Infrastructure (`FastAPI` + `MongoDB`)
+- [x] **RESTful APIs**: รองรับ Endpoints ครบถ้วน (`/api/pipeline`, `/api/mpt`, `/api/regime`, `/api/returns-history`, `/api/news` ฯลฯ)
+- [x] **AI Chat with Function Calling**: ระบบผู้ช่วยอัจฉริยะที่ LLM สามารถเรียกใช้เครื่องมือวิเคราะห์ภายในระบบได้ด้วยตนเอง
+- [x] **Auto-bootstrap & Dependency Management**: เริ่มต้นเซิร์ฟเวอร์พร้อมรัน Data Pipeline/MPT/Regime โดยอัตโนมัติ พร้อมแก้ปัญหา Dependency Stack (`yfinance`, ML libs)
+- [x] **Authentication**: ระบบ Emergent Google OAuth พร้อม Session 7 วัน ผ่าน HTTP-Only Cookie
+
+### 🤖 Machine Learning & Quant Engine
+- [x] **Data Pipeline (`yh.py`)**: ดึงและทำความสะอาดข้อมูล US Stocks, Thai Stocks (`.BK`) และ Bonds รวม 25 สินทรัพย์ แปลงสกุลเงินเป็น THB
+- [x] **MPT Optimizer (`mpt.py`)**: คำนวณ Max-Sharpe Portfolio, Efficient Frontier และ Monte Carlo Simulation กว่า 10,000 พอร์ต (Sharpe $1.93$, Return $31\%$, Volatility $15\%$)
+- [x] **Market Regime Classifier (`regime.py`)**: โมเดล Random Forest วิเคราะห์ 11 ฟีเจอร์หลัก (RSI, Momentum, Volatility) ประเมินผ่าน TimeSeriesSplit CV ได้ F1 Score $0.93$ (สถานะปัจจุบัน: Neutral $93.6\%$)
+
+---
+
+## 🚀 Product Roadmap & Backlog
+
+### 📌 Phase 2: High Priority (UX/UI & Advanced Optimization)
 
 | Status | Task | Category | Description |
 | :---: | :--- | :---: | :--- |
-| 🔲 | **Group Filter** | `Frontend` | เพิ่มตัวกรองแยกกลุ่มสินทรัพย์ (US / Thai / Bond) บน Return Chart |
-| 🔲 | **Benchmark Overlay & Comparison** | `Frontend` | แสดงเส้นพอร์ตรวมทับกราฟรายตัว พร้อมเทียบกับ Index จริง (S&P 500, SET50) |
-| 🔲 | **Interactive Frontier Inspector** | `Frontend` | คลิก/Hover เลือกจุดบนเส้น Efficient Frontier เพื่อดู Weight Allocation ทันที |
+| 🔲 | **Group Asset Filter** | `Frontend` | เพิ่มตัวกรองแยกกลุ่มสินทรัพย์ (US Stocks / Thai Stocks / Bonds) บน Return Chart |
+| 🔲 | **Benchmark Overlay & Comparison** | `Frontend` | แสดงเส้นพอร์ตรวมทับกราฟรายตัว พร้อมตัวเลือกเทียบกับ Index จริง (S&P 500, SET50) |
+| 🔲 | **Interactive Frontier Inspector** | `Frontend` | คลิก/Hover จุดบนเส้น Efficient Frontier เพื่อดู Weight Allocation ณ จุดนั้นทันที |
 | 🔲 | **Advanced MPT Extensions** | `Quant Engine` | คำนวณและเปรียบเทียบพอร์ต Min-Vol vs Max-Return vs Max-Sharpe บน Efficient Frontier |
 | 🔲 | **Server-side PDF Export Engine** | `Reporting` | พัฒนาระบบ Generate PDF Report ความละเอียดสูง (รวมตารางพอร์ต, กราฟ, Risk Metrics และ AI Summary) |
 
----
+### 🔬 Phase 3: Medium Priority (ML Interpretability & Backtesting)
 
-## 🔬 Phase 2: Medium Priority (ML Interpretability & Backtesting)
-
-### 🤖 Machine Learning & Explainability
-- [ ] **Regime Model Card**: แสดง Confusion Matrix, Classification Report (Precision, Recall, F1) และ ROC-AUC Curve บนหน้า UI
-- [ ] **Explainable AI (XAI) via SHAP**: ดึงค่า SHAP Values เพื่อระบุ Top Features รายวัน แล้วส่ง Context ให้ AI Chat ช่วยอธิบายเหตุผลการทำนายสภาวะตลาด
+#### 🤖 Machine Learning & Explainability
+- [ ] **Regime Model Card**: แสดง Confusion Matrix, Classification Report (Precision, Recall, F1) และ ROC-AUC Curve บน UI
+- [ ] **Explainable AI (XAI) via SHAP**: ส่งค่า SHAP Values ของ Top Features รายวัน ให้ AI Chat ช่วยอธิบายเหตุผลเบื้องหลังการทำนายสภาวะตลาด
 - [ ] **Concept Drift Detection**: ตรวจจับพฤติกรรมราคาที่เปลี่ยนไปจาก Training Set เพื่อแจ้งเตือนการ Retrain โมเดล
 
-### 📊 Backtesting Engine
+#### 📊 Backtesting Engine
 - [ ] **Out-of-Sample Walk-Forward Backtest**: ระบบทดสอบพอร์ตย้อนหลังแบบ Walk-Forward (เช่น Train 3 ปี / Test 6 เดือน) เพื่อป้องกัน Look-ahead Bias
 - [ ] **Transaction Cost & Friction Models**: รวมค่าธรรมเนียมการซื้อขาย (Fees), Slippage และต้นทุน FX (USD/THB) เข้าในการคำนวณ Return จริง
 
----
+### 🛡️ Phase 4: Long-term / Institutional Grade (Risk & Advanced Analytics)
 
-## 🛡️ Phase 3: Long-term / Institutional Grade (Risk & Advanced Models)
+> #### 📉 Downside Risk & Stress Testing
+> * **Institutional Risk Metrics**: คำนวณ Value at Risk (VaR 95%/99%), Conditional VaR (CVaR / Expected Shortfall), Max Drawdown (MDD) และ Drawdown Duration
+> * **Scenario Analysis**: จำลองผลกระทบพอร์ตเทียบกับวิกฤตการณ์ในอดีต (เช่น 2020 COVID Drop, 2022 Fed Rate Hike)
 
-> ### 📉 Risk Analytics & Stress Testing
-> * **Downside Risk Metrics**: คำนวณ Value at Risk (VaR 95%/99%), Conditional VaR (CVaR / Expected Shortfall), Max Drawdown (MDD) และ Drawdown Duration
-> * **Scenario Analysis**: จำลองผลกระทบพอร์ตเทียบกับวิกฤตการณ์อดีต (เช่น 2020 COVID Drop, 2022 Fed Rate Hike)
-
-> ### 🧬 Advanced Portfolio Engineering
+> #### 🧬 Advanced Portfolio Engineering
 > * **Black-Litterman Model**: รวมมุมมองตลาด (User Views / AI Signals) เข้ากับ Equilibrium Return
 > * **Hierarchical Risk Parity (HRP)**: จัดกลุ่มสินทรัพย์และกระจายความเสี่ยงด้วย Machine Learning Clustering
-
