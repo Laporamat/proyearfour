@@ -395,3 +395,28 @@ A Production-Ready Quantitative Investment & Asset Management Platform
 * **Model Card:** เพิ่มการแสดง Confusion Matrix สำหรับหน้า Market Regime
 * **Advanced MPT:** เปรียบเทียบพอร์ต Min-Vol / Max-Return บน Efficient Frontier
 * **PDF Export:** ฟังก์ชันส่งออกหน้าวิเคราะห์รายงานเป็นไฟล์ PDF
+
+ Phase 1: High Priority (ปรับปรุง UX/UI และ Quant Core)
+ Client-side UI / Visualization:
+ Group Filter: ตัวกรองแยกกลุ่มสินทรัพย์ (US Stocks / Thai Stocks / Bonds) บน Return Chart
+ Benchmark Overlay & Comparison: แสดงเส้นพอร์ตรวมทับลงบนกราฟรายตัว พร้อมตัวเลือกเปรียบเทียบกับ Index จริง (เช่น S&P 500, SET50)
+ Interactive Frontier Inspector: กด/Hover เลือกจุดใดก็ได้บนเส้น Efficient Frontier เพื่อดูสัดส่วน Weight Allocation ณ จุดนั้นทันที
+ Advanced Portfolio Optimization:
+ Advanced MPT Extensions: เพิ่มการคำนวณและเปรียบเทียบพอร์ต Minimum Volatility, Maximum Return และ Maximum Sharpe Ratio บนกราฟ
+ Reporting & Export:
+ Server-side PDF Export Engine: ระบบ Generate PDF Report แบบ Multi-page ความละเอียดสูง (รวมตารางพอร์ต, กราฟ, Risk Metrics และ AI Summary) แทนการ Print ผ่านหน้าจอ
+🟡 Phase 2: Medium Priority (ML Interpretability & Backtesting)
+ ML Model Analytics:
+ Regime Model Card: แสดง Confusion Matrix, Classification Report (Precision / Recall / F1) และ ROC-AUC Curve
+ Explainable AI (XAI) & SHAP: ใช้ SHAP Values เพื่อระบุ Feature Importance รายวัน ส่งต่อให้ AI Chat อธิบายเหตุผลเบื้องหลังการทำนายสภาวะตลาด
+ Concept Drift Detection: ระบบตรวจจับพฤติกรรมราคาที่เปลี่ยนไปจากข้อมูลที่ใช้ Train โมเดล
+ Backtesting & Simulation:
+ Out-of-Sample Walk-Forward Backtest: ระบบทดสอบพอร์ตย้อนหลังแบบ Walk-Forward (เช่น Train 3 ปี / Test 6 เดือน) ป้องกัน Look-ahead Bias
+ Transaction Cost & Friction Models: รวมค่าธรรมเนียม (Fees), Slippage และต้นทุนอัตราแลกเปลี่ยน (FX USD/THB) เข้าไปในการคำนวณ Return จริง
+🟢 Phase 3: Long-term / Institutional Grade (Risk & Advanced Models)
+ Risk Management Analytics:
+ Downside Risk Metrics: คำนวณ Value at Risk (VaR 95%/99%), Conditional VaR (CVaR/Expected Shortfall), Maximum Drawdown (MDD) และ Drawdown Duration
+ Stress Testing & Scenario Analysis: จำลองผลกระทบต่อพอร์ตในวิกฤตการณ์อดีต (เช่น COVID-19 Drop, Fed Rate Hike, 2008 Financial Crisis)
+ Advanced Portfolio Engine:
+ Black-Litterman Model: รวมมุมมองตลาด (User Views / AI Signal) เข้ากับ Equilibrium Return
+ Hierarchical Risk Parity (HRP): ใช้ Machine Learning Clustering ในการจัดกลุ่มสินทรัพย์และกระจายความเสี่ยง
