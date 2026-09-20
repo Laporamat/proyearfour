@@ -30,7 +30,7 @@ export default function Landing() {
         <div className={s.navLinks}>
           <a href="#features">Features</a>
           <a href="#how">How it works</a>
-          <a href="#stack">Stack</a>
+          <a href="#stacks">Stack</a>
           {user ? (
             <button data-testid="landing-dashboard-btn" className={s.btnDark} onClick={() => navigate('/dashboard')}>
               Dashboard →
@@ -103,7 +103,7 @@ export default function Landing() {
       </section>
 
       {/* ── Stack strip ──────────────────── */}
-      <section id="stack" className={s.stackStrip}>
+      <section id="stacks" className={s.stackStrip}>
         <span className={s.stackLabel}>Powered by</span>
         <div className={s.stackTags}>
           {['Yahoo Finance', 'FastAPI', 'React 19', 'Recharts', 'scikit-learn', 'SciPy Optimize', 'GPT-4o-mini'].map(t => (
@@ -131,7 +131,7 @@ export default function Landing() {
 
 const FEATURES = [
   { icon:'📊', title:'Auto Portfolio Optimizer',
-    desc:'Modern Portfolio Theory หา Max Sharpe / Min Vol ให้อัตโนมัติ จากสินทรัพย์ 25 ตัว รวมหุ้นไทย + เทศ + ทอง + พันธบัตร' },
+    desc:'Modern Portfolio Theory หา Max Sharpe / Min Vol ให้อัตโนมัติ จากสินทรัพย์ 25 ตัว รวมหุ้นไทย + หุ้นอเมริกา + ทอง + พันธบัตร' },
   { icon:'🎯', title:'Market Regime Detection',
     desc:'Random Forest แยกภาวะตลาดเป็น Bull / Neutral / Bear พร้อมค่าความน่าจะเป็นแบบเรียลไทม์' },
   { icon:'⚡', title:'Live Prices in THB',
