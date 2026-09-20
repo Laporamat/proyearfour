@@ -244,8 +244,8 @@ function RegimeView({ data }) {
               <YAxis tick={{ fontSize: 10, fill: 'var(--text-muted)' }} tickLine={false} axisLine={false} width={40} />
               <Tooltip content={<GenericTooltip suffix=" วัน" />} cursor={{ fill: 'var(--surface2)' }} />
               <Bar dataKey="days" name="จำนวนวัน" radius={[5, 5, 0, 0]} maxBarSize={70}>
-                {data.distribution.map((d, i) => (
-                  <Cell key={i} fill={REGIME_COLORS[d.name.toLowerCase()]} />
+                {data.distribution.map((d) => (
+                  <Cell key={d.name} fill={REGIME_COLORS[d.name.toLowerCase()]} />
                 ))}
               </Bar>
             </BarChart>

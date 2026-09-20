@@ -37,7 +37,9 @@ export function AuthProvider({ children }) {
         method: 'POST',
         credentials: 'include',
       })
-    } catch { /* ignore */ }
+    } catch (e) {
+      console.warn('logout request failed (clearing session anyway):', e)
+    }
     setUser(null)
     window.location.href = '/'
   }, [])

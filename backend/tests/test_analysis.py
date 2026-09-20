@@ -1,10 +1,11 @@
 """Backend tests for /api/analysis/mpt, /api/analysis/regime, /api/regime/latest."""
+import os
 import requests
 import pytest
 
-BASE_URL = "https://wealth-monitor-256.preview.emergentagent.com"
+BASE_URL = os.environ.get("TEST_BASE_URL", "http://localhost:8001")
 API = f"{BASE_URL}/api"
-TOKEN = "demo_session_persistent"
+TOKEN = os.environ.get("TEST_DEMO_TOKEN", "demo_session_persistent")
 
 
 @pytest.fixture

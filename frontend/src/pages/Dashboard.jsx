@@ -22,7 +22,9 @@ export default function Dashboard() {
     try {
       const live = await api.livePrices()
       if (live?.prices) dispatch({ type: 'SET_LIVE', payload: live })
-    } catch { /* backend offline */ }
+    } catch (e) {
+      console.warn('live prices fetch failed (backend offline?):', e.message)
+    }
   }, [dispatch])
 
   const loadInitial = useCallback(async () => {
@@ -59,7 +61,9 @@ export default function Dashboard() {
           },
         })
       }
-    } catch { /* API offline */ }
+    } catch (e) {
+      console.warn('initial dashboard data fetch failed (API offline?):', e.message)
+    }
   }, [dispatch])
 
   useEffect(() => {

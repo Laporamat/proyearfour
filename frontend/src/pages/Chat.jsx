@@ -3,6 +3,16 @@ import { api }      from '../hooks/useApi'
 import { useChart } from '../context/ChartContext'
 import s            from './Chat.module.css'
 
+/* current time label (module-scope → stable, no hook dep churn) */
+const now = () =>
+  new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })
+
+/* stable unique id for message keys */
+const uid = () =>
+  (typeof crypto !== 'undefined' && crypto.randomUUID)
+    ? crypto.randomUUID()
+    : `${Date.now()}-${Math.random().toString(36).slice(2)}`
+
 /* ── Suggestions ────────────────────────────── */
 const SUGGESTIONS = [
   { icon: '💼', text: 'จัดพอร์ตให้หน่อย Sharpe ดีที่สุด' },
@@ -74,7 +84,7 @@ function Bubble({ msg }) {
         {msg.toolResults?.length > 0 && (
           <div className={s.tools}>
             {msg.toolResults.map((tr, i) => (
-              <ToolCard key={i} tool={tr.tool} result={tr.result} />
+              <ToolCard key={`${tr.tool}-${i}`} tool={tr.tool} result={tr.result} />
             ))}
           </div>
         )}
@@ -107,10 +117,9 @@ function Typing() {
 /* ── Main Chat ───────────────────────────────── */
 export default function Chat({ embedded = false }) {
   const { applyToolResults } = useChart()
-  const now = () =>
-    new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })
 
   const [messages, setMessages] = useState([{
+    id: uid(),
     role: 'bot',
     content: 'สวัสดีครับ! ผมเป็น **Quant AI** 📊\nถามเรื่องพอร์ต, สภาวะตลาด หรือราคาหุ้นได้เลย\nกราฟจะขยับอัตโนมัติตามคำตอบ',
     time: now(),
@@ -136,7 +145,7 @@ export default function Chat({ embedded = false }) {
     const msg = text.trim()
     if (!msg || busy) return
     setInput('')
-    setMessages(prev => [...prev, { role: 'user', content: msg, time: now() }])
+    setMessages(prev => [...prev, { id: uid(), role: 'user', content: msg, time: now() }])
     setBusy(true)
     try {
       const history = messages.slice(-10).map(m => ({
@@ -151,6 +160,7 @@ export default function Chat({ embedded = false }) {
         chartUpdated = true
       }
       setMessages(prev => [...prev, {
+        id: uid(),
         role: 'bot',
         content: data.reply || '(ไม่มีคำตอบ)',
         toolResults, chartUpdated,
@@ -158,6 +168,7 @@ export default function Chat({ embedded = false }) {
       }])
     } catch (e) {
       setMessages(prev => [...prev, {
+        id: uid(),
         role: 'bot',
         content: `❌ ${e.message}`,
         time: now(),
@@ -207,7 +218,7 @@ export default function Chat({ embedded = false }) {
 
       {/* messages */}
       <div className={s.messages}>
-        {messages.map((m, i) => <Bubble key={i} msg={m} />)}
+        {messages.map((m) => <Bubble key={m.id} msg={m} />)}
         {busy && <Typing />}
         <div ref={bottomRef} />
       </div>

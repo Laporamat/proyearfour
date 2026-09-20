@@ -3,11 +3,11 @@ import os
 import requests
 import pytest
 
-BASE_URL = "https://wealth-monitor-256.preview.emergentagent.com"
+BASE_URL = os.environ.get("TEST_BASE_URL", "http://localhost:8001")
 API = f"{BASE_URL}/api"
 
-# Pre-seeded persistent demo session token
-DEMO_TOKEN = "demo_session_persistent"
+# Pre-seeded demo session token (non-secret test fixture; override via env)
+DEMO_TOKEN = os.environ.get("TEST_DEMO_TOKEN", "demo_session_persistent")
 
 
 class TestAuthMe:

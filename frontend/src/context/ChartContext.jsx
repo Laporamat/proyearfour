@@ -135,7 +135,7 @@ export function ChartProvider({ children }) {
           fetch('/api/prices?n=1')
             .then(r => r.json())
             .then(d => dispatch({ type: 'SET_PRICES', payload: d.prices ?? {} }))
-            .catch(() => {})
+            .catch(e => console.warn('post-pipeline price refetch failed:', e.message))
           break
         }
         default:

@@ -43,7 +43,9 @@ async function apiFetch(path, options = {}) {
       try {
         const err = await safeJson(res)
         detail = err.detail ?? err.message ?? detail
-      } catch { /* ignore parse error */ }
+      } catch (e) {
+        console.debug('could not parse error response body:', e.message)
+      }
       throw new Error(detail)
     }
 
