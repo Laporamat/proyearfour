@@ -25,7 +25,7 @@ export default function Landing() {
               <polyline points="14 7 21 7 21 14" />
             </svg>
           </div>
-          <span>QuantAI</span>
+          <span>Quantix</span>
         </div>
         <div className={s.navLinks}>
           <a href="#features">Features</a>
@@ -46,7 +46,7 @@ export default function Landing() {
           <span className="pulse-dot green" /> Live · 25 assets · THB
         </div>
         <h1 className={s.heroTitle}>
-          จัดพอร์ตอัจฉริยะด้วย <span className={s.accent}>AI + Quant</span>
+          จัดพอร์ตด้วย <span className={s.accent}>AI + Quant</span>
           <br />ในแดชบอร์ดเดียว
         </h1>
         <p className={s.heroSub}>
