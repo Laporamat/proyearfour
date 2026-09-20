@@ -50,8 +50,8 @@ export default function Landing() {
           <br />ในแดชบอร์ดเดียว
         </h1>
         <p className={s.heroSub}>
-          รวมข้อมูลตลาดสด — หุ้นไทย · หุ้นเทศ · ทองคำ · พันธบัตร —
-          แล้วให้ Modern Portfolio Theory + Machine Learning ช่วยตัดสินใจ
+          รวมข้อมูลตลาดสด — หุ้นไทย · หุ้นอเมริกา · ทองคำ · พันธบัตร —
+          โดยใช้ Modern Portfolio Theory + Machine Learning ช่วยตัดสินใจ
           ว่าควรถือสัดส่วนอะไร ในสภาวะตลาดแบบไหน
         </p>
         <div className={s.heroCTA}>
