@@ -68,3 +68,10 @@
 ## Update — 2026-09-18 (Cumulative Return: all tickers selectable)
 - /api/returns-history now returns ALL 25 tickers (removed FEATURED 5 filter) + "tickers" list; per-column rebase from first valid value (supports later-listed assets).
 - ReturnsLineChart: dynamic chips for all tickers with select-all (ทั้งหมด) / clear (ล้าง) + counter; 25-color palette; testids ticker-chip-<T>, tickers-select-all, tickers-clear, period-<p>. Verified via screenshots (default 5, all 25, custom TSLA+META).
+
+## Update — 2026-09-20 (code-review fixes, verified by testing agent)
+- Test files (test_auth.py, test_analysis.py) now read BASE_URL/token from env (TEST_BASE_URL, TEST_DEMO_TOKEN) with safe defaults — removed hardcoded stale preview URL/secret.
+- Empty catch blocks now log with context: AuthContext.logout, Dashboard loadLive/loadInitial, useApi error-body parse, ChartContext pipeline refetch.
+- Chat: now()/uid() moved to module scope; messages carry stable id; key={m.id}; toolResults key `${tr.tool}-${i}` → no React key warnings. MetricAnalysis distribution Cell keyed by name.
+- DELIBERATELY NOT DONE (documented): large refactors of auth.py register(), main.py execute_tool(), analysis.register(), and component splits (Dashboard/Chat/ReturnsLineChart). Reason: working code with 100% passing tests; auth is a sensitive integration; several flagged "missing hook deps" (AuthContext .includes, ChartContext d/k) were false positives (String.includes / local loop vars) and were intentionally left unchanged.
+- Regression: iteration_3.json — backend 100%, frontend 100%, retest_needed=false.
