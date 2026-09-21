@@ -1,4 +1,4 @@
-# QuantAI Portfolio System
+# Quantix Portfolio System
 
 ระบบวิเคราะห์และจัดพอร์ตการลงทุนอัตโนมัติ — **MPT Optimizer + Market Regime Classifier + AI Chat + Live Prices** พร้อม landing page และ Google login
 
