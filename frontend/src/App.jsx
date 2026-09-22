@@ -5,6 +5,8 @@ import Layout          from './components/Layout'
 import Dashboard       from './pages/Dashboard'
 import Chat            from './pages/Chat'
 import MetricAnalysis  from './pages/MetricAnalysis'
+import MyPortfolio     from './pages/MyPortfolio'
+import Watchlist        from './pages/Watchlist'
 import Landing         from './pages/Landing'
 import Login           from './pages/Login'
 import Register        from './pages/Register'
@@ -36,6 +38,8 @@ function AppRouter() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/chat"      element={<Chat />} />
         <Route path="/analysis/:metric" element={<MetricAnalysis />} />
+        <Route path="/portfolio" element={<MyPortfolio />} />
+        <Route path="/watchlist" element={<Watchlist />} />
       </Route>
     </Routes>
   )
