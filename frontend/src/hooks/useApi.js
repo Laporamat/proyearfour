@@ -131,4 +131,7 @@ export const api = {
 
   analysisRegime: () =>
     apiFetch('/api/analysis/regime'),
+
+  priceAt: (ticker, date) =>
+    apiFetch(`/api/price/at?ticker=${encodeURIComponent(ticker)}&date=${encodeURIComponent(date)}`),
 }

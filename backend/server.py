@@ -19,3 +19,7 @@ news.register(app)
 # Register detail-page analysis endpoints (MPT + Regime real data).
 import analysis  # noqa: E402, F401
 analysis.register(app)
+
+# Register My Portfolio historical price endpoint.
+import myportfolio  # noqa: E402, F401
+myportfolio.register(app)
