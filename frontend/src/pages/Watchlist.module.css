@@ -61,6 +61,15 @@
 .select { min-width: 160px; }
 .input { width: 150px; }
 .inputWide { flex: 1; min-width: 180px; }
+.tickerInput { width: 180px; }
+
+.alertMsg {
+  font-size: 0.82rem;
+  color: var(--accent);
+  padding: var(--sp-2) var(--sp-4);
+  background: var(--accent-dim);
+  border-radius: var(--r-md);
+}
 
 .error {
   margin-top: var(--sp-3);

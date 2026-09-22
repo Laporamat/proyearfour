@@ -96,6 +96,7 @@
 .select { min-width: 160px; }
 .input  { width: 130px; }
 .input[type="date"] { width: 150px; }
+.tickerInput { width: 180px; }
 
 .error {
   margin-top: var(--sp-3);

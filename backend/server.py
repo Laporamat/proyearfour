@@ -23,3 +23,7 @@ analysis.register(app)
 # Register My Portfolio historical price endpoint.
 import myportfolio  # noqa: E402, F401
 myportfolio.register(app)
+
+# Register per-user data persistence (portfolio, watchlist, custom tickers, alerts).
+import user_data  # noqa: E402, F401
+user_data.register(app)

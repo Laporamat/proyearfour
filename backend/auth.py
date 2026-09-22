@@ -185,6 +185,16 @@ class ResetIn(BaseModel):
     token:    str = Field(min_length=10)
     password: str = Field(min_length=8, max_length=128)
 
+class ChangePasswordIn(BaseModel):
+    current_password: str
+    new_password:     str = Field(min_length=8, max_length=128)
+
+class DeleteAccountIn(BaseModel):
+    password: str = ""
+
+class UpdateProfileIn(BaseModel):
+    name: str = Field(min_length=1, max_length=80)
+
 
 # ─────────────────────────────────────────────
 # Registration
@@ -465,3 +475,56 @@ def register(app: FastAPI) -> None:
             await db.user_sessions.delete_many({"session_token": tok})
         response.delete_cookie(COOKIE_NAME, path="/", samesite="none", secure=True)
         return {"ok": True}
+
+    # ── Change password ──────────────────────
+    @app.post("/api/auth/change-password")
+    async def change_password(request: Request, inp: ChangePasswordIn):
+        user = await _current_user(request)
+        if not user:
+            raise HTTPException(status_code=401, detail="Not authenticated")
+        if not user.get("password_hash"):
+            raise HTTPException(status_code=400, detail="บัญชีนี้ใช้ Google OAuth — ไม่มีรหัสผ่านให้เปลี่ยน")
+        if not _verify_password(inp.current_password, user["password_hash"]):
+            raise HTTPException(status_code=401, detail="รหัสผ่านปัจจุบันไม่ถูกต้อง")
+        if not _valid_password(inp.new_password):
+            raise HTTPException(status_code=400, detail="รหัสผ่านใหม่ต้องมี 8-128 ตัวอักษร")
+        await db.users.update_one(
+            {"user_id": user["user_id"]},
+            {"$set": {"password_hash": _hash_password(inp.new_password), "updated_at": _now()}},
+        )
+        # Invalidate all sessions (force re-login)
+        await db.user_sessions.delete_many({"user_id": user["user_id"]})
+        return {"ok": True, "message": "เปลี่ยนรหัสผ่านสำเร็จ กรุณาเข้าสู่ระบบใหม่"}
+
+    # ── Update profile ────────────────────────
+    @app.patch("/api/auth/profile")
+    async def update_profile(request: Request, inp: UpdateProfileIn):
+        user = await _current_user(request)
+        if not user:
+            raise HTTPException(status_code=401, detail="Not authenticated")
+        await db.users.update_one(
+            {"user_id": user["user_id"]},
+            {"$set": {"name": inp.name.strip(), "updated_at": _now()}},
+        )
+        updated = await db.users.find_one({"user_id": user["user_id"]}, {"_id": 0, "password_hash": 0})
+        return _public_user(updated)
+
+    # ── Delete account ───────────────────────
+    @app.delete("/api/auth/account")
+    async def delete_account(request: Request, response: Response, inp: DeleteAccountIn):
+        user = await _current_user(request)
+        if not user:
+            raise HTTPException(status_code=401, detail="Not authenticated")
+        # If password-based account, verify password
+        if user.get("password_hash"):
+            if not _verify_password(inp.password, user["password_hash"]):
+                raise HTTPException(status_code=401, detail="รหัสผ่านไม่ถูกต้อง")
+        user_id = user["user_id"]
+        # Delete all user data
+        await db.users.delete_one({"user_id": user_id})
+        await db.user_sessions.delete_many({"user_id": user_id})
+        await db.user_portfolios.delete_many({"user_id": user_id})
+        await db.user_watchlists.delete_many({"user_id": user_id})
+        await db.user_tickers.delete_many({"user_id": user_id})
+        response.delete_cookie(COOKIE_NAME, path="/", samesite="none", secure=True)
+        return {"ok": True, "message": "ลบบัญชีสำเร็จ"}
