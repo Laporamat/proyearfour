@@ -165,4 +165,14 @@ export const api = {
 
   deleteCustomTicker: (ticker) =>
     apiFetch(`/api/user/tickers/${encodeURIComponent(ticker)}`, { method: 'DELETE' }),
+
+  // ── Portfolio analytics ──
+  rebalance: (holdings) =>
+    apiFetch('/api/portfolio/rebalance', { method: 'POST', body: JSON.stringify({ holdings }) }),
+
+  backtest: () =>
+    apiFetch('/api/portfolio/backtest'),
+
+  dividends: () =>
+    apiFetch('/api/portfolio/dividends'),
 }

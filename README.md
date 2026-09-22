@@ -61,11 +61,16 @@
 
 ### 💼 My Portfolio (`/portfolio`)
 
-- **เพิ่มหุ้นที่ซื้อ** — เลือกจาก 25 ตัว + จำนวนหุ้น + วันที่ซื้อ → ระบบดึงราคาปิดของวันนั้นให้อัตโนมัติ (แปลงเป็น THB)
+- **เพิ่มหุ้นที่ซื้อ** — เลือกจาก 25 ตัวหรือพิมพ์ ticker เอง + จำนวนหุ้น + วันที่ซื้อ → ระบบดึงราคาปิดของวันนั้นให้อัตโนมัติ (แปลงเป็น THB)
 - **ตาราง P/L** — ราคาซื้อ, ราคาปัจจุบัน (live), มูลค่า, กำไร/ขาดทุน (฿ + %) เปลี่ยนสีเขียว/แดง
 - **สรุปยอดรวม** — ต้นทุนรวม, มูลค่าปัจจุบัน, กำไร/ขาดทุนรวม, ผลตอบแทนรวม %
+- **Multi-currency (THB/USD)** — สลับมุมมองพอร์ตระหว่าง THB และ USD ด้วยอัตราแลกเปลี่ยนสด
 - **เทียบพอร์ต vs MPT** — เปรียบเทียบสัดส่วนพอร์ตจริงของคุณกับพอร์ตที่ MPT แนะนำ พร้อมแผนภูมิเทียบข้างกัน
-- **บันทึกใน localStorage** — ไม่หายเมื่อรีเฟรช
+- **Rebalancing Suggestions** — แนะนำการปรับสัดส่วนพอร์ตตาม MPT + สภาวะตลาดปัจจุบัน (Regime) — บอกว่าควร BUY/SELL หุ้นตัวไหน จำนวนเท่าไหร่
+- **Backtesting** — ทดสอบกลยุทธ์ย้อนหลัง 2 ปี เปรียบเทียบ Buy & Hold vs MPT Optimal vs Regime-based พร้อมสถิติ (Return, Volatility, Sharpe, Max Drawdown)
+- **Dividend Tracking** — ติดตามเงินปันผลรายปีของหุ้นในพอร์ต + ผลตอบแทนรวม (Total Return) + ประวัติการจ่ายปันผล
+- **CSV Export** — ดาวน์โหลดตารางพอร์ตเป็น CSV
+- **บันทึกใน MongoDB** — ข้อมูลพอร์ตถาวร เชื่อมกับบัญชีผู้ใช้
 - **Auto-refresh** — ดึงราคา live ทุก 60 วิ
 
 ### 👁️ Watchlist (`/watchlist`)
@@ -124,6 +129,7 @@
 │  analysis.py  → Efficient Frontier + Monte Carlo data        │
 │  news.py      → Aggregated portfolio news (Yahoo)            │
 │  myportfolio.py → Historical price at date (THB)             │
+│  portfolio_analytics.py → Rebalancing + Backtest + Dividends │
 │  mailer.py    → Resend email (OTP + password reset)          │
 └────────────────────────┬─────────────────────────────────────┘
                          │
@@ -163,6 +169,7 @@ proyearfour/
 │   ├── analysis.py              ← KPI detail page data
 │   ├── news.py                  ← Portfolio news aggregator
 │   ├── myportfolio.py           ← Historical price lookup
+│   ├── portfolio_analytics.py   ← Rebalancing + Backtest + Dividends
 │   ├── mailer.py                ← Resend email integration
 │   ├── requirements.txt
 │   ├── tests/
@@ -190,7 +197,10 @@ proyearfour/
         │   ├── ReturnsLineChart.jsx
         │   ├── PriceTable.jsx
         │   ├── NewsFeed.jsx
-        │   └── PortfolioComparison.jsx  ← My Portfolio vs MPT
+        │   ├── PortfolioComparison.jsx  ← My Portfolio vs MPT
+        │   ├── RebalancingSuggestions.jsx ← Rebalancing suggestions
+        │   ├── BacktestResults.jsx        ← Strategy backtesting
+        │   └── DividendTracking.jsx       ← Dividend tracking
         └── pages/
             ├── Landing.jsx
             ├── Login.jsx
@@ -330,6 +340,9 @@ npm run dev          # → http://localhost:3000
 | `GET`  | `/api/news?limit=30` | ข่าวรวมทั้งพอร์ต (Yahoo, dedupe, cache 10 นาที) |
 | `GET`  | `/api/analysis/mpt` | Efficient Frontier + Monte Carlo + optimal + growth + weights |
 | `GET`  | `/api/analysis/regime` | Regime probs timeline + distribution + feature importance |
+| `POST` | `/api/portfolio/rebalance` | แนะนำการปรับสัดส่วนพอร์ต (MPT + Regime) |
+| `GET`  | `/api/portfolio/backtest` | Backtest Buy&Hold vs MPT vs Regime (2 ปี) |
+| `GET`  | `/api/portfolio/dividends` | ปันผลรายปี + ผลตอบแทนรวมของหุ้นในพอร์ต |
 | `POST` | `/api/chat` | AI chat + Function Calling |
 
 ---
@@ -432,18 +445,18 @@ curl -H "Cookie: session_token=demo_session_persistent" \
 - [x] Docker Compose dev setup
 
 ### 🔜 ระยะสั้น (Short-term)
-- [ ] **Dark mode** — theme toggle (light/dark) สำหรับใช้กลางคืน
-- [ ] **Settings/Profile page** — จัดการบัญชี, เปลี่ยนรหัสผ่าน, ลบบัญชี
-- [ ] **Export Portfolio CSV** — ดาวน์โหลดตาราง My Portfolio เป็น CSV
-- [ ] **Price Alert notifications** — แจ้งเตือนทางอีเมลเมื่อราคาถึงเป้าหมายใน Watchlist
-- [ ] **Portfolio persistence** — บันทึก My Portfolio และ Watchlist ใน MongoDB (ปัจจุบันเก็บใน localStorage)
-- [ ] **More tickers** — เพิ่มหุ้นนอกเหนือ 25 ตัว (ให้ผู้ใช้เพิ่มเอง)
+- [x] **Dark mode** — theme toggle (light/dark) สำหรับใช้กลางคืน
+- [x] **Settings/Profile page** — จัดการบัญชี, เปลี่ยนรหัสผ่าน, ลบบัญชี
+- [x] **Export Portfolio CSV** — ดาวน์โหลดตาราง My Portfolio เป็น CSV
+- [x] **Price Alert notifications** — แจ้งเตือนทางอีเมลเมื่อราคาถึงเป้าหมายใน Watchlist
+- [x] **Portfolio persistence** — บันทึก My Portfolio และ Watchlist ใน MongoDB
+- [x] **More tickers** — เพิ่มหุ้นนอกเหนือ 25 ตัว (ผู้ใช้เพิ่มเองได้)
 
 ### 🎯 ระยะกลาง (Mid-term)
-- [ ] **Rebalancing suggestions** — แนะนำการปรับสัดส่วนพอร์ตตาม MPT + สภาวะตลาดปัจจุบัน
-- [ ] **Backtesting** — ทดสอบกลยุทธ์การลงทุนย้อนหลัง (buy & hold vs MPT vs regime-based)
-- [ ] **Dividend tracking** — ติดตามเงินปันผล + ผลตอบแทนรวม (total return)
-- [ ] **Multi-currency** — รองรับการดูพอร์ตในหลายสกุลเงิน (THB/USD)
+- [x] **Rebalancing suggestions** — แนะนำการปรับสัดส่วนพอร์ตตาม MPT + สภาวะตลาดปัจจุบัน
+- [x] **Backtesting** — ทดสอบกลยุทธ์การลงทุนย้อนหลัง (buy & hold vs MPT vs regime-based)
+- [x] **Dividend tracking** — ติดตามเงินปันผล + ผลตอบแทนรวม (total return)
+- [x] **Multi-currency** — รองรับการดูพอร์ตในหลายสกุลเงิน (THB/USD)
 - [ ] **Custom portfolios** — สร้างหลายพอร์ต (เช่น พอร์ตเกษียณ, พอร์ตเก็งกำไร)
 - [ ] **Mobile responsive** — ปรับ layout ให้ใช้งานบนมือถือได้เต็มรูปแบบ
 
@@ -467,7 +480,7 @@ curl -H "Cookie: session_token=demo_session_persistent" \
 - **Live cache TTL**: 60 วินาที — แก้ได้ที่ `backend/live.py` (`CACHE_TTL`)
 - **Session TTL**: 7 วัน — แก้ได้ที่ `backend/auth.py` (`SESSION_TTL_DAYS`)
 - **Deployment**: ใช้ `server:app` เป็น entrypoint (ไม่ใช่ `main:app`) เพราะ `server.py` ต้อง register ทุก module
-- **My Portfolio & Watchlist**: ปัจจุบันเก็บใน localStorage — ข้อมูลอยู่เฉพาะในเบราว์เซอร์นั้น
+- **My Portfolio & Watchlist**: บันทึกใน MongoDB (user_portfolios, user_watchlists) — เชื่อมกับบัญชีผู้ใช้
 - **Not investment advice** — ข้อมูลจาก Yahoo Finance อาจ delay 15 นาที
 
 ---

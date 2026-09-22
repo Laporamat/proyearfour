@@ -35,6 +35,35 @@
   letter-spacing: 0.02em;
 }
 
+/* ── Header actions ─────────────────────────── */
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+}
+
+.currencyToggle {
+  display: inline-flex;
+  border-radius: var(--r-md);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+.currencyToggle button {
+  padding: 6px 14px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  background: var(--surface);
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all var(--tx);
+}
+.currencyToggle button:hover { color: var(--text); }
+.currencyToggle .curActive {
+  background: var(--accent);
+  color: #fff;
+}
+
 /* ── Summary cards ───────────────────────────── */
 .summary {
   display: grid;

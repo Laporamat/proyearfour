@@ -2,6 +2,9 @@ import { useEffect, useState, useCallback, useRef } from 'react'
 import { api } from '../hooks/useApi'
 import { TICKER_GROUPS, ALL_PREDEFINED } from '../lib/tickers'
 import PortfolioComparison from '../components/PortfolioComparison'
+import RebalancingSuggestions from '../components/RebalancingSuggestions'
+import BacktestResults from '../components/BacktestResults'
+import DividendTracking from '../components/DividendTracking'
 import s from './MyPortfolio.module.css'
 
 const fmt = (n, d = 2) =>
@@ -16,6 +19,7 @@ export default function MyPortfolio() {
   const [adding, setAdding] = useState(false)
   const [error, setError] = useState('')
   const [customTickers, setCustomTickers] = useState([])
+  const [currency, setCurrency] = useState('THB')
   const timerRef = useRef(null)
 
   // ── Load holdings from backend ──
@@ -151,6 +155,14 @@ export default function MyPortfolio() {
   const totalPL    = totalValue - totalCost
   const totalPLPct = totalCost > 0 ? (totalPL / totalCost) * 100 : 0
 
+  // ── Multi-currency display ──
+  const FX_RATE = liveMeta?.fx_thb_per_usd || 35
+  const convert = (thb) => currency === 'USD' && thb != null ? thb / FX_RATE : thb
+  const cur = (thb) => {
+    const val = convert(thb)
+    return val != null ? `${currency === 'USD' ? '$' : '฿'}${fmt(val)}` : '—'
+  }
+
   return (
     <div className={s.page}>
       {/* Header */}
@@ -168,16 +180,24 @@ export default function MyPortfolio() {
             )}
           </p>
         </div>
-        {holdings.length > 0 && (
-          <button className="btn btn-ghost" onClick={handleExportCSV}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-              <polyline points="7 10 12 15 17 10"/>
-              <line x1="12" y1="15" x2="12" y2="3"/>
-            </svg>
-            Export CSV
-          </button>
-        )}
+        <div className={s.headerActions}>
+          {holdings.length > 0 && (
+            <div className={s.currencyToggle}>
+              <button className={currency === 'THB' ? s.curActive : ''} onClick={() => setCurrency('THB')}>THB</button>
+              <button className={currency === 'USD' ? s.curActive : ''} onClick={() => setCurrency('USD')}>USD</button>
+            </div>
+          )}
+          {holdings.length > 0 && (
+            <button className="btn btn-ghost" onClick={handleExportCSV}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+              Export CSV
+            </button>
+          )}
+        </div>
       </header>
 
       {/* Summary */}
@@ -185,16 +205,16 @@ export default function MyPortfolio() {
         <div className={s.summary}>
           <div className={`card ${s.sumCard}`}>
             <span className={s.sumLabel}>ต้นทุนรวม</span>
-            <span className={s.sumValue}>฿{fmt(totalCost)}</span>
+            <span className={s.sumValue}>{cur(totalCost)}</span>
           </div>
           <div className={`card ${s.sumCard}`}>
             <span className={s.sumLabel}>มูลค่าปัจจุบัน</span>
-            <span className={s.sumValue}>฿{fmt(totalValue)}</span>
+            <span className={s.sumValue}>{cur(totalValue)}</span>
           </div>
           <div className={`card ${s.sumCard} ${totalPL >= 0 ? s.profit : s.loss}`}>
             <span className={s.sumLabel}>กำไร/ขาดทุน</span>
             <span className={s.sumValue}>
-              {totalPL >= 0 ? '+' : '-'}฿{fmt(Math.abs(totalPL))}
+              {totalPL >= 0 ? '+' : '-'}{cur(Math.abs(totalPL))}
             </span>
           </div>
           <div className={`card ${s.sumCard} ${totalPL >= 0 ? s.profit : s.loss}`}>
@@ -254,6 +274,21 @@ export default function MyPortfolio() {
         <PortfolioComparison holdings={holdings} livePrices={livePrices} />
       )}
 
+      {/* Rebalancing suggestions */}
+      {holdings.length > 0 && (
+        <RebalancingSuggestions holdings={holdings} livePrices={livePrices} />
+      )}
+
+      {/* Backtesting */}
+      {holdings.length > 0 && (
+        <BacktestResults holdings={holdings} />
+      )}
+
+      {/* Dividend tracking */}
+      {holdings.length > 0 && (
+        <DividendTracking holdings={holdings} />
+      )}
+
       {/* Holdings table */}
       {loading ? (
         <div className={`card ${s.empty}`}>กำลังโหลด…</div>
@@ -266,9 +301,9 @@ export default function MyPortfolio() {
                   <th>หุ้น</th>
                   <th className={s.right}>จำนวน</th>
                   <th>วันที่ซื้อ</th>
-                  <th className={s.right}>ราคาซื้อ (฿)</th>
-                  <th className={s.right}>ราคาล่าสุด (฿)</th>
-                  <th className={s.right}>มูลค่า (฿)</th>
+                  <th className={s.right}>{`ราคาซื้อ (${currency === 'USD' ? '$' : '฿'})`}</th>
+                  <th className={s.right}>{`ราคาล่าสุด (${currency === 'USD' ? '$' : '฿'})`}</th>
+                  <th className={s.right}>{`มูลค่า (${currency === 'USD' ? '$' : '฿'})`}</th>
                   <th className={s.right}>กำไร/ขาดทุน</th>
                   <th className={s.right}>%</th>
                   <th />
@@ -280,15 +315,15 @@ export default function MyPortfolio() {
                     <td className={s.ticker}>{r.ticker}</td>
                     <td className={s.right}>{fmt(r.shares, 0)}</td>
                     <td className={s.dateCell}>{r.buyDate}</td>
-                    <td className={s.right}>฿{fmt(r.buyPrice)}</td>
+                    <td className={s.right}>{cur(r.buyPrice)}</td>
                     <td className={s.right}>
-                      {r.currentPrice != null ? `฿${fmt(r.currentPrice)}` : '—'}
+                      {r.currentPrice != null ? cur(r.currentPrice) : '—'}
                     </td>
                     <td className={s.right}>
-                      {r.value != null ? `฿${fmt(r.value)}` : '—'}
+                      {r.value != null ? cur(r.value) : '—'}
                     </td>
                     <td className={`${s.right} ${r.pl != null ? (r.pl >= 0 ? s.profit : s.loss) : ''}`}>
-                      {r.pl != null ? `${r.pl >= 0 ? '+' : '-'}฿${fmt(Math.abs(r.pl))}` : '—'}
+                      {r.pl != null ? `${r.pl >= 0 ? '+' : '-'}${cur(Math.abs(r.pl))}` : '—'}
                     </td>
                     <td className={`${s.right} ${r.plPct != null ? (r.plPct >= 0 ? s.profit : s.loss) : ''}`}>
                       {r.plPct != null ? `${r.plPct >= 0 ? '+' : ''}${fmt(r.plPct)}%` : '—'}
