@@ -64,6 +64,8 @@
   flex: 1;
 }
 
+.navGroup { display: flex; flex-direction: column; gap: 2px; }
+
 .navSection {
   font-size: 0.62rem;
   font-weight: 700;
@@ -151,7 +153,41 @@
 }
 
 @media (max-width: 900px) { .sidebar { width: 200px; } .main { padding: var(--sp-5); } }
-@media (max-width: 680px) { .sidebar { display: none; } .main { padding: var(--sp-4); } }
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed; left: 0; top: 0; z-index: 100;
+    transform: translateX(-100%);
+    transition: transform 0.2s ease;
+    box-shadow: var(--shadow-lg);
+  }
+  .sidebar.open { transform: translateX(0); }
+  .main { padding: var(--sp-4); }
+  .mobileTopbar { display: flex; }
+}
+.mobileTopbar {
+  display: none;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; z-index: 50;
+}
+.hamburger {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  width: 36px; height: 36px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--text);
+}
+.hamburger:hover { background: var(--surface3); }
+.mobileBrand { font-weight: 800; font-size: 0.95rem; color: var(--text-head); }
+.overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.4);
+  z-index: 90; display: none;
+}
+.overlay.show { display: block; }
 
 
 /* ── User chip in footer ─────────────── */

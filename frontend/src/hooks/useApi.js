@@ -165,4 +165,61 @@ export const api = {
 
   deleteCustomTicker: (ticker) =>
     apiFetch(`/api/user/tickers/${encodeURIComponent(ticker)}`, { method: 'DELETE' }),
+
+  // ── Advanced analytics ──
+  rebalancing: () =>
+    apiFetch('/api/rebalancing'),
+
+  backtest: (strategy = 'all', period = '1y') =>
+    apiFetch(`/api/backtest?strategy=${strategy}&period=${period}`),
+
+  dividends: (tickers = '') =>
+    apiFetch(`/api/dividends${tickers ? `?tickers=${tickers}` : ''}`),
+
+  retrainRegime: () =>
+    apiFetch('/api/regime/retrain', { method: 'POST' }),
+
+  altData: () =>
+    apiFetch('/api/alt-data'),
+
+  taxReport: () =>
+    apiFetch('/api/tax-report'),
+
+  taxCalc: (body) =>
+    apiFetch('/api/tax-report/calculate', { method: 'POST', body: JSON.stringify(body) }),
+
+  options: (ticker, expiry = '') =>
+    apiFetch(`/api/options/${encodeURIComponent(ticker)}${expiry ? `?expiry=${expiry}` : ''}`),
+
+  livePricesMulti: (currency = 'THB') =>
+    apiFetch(`/api/prices/live?currency=${currency}`),
+
+  // ── Custom portfolios ──
+  listPortfolios: () =>
+    apiFetch('/api/user/portfolios'),
+
+  createPortfolio: (body) =>
+    apiFetch('/api/user/portfolios', { method: 'POST', body: JSON.stringify(body) }),
+
+  deletePortfolio: (key) =>
+    apiFetch(`/api/user/portfolios/${key}`, { method: 'DELETE' }),
+
+  getMultiPortfolio: (key) =>
+    apiFetch(`/api/user/portfolio-multi/${key}`),
+
+  addMultiHolding: (key, body) =>
+    apiFetch(`/api/user/portfolio-multi/${key}`, { method: 'POST', body: JSON.stringify(body) }),
+
+  deleteMultiHolding: (key, id) =>
+    apiFetch(`/api/user/portfolio-multi/${key}/${id}`, { method: 'DELETE' }),
+
+  // ── Social ──
+  listShared: () =>
+    apiFetch('/api/social/shared'),
+
+  sharePortfolio: (body) =>
+    apiFetch('/api/social/share', { method: 'POST', body: JSON.stringify(body) }),
+
+  getShared: (shareId) =>
+    apiFetch(`/api/social/${shareId}`),
 }

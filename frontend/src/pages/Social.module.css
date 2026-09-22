@@ -1,0 +1,28 @@
+.page { display: flex; flex-direction: column; gap: var(--sp-5); }
+.header h1 { margin-bottom: 2px; }
+.sub { font-size: 0.82rem; color: var(--text-muted); }
+.shareCard { display: flex; flex-direction: column; gap: var(--sp-3); }
+.shareForm { display: flex; gap: var(--sp-3); flex-wrap: wrap; }
+.input { flex: 1; min-width: 180px; padding: 8px 12px; border: 1px solid var(--border); border-radius: var(--r-md); background: var(--surface); color: var(--text); font-size: 0.82rem; font-family: inherit; }
+.input:focus { outline: none; border-color: var(--accent); }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: var(--sp-4); }
+.card { cursor: pointer; transition: all var(--tx); display: flex; flex-direction: column; gap: var(--sp-2); }
+.card:hover { border-color: var(--border-hi); box-shadow: var(--shadow-md); }
+.cardTitle { font-size: 0.95rem; }
+.cardDesc { font-size: 0.76rem; color: var(--text-muted); line-height: 1.4; }
+.cardMeta { display: flex; align-items: center; gap: var(--sp-2); font-size: 0.72rem; color: var(--text-muted); }
+.authorAvatar { width: 20px; height: 20px; border-radius: 50%; }
+.date { margin-left: auto; }
+.holdingCount { font-size: 0.68rem; font-weight: 600; color: var(--accent); }
+.modal { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; display: flex; align-items: center; justify-content: center; padding: var(--sp-4); }
+.modalCard { max-width: 500px; width: 100%; max-height: 80vh; overflow-y: auto; display: flex; flex-direction: column; gap: var(--sp-3); }
+.modalHeader { display: flex; align-items: center; justify-content: space-between; }
+.modalDesc { font-size: 0.82rem; color: var(--text-muted); }
+.authorRow { display: flex; align-items: center; gap: var(--sp-2); font-size: 0.78rem; color: var(--text-muted); }
+.closeBtn { background: transparent; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-muted); padding: 0 4px; }
+.table { width: 100%; border-collapse: collapse; }
+.table th { text-align: left; padding: var(--sp-2); font-size: 0.68rem; font-weight: 600; color: var(--text-muted); border-bottom: 1px solid var(--border); }
+.table td { padding: var(--sp-2); font-size: 0.78rem; border-bottom: 1px solid var(--border); }
+.ticker { font-weight: 600; color: var(--text-head); }
+.right { text-align: right; }
+@media (max-width: 768px) { .shareForm { flex-direction: column; } .grid { grid-template-columns: 1fr; } }

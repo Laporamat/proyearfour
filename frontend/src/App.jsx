@@ -9,6 +9,14 @@ import MetricAnalysis  from './pages/MetricAnalysis'
 import MyPortfolio     from './pages/MyPortfolio'
 import Watchlist        from './pages/Watchlist'
 import Settings        from './pages/Settings'
+import Backtest        from './pages/Backtest'
+import Rebalancing     from './pages/Rebalancing'
+import Dividends       from './pages/Dividends'
+import OptionsAnalysis from './pages/OptionsAnalysis'
+import AltData         from './pages/AltData'
+import TaxReport       from './pages/TaxReport'
+import Social          from './pages/Social'
+import BrokerConnect   from './pages/BrokerConnect'
 import Landing         from './pages/Landing'
 import Login           from './pages/Login'
 import Register        from './pages/Register'
@@ -42,6 +50,14 @@ function AppRouter() {
         <Route path="/analysis/:metric" element={<MetricAnalysis />} />
         <Route path="/portfolio" element={<MyPortfolio />} />
         <Route path="/watchlist" element={<Watchlist />} />
+        <Route path="/backtest" element={<Backtest />} />
+        <Route path="/rebalancing" element={<Rebalancing />} />
+        <Route path="/dividends" element={<Dividends />} />
+        <Route path="/options" element={<OptionsAnalysis />} />
+        <Route path="/alt-data" element={<AltData />} />
+        <Route path="/tax" element={<TaxReport />} />
+        <Route path="/social" element={<Social />} />
+        <Route path="/broker" element={<BrokerConnect />} />
         <Route path="/settings" element={<Settings />} />
       </Route>
     </Routes>

@@ -1,0 +1,19 @@
+.page { display: flex; flex-direction: column; gap: var(--sp-5); }
+.header h1 { margin-bottom: 2px; }
+.sub { font-size: 0.82rem; color: var(--text-muted); }
+.regimeBar { display: flex; align-items: center; gap: var(--sp-4); flex-wrap: wrap; padding: var(--sp-4) var(--sp-5); background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); }
+.regimeText { font-size: 0.82rem; color: var(--text-muted); }
+.note { font-size: 0.78rem; color: var(--accent); margin-left: auto; }
+.tableCard { padding: 0; overflow: hidden; }
+.table { width: 100%; border-collapse: collapse; }
+.table th { text-align: left; padding: var(--sp-3) var(--sp-5); font-size: 0.72rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; border-bottom: 1px solid var(--border); }
+.table td { padding: var(--sp-3) var(--sp-5); font-size: 0.82rem; border-bottom: 1px solid var(--border); }
+.table tr:last-child td { border-bottom: none; }
+.ticker { font-weight: 600; color: var(--text-head); }
+.group { font-size: 0.68rem; padding: 2px 8px; border-radius: var(--r-pill); background: var(--surface2); color: var(--text-muted); }
+.right { text-align: right; }
+.action { font-size: 0.68rem; font-weight: 600; padding: 2px 10px; border-radius: var(--r-pill); }
+.actionBuy { background: var(--green-dim); color: var(--green); }
+.actionHold { background: var(--surface2); color: var(--text-muted); }
+.actionReduce { background: var(--red-dim); color: var(--red); }
+@media (max-width: 768px) { .note { margin-left: 0; } .table th, .table td { padding: var(--sp-2); font-size: 0.75rem; } }

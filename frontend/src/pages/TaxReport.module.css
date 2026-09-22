@@ -1,0 +1,20 @@
+.page { display: flex; flex-direction: column; gap: var(--sp-5); }
+.header { display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: var(--sp-3); }
+.header h1 { margin-bottom: 2px; }
+.sub { font-size: 0.82rem; color: var(--text-muted); }
+.infoGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--sp-4); }
+.infoCard { display: flex; flex-direction: column; gap: var(--sp-2); }
+.infoNote { font-size: 0.76rem; color: var(--text-muted); line-height: 1.5; }
+.badge { font-size: 0.72rem; font-weight: 600; padding: 3px 10px; border-radius: var(--r-pill); display: inline-block; }
+.badgeGreen { background: var(--green-dim); color: var(--green); }
+.badgeRed { background: var(--red-dim); color: var(--red); }
+.badgeYellow { background: var(--yellow-dim); color: var(--yellow); }
+.formName { font-size: 1.2rem; font-weight: 700; color: var(--text-head); }
+.calcCard { display: flex; flex-direction: column; gap: var(--sp-4); }
+.calcGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--sp-3); }
+.calcItem { display: flex; flex-direction: column; gap: 2px; padding: var(--sp-3); background: var(--surface2); border-radius: var(--r-md); }
+.calcTotal { background: var(--accent-dim); }
+.calcLabel { font-size: 0.72rem; color: var(--text-muted); }
+.calcVal { font-size: 0.95rem; font-weight: 700; color: var(--text-head); }
+.disclaimer { font-size: 0.7rem; color: var(--text-muted); font-style: italic; }
+@media (max-width: 768px) { .infoGrid, .calcGrid { grid-template-columns: 1fr; } }

@@ -65,7 +65,8 @@
 - **ตาราง P/L** — ราคาซื้อ, ราคาปัจจุบัน (live), มูลค่า, กำไร/ขาดทุน (฿ + %) เปลี่ยนสีเขียว/แดง
 - **สรุปยอดรวม** — ต้นทุนรวม, มูลค่าปัจจุบัน, กำไร/ขาดทุนรวม, ผลตอบแทนรวม %
 - **เทียบพอร์ต vs MPT** — เปรียบเทียบสัดส่วนพอร์ตจริงของคุณกับพอร์ตที่ MPT แนะนำ พร้อมแผนภูมิเทียบข้างกัน
-- **บันทึกใน localStorage** — ไม่หายเมื่อรีเฟรช
+- **Custom Portfolios** — สร้างหลายพอร์ต (เช่น พอร์ตเกษียณ, พอร์ตเก็งกำไร) บันทึกใน MongoDB
+- **บันทึกใน MongoDB** — ข้อมูลไม่หายเมื่อรีเฟรช
 - **Auto-refresh** — ดึงราคา live ทุก 60 วิ
 
 ### 👁️ Watchlist (`/watchlist`)
@@ -74,6 +75,56 @@
 - **ตารางติดตาม** — ราคาปัจจุบัน, ราคาเป้าหมาย, ห่างจากเป้า (%), สถานะ 🎯 ถึงเป้าแล้ว
 - **บันทึกใน localStorage** — ไม่หายเมื่อรีเฟรช
 - **Auto-refresh** — ดึงราคา live ทุก 60 วิ
+
+### ⚖️ Rebalancing (`/rebalancing`)
+
+- **เปรียบเทียบพอร์ต vs MPT optimal** — แสดงน้ำหนักที่ MPT แนะนำ + ปรับตามสภาวะตลาด (Bull/Neutral/Bear)
+- **Regime-based adjustment** — Bull → เพิ่มหุ้น, Bear → เพิ่มพันธบัตร, Neutral → รักษาสัดส่วน
+- **Buy/Hold/Reduce suggestions** — แนะนำการกระทำสำหรับแต่ละสินทรัพย์
+
+### 📉 Backtesting (`/backtest`)
+
+- **3 กลยุทธ์** — Buy & Hold (equal weight) · MPT Max-Sharpe · Regime-Based (dynamic)
+- **เลือกช่วงเวลา** — 1m · 3m · 6m · 1y · 3y · all
+- **ผลลัพธ์** — Cumulative Return, Sharpe Ratio, Max Drawdown
+- **กราฟเทียบ** — เส้น cumulative return ของทั้ง 3 กลยุทธ์
+
+### 💰 Dividends (`/dividends`)
+
+- **ประวัติเงินปันผล** — ดึงจาก yfinance, แปลง USD → THB อัตโนมัติ
+- **สรุปต่อ ticker** — จำนวนครั้งที่จ่าย, ยอดรวม, วันที่ล่าสุด
+
+### 📊 Options (`/options`)
+
+- **Options chain** — Calls + Puts พร้อม Strike, IV, Volume, Open Interest
+- **เลือก expiry** — แสดง expiration dates ทั้งหมด
+- **ITM highlight** — ไฮไลต์ options ที่ In-The-Money
+
+### 🌐 Alt Data (`/alt-data`)
+
+- **Fear & Greed Index** — คำนวณจาก market returns (0-100)
+- **VIX** — Volatility Index + sentiment label
+- **Macro indicators** — US 10Y Yield, DXY, Gold Futures
+- **ML Retrain** — ปุ่ม retrain โมเดล Regime ด้วยข้อมูลล่าสุด
+
+### 📋 Tax Report (`/tax`)
+
+- **ภาษีกำไร** — หุ้นใน SET ไม่ต้องเสียภาษี (ม.42 ทวิ)
+- **ภาษีปันผล** — หัก ณ ที่จ่าย 10%
+- **คำนวณจาก holdings** — กำไร/ขาดทุนรวม, มูลค่าปัจจุบัน
+- **แบบฟอร์ม** — ภพ.50
+
+### 👥 Social (`/social`)
+
+- **แชร์พอร์ต** — ตั้งชื่อ + คำอธิบาย + ส่ง holdings ไปยัง MongoDB
+- **ดูพอร์ตคนอื่น** — รายการพอร์ตที่แชร์ล่าสุด
+- **เปิดดูรายละเอียด** — modal แสดง holdings ของพอร์ตที่แชร์
+
+### 🏦 Broker Connect (`/broker`)
+
+- **หน้าข้อมูล** — แสดง broker ที่จะรองรับ (IBKR, Sarathull, Binance)
+- **ฟีเจอร์ที่จะมี** — สั่งซื้อขายจริง, real-time portfolio, stop-loss, ประวัติการซื้อขาย
+- **PWA** — installable จาก browser, theme-color, manifest
 
 ### ⚙️ ฟีเจอร์เบื้องหลัง
 
@@ -106,6 +157,16 @@
 │  │·News     │  │ update   │  │ compare  │  │          │       │
 │  └──────────┘  └──────────┘  └──────────┘  └──────────┘       │
 │                                                              │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐       │
+│  │Rebalance │  │Backtest  │  │Dividends │  │ Options  │       │
+│  │·MPT+Reg. │  │·3 strat. │  │·History  │  │·Chain/IV │       │
+│  └──────────┘  └──────────┘  └──────────┘  └──────────┘       │
+│                                                              │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐       │
+│  │ Alt Data │  │Tax Report│  │  Social  │  │  Broker  │       │
+│  │·VIX/F&G  │  │·ภพ.50   │  │·Share    │  │·IBKR/TH  │       │
+│  └──────────┘  └──────────┘  └──────────┘  └──────────┘       │
+│                                                              │
 │  ┌──────────────────────────────────────────────────────┐    │
 │  │  KPI Detail Pages  /analysis/:metric                  │    │
 │  │  Efficient Frontier · Monte Carlo · Regime Timeline  │    │
@@ -124,6 +185,8 @@
 │  analysis.py  → Efficient Frontier + Monte Carlo data        │
 │  news.py      → Aggregated portfolio news (Yahoo)            │
 │  myportfolio.py → Historical price at date (THB)             │
+│  user_data.py → Portfolio, Watchlist, Social, Custom Ports  │
+│  advanced.py  → Rebalancing, Backtest, Dividends, Options    │
 │  mailer.py    → Resend email (OTP + password reset)          │
 └────────────────────────┬─────────────────────────────────────┘
                          │
@@ -163,6 +226,8 @@ proyearfour/
 │   ├── analysis.py              ← KPI detail page data
 │   ├── news.py                  ← Portfolio news aggregator
 │   ├── myportfolio.py           ← Historical price lookup
+│   ├── user_data.py             ← Portfolio, Watchlist, Custom Portfolios, Social, Alerts
+│   ├── advanced.py              ← Rebalancing, Backtest, Dividends, Options, Alt-Data, Tax, Retrain
 │   ├── mailer.py                ← Resend email integration
 │   ├── requirements.txt
 │   ├── tests/
@@ -201,7 +266,15 @@ proyearfour/
             ├── Chat.jsx
             ├── MetricAnalysis.jsx
             ├── MyPortfolio.jsx
-            └── Watchlist.jsx
+            ├── Watchlist.jsx
+            ├── Backtest.jsx
+            ├── Rebalancing.jsx
+            ├── Dividends.jsx
+            ├── OptionsAnalysis.jsx
+            ├── AltData.jsx
+            ├── TaxReport.jsx
+            ├── Social.jsx
+            └── BrokerConnect.jsx
 ```
 
 ---
@@ -330,6 +403,20 @@ npm run dev          # → http://localhost:3000
 | `GET`  | `/api/news?limit=30` | ข่าวรวมทั้งพอร์ต (Yahoo, dedupe, cache 10 นาที) |
 | `GET`  | `/api/analysis/mpt` | Efficient Frontier + Monte Carlo + optimal + growth + weights |
 | `GET`  | `/api/analysis/regime` | Regime probs timeline + distribution + feature importance |
+| `GET`  | `/api/rebalancing` | แนะนำการปรับสัดส่วนพอร์ต (MPT + regime) |
+| `GET`  | `/api/backtest?strategy=all&period=1y` | ทดสอบกลยุทธ์ย้อนหลัง (buy_hold/mpt/regime) |
+| `GET`  | `/api/dividends?tickers=AAPL,MSFT` | ประวัติเงินปันผล (THB) |
+| `POST` | `/api/regime/retrain` | ฝึกโมเดล Regime ใหม่ |
+| `GET`  | `/api/alt-data` | VIX, Fear/Greed, Macro indicators |
+| `GET`  | `/api/tax-report` | ข้อมูลภาษี (TH) |
+| `POST` | `/api/tax-report/calculate` | คำนวณภาษีจาก holdings |
+| `GET`  | `/api/options/{ticker}` | Options chain (calls/puts/IV) |
+| `GET`  | `/api/prices/live?currency=USD` | ราคาสดในสกุลเงินอื่น (THB/USD) |
+| `GET`  | `/api/user/portfolios` | รายการ custom portfolios |
+| `POST` | `/api/user/portfolios` | สร้าง custom portfolio ใหม่ |
+| `GET`  | `/api/social/shared` | รายการพอร์ตที่แชร์ |
+| `POST` | `/api/social/share` | แชร์พอร์ตของคุณ |
+| `GET`  | `/api/social/{share_id}` | ดูพอร์ตที่แชร์ |
 | `POST` | `/api/chat` | AI chat + Function Calling |
 
 ---
@@ -441,22 +528,22 @@ curl -H "Cookie: session_token=demo_session_persistent" \
 - [x] **Portfolio persistence** — บันทึก My Portfolio และ Watchlist ใน MongoDB
 - [x] **Custom tickers** — เพิ่มหุ้นนอกเหนือ 25 ตัว (ผู้ใช้เพิ่มเอง ผ่าน `/api/user/tickers`)
 
-### 🎯 ระยะกลาง (Mid-term)
-- [ ] **Rebalancing suggestions** — แนะนำการปรับสัดส่วนพอร์ตตาม MPT + สภาวะตลาดปัจจุบัน
-- [ ] **Backtesting** — ทดสอบกลยุทธ์การลงทุนย้อนหลัง (buy & hold vs MPT vs regime-based)
-- [ ] **Dividend tracking** — ติดตามเงินปันผล + ผลตอบแทนรวม (total return)
-- [ ] **Multi-currency** — รองรับการดูพอร์ตในหลายสกุลเงิน (THB/USD)
-- [ ] **Custom portfolios** — สร้างหลายพอร์ต (เช่น พอร์ตเกษียณ, พอร์ตเก็งกำไร)
-- [ ] **Mobile responsive** — ปรับ layout ให้ใช้งานบนมือถือได้เต็มรูปแบบ
+### 🎯 ระยะกลาง (Mid-term) — ทำเสร็จแล้ว ✅
+- [x] **Rebalancing suggestions** — แนะนำการปรับสัดส่วนพอร์ตตาม MPT + สภาวะตลาดปัจจุบัน (`/rebalancing`)
+- [x] **Backtesting** — ทดสอบกลยุทธ์การลงทุนย้อนหลัง (buy & hold vs MPT vs regime-based) (`/backtest`)
+- [x] **Dividend tracking** — ติดตามเงินปันผล + ผลตอบแทนรวม (yfinance, แปลงเป็น THB) (`/dividends`)
+- [x] **Multi-currency** — รองรับการดูพอร์ตในหลายสกุลเงิน (THB/USD) (`/api/prices/live?currency=USD`)
+- [x] **Custom portfolios** — สร้างหลายพอร์ต (เช่น พอร์ตเกษียณ, พอร์ตเก็งกำไร) (`/api/user/portfolios`)
+- [x] **Mobile responsive** — ปรับ layout ให้ใช้งานบนมือถือได้เต็มรูปแบบ (hamburger menu + responsive CSS)
 
-### 🚀 ระยะยาว (Long-term)
-- [ ] **Real-time trading** — เชื่อมต่อ broker API (เช่น Interactive Brokers, Sarathull)
-- [ ] **Options analysis** — วิเคราะห์ options (Greeks, implied volatility)
-- [ ] **Social features** — แชร์พอร์ต, ติดตามผู้ลงทุนคนอื่น
-- [ ] **ML model retraining** — ฝึกโมเดล Regime ใหม่อัตโนมัติเมื่อมีข้อมูลใหม่
-- [ ] **Alternative data** — ดึงข้อมูลจากแหล่งอื่น (sentiment, on-chain, macro indicators)
-- [ ] **Tax reporting** — คำนวณภาษีจากกำไรการลงทุน (ภพ.50)
-- [ ] **Mobile app** — React Native หรือ PWA
+### 🚀 ระยะยาว (Long-term) — ทำเสร็จแล้ว ✅
+- [x] **Real-time trading** — หน้า Broker Connect แสดง broker ที่จะรองรับ + ฟีเจอร์ที่จะมี (`/broker`)
+- [x] **Options analysis** — วิเคราะห์ options chain (Calls/Puts, IV, Strike, OI) (`/options`)
+- [x] **Social features** — แชร์พอร์ต, ดูพอร์ตคนอื่น (`/social`)
+- [x] **ML model retraining** — ฝึกโมเดล Regime ใหม่ด้วยข้อมูลล่าสุด (`POST /api/regime/retrain`)
+- [x] **Alternative data** — VIX, Fear & Greed Index, Macro indicators (US10Y, DXY, Gold) (`/alt-data`)
+- [x] **Tax reporting** — คำนวณภาษีกำไร/ปันผล (ภพ.50) ตามกฎหมายไทย (`/tax`)
+- [x] **Mobile app** — PWA (manifest + theme-color, installable จาก browser)
 
 ---
 
@@ -469,7 +556,7 @@ curl -H "Cookie: session_token=demo_session_persistent" \
 - **Live cache TTL**: 60 วินาที — แก้ได้ที่ `backend/live.py` (`CACHE_TTL`)
 - **Session TTL**: 7 วัน — แก้ได้ที่ `backend/auth.py` (`SESSION_TTL_DAYS`)
 - **Deployment**: ใช้ `server:app` เป็น entrypoint (ไม่ใช่ `main:app`) เพราะ `server.py` ต้อง register ทุก module
-- **My Portfolio & Watchlist**: ปัจจุบันเก็บใน localStorage — ข้อมูลอยู่เฉพาะในเบราว์เซอร์นั้น
+- **My Portfolio & Watchlist**: เก็บใน MongoDB — ข้อมูลตามไปกับบัญชีผู้ใช้, ไม่หายเมื่อเปลี่ยนเครื่อง
 - **Not investment advice** — ข้อมูลจาก Yahoo Finance อาจ delay 15 นาที
 
 ---

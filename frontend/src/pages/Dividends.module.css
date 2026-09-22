@@ -1,0 +1,16 @@
+.page { display: flex; flex-direction: column; gap: var(--sp-5); }
+.header h1 { margin-bottom: 2px; }
+.sub { font-size: 0.82rem; color: var(--text-muted); }
+.summaryGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: var(--sp-3); }
+.sumCard { display: flex; flex-direction: column; gap: 2px; padding: var(--sp-3) var(--sp-4); }
+.sumTicker { font-size: 0.75rem; font-weight: 600; color: var(--text-muted); }
+.sumTotal { font-size: 1.05rem; font-weight: 700; color: var(--green); }
+.sumMeta { font-size: 0.65rem; color: var(--text-muted); }
+.tableCard { padding: 0; overflow: hidden; }
+.table { width: 100%; border-collapse: collapse; }
+.table th { text-align: left; padding: var(--sp-3) var(--sp-5); font-size: 0.72rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; border-bottom: 1px solid var(--border); }
+.table td { padding: var(--sp-2) var(--sp-5); font-size: 0.8rem; border-bottom: 1px solid var(--border); }
+.table tr:last-child td { border-bottom: none; }
+.ticker { font-weight: 600; color: var(--text-head); }
+.right { text-align: right; }
+@media (max-width: 768px) { .summaryGrid { grid-template-columns: repeat(2, 1fr); } }

@@ -27,3 +27,7 @@ myportfolio.register(app)
 # Register per-user data persistence (portfolio, watchlist, custom tickers, alerts).
 import user_data  # noqa: E402, F401
 user_data.register(app)
+
+# Register advanced analytics (rebalancing, backtest, dividends, options, alt-data, tax, retrain).
+import advanced  # noqa: E402, F401
+advanced.register(app)

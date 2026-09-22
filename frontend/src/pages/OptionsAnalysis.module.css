@@ -1,0 +1,23 @@
+.page { display: flex; flex-direction: column; gap: var(--sp-5); }
+.header h1 { margin-bottom: 2px; }
+.sub { font-size: 0.82rem; color: var(--text-muted); }
+.controlCard { padding: var(--sp-4) var(--sp-5); }
+.controls { display: flex; gap: var(--sp-3); align-items: center; flex-wrap: wrap; }
+.input { padding: 8px 12px; border: 1px solid var(--border); border-radius: var(--r-md); background: var(--surface); color: var(--text); font-size: 0.85rem; font-family: inherit; width: 120px; }
+.input:focus { outline: none; border-color: var(--accent); }
+.select { padding: 8px 12px; border: 1px solid var(--border); border-radius: var(--r-md); background: var(--surface); color: var(--text); font-size: 0.82rem; font-family: inherit; cursor: pointer; }
+.spotInfo { margin-top: var(--sp-3); font-size: 0.82rem; color: var(--text-muted); }
+.spotInfo strong { color: var(--text-head); }
+.chains { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-4); }
+.chainCard { padding: 0; overflow: hidden; }
+.chainCard h3 { padding: var(--sp-3) var(--sp-5); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: var(--sp-2); }
+.count { font-size: 0.65rem; font-weight: 500; color: var(--text-muted); background: var(--surface2); padding: 1px 8px; border-radius: var(--r-pill); }
+.tableWrap { max-height: 400px; overflow-y: auto; }
+.table { width: 100%; border-collapse: collapse; }
+.table th { position: sticky; top: 0; background: var(--surface2); text-align: right; padding: 6px 10px; font-size: 0.68rem; font-weight: 600; color: var(--text-muted); border-bottom: 1px solid var(--border); }
+.table th:first-child, .table th:last-child { text-align: left; }
+.table td { padding: 5px 10px; font-size: 0.75rem; border-bottom: 1px solid var(--border); text-align: right; }
+.table td:first-child, .table td:last-child { text-align: left; }
+.itm { background: var(--green-dim); }
+.right { text-align: right; }
+@media (max-width: 768px) { .chains { grid-template-columns: 1fr; } .table { font-size: 0.7rem; } }

@@ -227,3 +227,135 @@ def register(app: FastAPI) -> None:
             {"$pull": {"tickers": ticker.upper().strip()}},
         )
         return {"ok": True}
+
+    # ════════════════════════════════════════════
+    # CUSTOM PORTFOLIOS (multiple named portfolios)
+    # ════════════════════════════════════════════
+    class PortfolioIn(BaseModel):
+        name: str = Field(min_length=1, max_length=40)
+        description: str = ""
+
+    @app.get("/api/user/portfolios")
+    async def list_portfolios(request: Request):
+        """List all named portfolios for the user (including 'default')"""
+        user = await _require_user(request)
+        # Ensure default exists
+        await db.user_portfolios_multi.update_one(
+            {"user_id": user["user_id"]},
+            {"$setOnInsert": {"user_id": user["user_id"], "portfolios": {
+                "default": {"name": "Default", "description": "", "items": []}
+            }}},
+            upsert=True,
+        )
+        doc = await db.user_portfolios_multi.find_one({"user_id": user["user_id"]}, {"_id": 0})
+        portfolios = doc.get("portfolios", {}) if doc else {}
+        return {"portfolios": [{"key": k, **v} for k, v in portfolios.items()]}
+
+    @app.post("/api/user/portfolios")
+    async def create_portfolio(request: Request, inp: PortfolioIn):
+        user = await _require_user(request)
+        key = inp.name.lower().strip().replace(" ", "_")
+        result = await db.user_portfolios_multi.update_one(
+            {"user_id": user["user_id"]},
+            {"$setOnInsert": {"user_id": user["user_id"]},
+             "$set": {f"portfolios.{key}": {"name": inp.name, "description": inp.description, "items": []}}},
+            upsert=True,
+        )
+        if result.matched_count == 0 and result.upserted_id is None:
+            # Portfolio key already exists — check if it was set
+            existing = await db.user_portfolios_multi.find_one(
+                {"user_id": user["user_id"], f"portfolios.{key}": {"$exists": True}})
+            if existing:
+                raise HTTPException(409, f"พอร์ต '{inp.name}' มีอยู่แล้ว")
+        return {"key": key, "name": inp.name, "description": inp.description}
+
+    @app.delete("/api/user/portfolios/{key}")
+    async def delete_portfolio(request: Request, key: str):
+        user = await _require_user(request)
+        if key == "default":
+            raise HTTPException(400, "ไม่สามารถลบพอร์ต Default ได้")
+        await db.user_portfolios_multi.update_one(
+            {"user_id": user["user_id"]},
+            {"$unset": {f"portfolios.{key}": ""}},
+        )
+        return {"ok": True}
+
+    @app.get("/api/user/portfolio-multi/{key}")
+    async def get_multi_portfolio(request: Request, key: str):
+        user = await _require_user(request)
+        doc = await db.user_portfolios_multi.find_one({"user_id": user["user_id"]}, {"_id": 0})
+        portfolios = doc.get("portfolios", {}) if doc else {}
+        pf = portfolios.get(key)
+        if not pf:
+            raise HTTPException(404, f"ไม่พบพอร์ต '{key}'")
+        return {"key": key, **pf}
+
+    @app.post("/api/user/portfolio-multi/{key}")
+    async def add_multi_holding(request: Request, key: str, inp: HoldingIn):
+        user = await _require_user(request)
+        item = {
+            "id": f"h_{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S%f')}",
+            "ticker": inp.ticker.upper().strip(),
+            "shares": inp.shares,
+            "buyDate": inp.buyDate,
+            "buyPrice": inp.buyPrice,
+        }
+        result = await db.user_portfolios_multi.update_one(
+            {"user_id": user["user_id"]},
+            {"$push": {f"portfolios.{key}.items": item},
+             "$setOnInsert": {"user_id": user["user_id"],
+                              "portfolios.default": {"name": "Default", "description": "", "items": []}}},
+            upsert=True,
+        )
+        if result.matched_count == 0:
+            raise HTTPException(404, f"ไม่พบพอร์ต '{key}'")
+        return item
+
+    @app.delete("/api/user/portfolio-multi/{key}/{item_id}")
+    async def delete_multi_holding(request: Request, key: str, item_id: str):
+        user = await _require_user(request)
+        result = await db.user_portfolios_multi.update_one(
+            {"user_id": user["user_id"]},
+            {"$pull": {f"portfolios.{key}.items": {"id": item_id}}},
+        )
+        if result.modified_count == 0:
+            raise HTTPException(404, "ไม่พบรายการที่ต้องการลบ")
+        return {"ok": True}
+
+    # ════════════════════════════════════════════
+    # SOCIAL — Share portfolios publicly
+    # ════════════════════════════════════════════
+    class ShareIn(BaseModel):
+        title: str = Field(min_length=1, max_length=80)
+        description: str = ""
+        holdings: list[dict] = Field(default_factory=list)
+
+    @app.get("/api/social/shared")
+    async def list_shared_portfolios():
+        """Browse publicly shared portfolios"""
+        cursor = db.shared_portfolios.find({}, {"_id": 0}).sort("created_at", -1).limit(20)
+        docs = await cursor.to_list(20)
+        return {"portfolios": docs}
+
+    @app.post("/api/social/share")
+    async def share_portfolio(request: Request, inp: ShareIn):
+        user = await _require_user(request)
+        share_id = f"sp_{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}"
+        doc = {
+            "share_id": share_id,
+            "title": inp.title,
+            "description": inp.description,
+            "author_name": user.get("name", "Anonymous"),
+            "author_avatar": user.get("picture", ""),
+            "holdings": inp.holdings,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+        }
+        await db.shared_portfolios.insert_one(doc)
+        return {"share_id": share_id, "ok": True}
+
+    @app.get("/api/social/{share_id}")
+    async def get_shared_portfolio(share_id: str):
+        doc = await db.shared_portfolios.find_one({"share_id": share_id}, {"_id": 0})
+        if not doc:
+            raise HTTPException(404, "ไม่พบพอร์ตที่แชร์")
+        return doc

@@ -165,8 +165,19 @@ async def _bootstrap_pipeline() -> None:
 # ─────────────────────────────────────────────
 def register(app: FastAPI) -> None:
     @app.get("/api/prices/live")
-    async def api_prices_live(force: bool = False):
-        return await get_live_snapshot(force=force)
+    async def api_prices_live(force: bool = False, currency: str = "THB"):
+        snapshot = await get_live_snapshot(force=force)
+        if currency.upper() == "USD":
+            fx = snapshot.get("fx_thb_per_usd", FX_FALLBACK)
+            prices_usd = {t: round(p / fx, 2) for t, p in snapshot.get("prices", {}).items()}
+            result = dict(snapshot)
+            result["prices"] = prices_usd
+            result["currency"] = "USD"
+            result["fx_used"] = fx
+            return result
+        result = dict(snapshot)
+        result["currency"] = "THB"
+        return result
 
     @app.on_event("startup")
     async def _startup() -> None:
