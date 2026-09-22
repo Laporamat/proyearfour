@@ -1,85 +1,91 @@
 .page {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 4rem;
   display: flex;
   flex-direction: column;
-  gap: var(--sp-5);
-  max-width: 640px;
+  gap: 1.5rem;
 }
 
 .header {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: var(--sp-4);
+  margin-bottom: 0.5rem;
 }
+
+.header h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin: 0;
+}
+
 .sub {
-  font-size: 0.78rem;
-  color: var(--text-muted);
-  margin-top: var(--sp-1);
+  margin: 0.25rem 0 0;
+  color: var(--muted, #888);
+  font-size: 0.9rem;
 }
 
 .section {
-  padding: var(--sp-5) var(--sp-6);
+  padding: 1.5rem;
   display: flex;
   flex-direction: column;
-  gap: var(--sp-4);
+  gap: 1rem;
 }
 
 .sectionTitle {
-  font-size: 0.95rem;
-  font-weight: 700;
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin: 0 0 0.25rem;
 }
 
 .row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--sp-4);
+  gap: 1rem;
 }
 
 .label {
-  font-size: 0.86rem;
-  font-weight: 600;
-  color: var(--text-head);
+  font-weight: 500;
+  font-size: 0.95rem;
 }
+
 .desc {
-  font-size: 0.76rem;
-  color: var(--text-muted);
-  margin-top: 2px;
+  font-size: 0.85rem;
+  color: var(--muted, #888);
+  margin-top: 0.15rem;
 }
 
 .themeToggle {
-  min-width: 120px;
-  justify-content: center;
+  white-space: nowrap;
 }
 
 .field {
   display: flex;
   flex-direction: column;
-  gap: var(--sp-2);
+  gap: 0.35rem;
 }
+
 .fieldLabel {
-  font-size: 0.76rem;
-  font-weight: 600;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--muted, #888);
 }
+
 .input {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--r-md);
-  padding: 9px 12px;
-  font-size: 0.86rem;
-  font-family: inherit;
-  color: var(--text-head);
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  border-radius: 8px;
+  border: 1px solid var(--border, #333);
+  background: var(--surface, #1a1a1a);
+  color: var(--text, #fff);
+  font-size: 0.95rem;
   outline: none;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition: border-color 0.15s;
 }
+
 .input:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px var(--accent-dim);
+  border-color: var(--accent, #4f8cff);
 }
+
 .input:disabled {
   opacity: 0.6;
   cursor: not-allowed;
@@ -89,44 +95,52 @@
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: var(--sp-3);
-  margin-top: var(--sp-2);
+  gap: 0.75rem;
+  margin-top: 0.25rem;
 }
 
-.infoText {
-  font-size: 0.82rem;
-  color: var(--text-muted);
-  padding: var(--sp-3);
-  background: var(--surface2);
-  border-radius: var(--r-md);
+.successMsg {
+  color: #2ecc71;
+  font-size: 0.85rem;
 }
 
 .error {
-  font-size: 0.78rem;
-  color: var(--red);
+  color: #e74c3c;
+  font-size: 0.85rem;
+  margin: 0;
 }
-.successMsg {
-  font-size: 0.78rem;
-  color: var(--green);
-  margin-right: auto;
+
+.infoText {
+  font-size: 0.9rem;
+  color: var(--muted, #888);
+  margin: 0;
 }
 
 .dangerZone {
-  border-color: rgba(214, 69, 69, 0.25);
+  border: 1px solid rgba(231, 76, 60, 0.3);
 }
+
 .dangerTitle {
-  color: var(--red);
+  color: #e74c3c;
 }
+
 .dangerBtn {
-  background: var(--red);
+  background: #e74c3c;
   color: #fff;
+  border: none;
 }
-.dangerBtn:hover:not(:disabled) {
-  opacity: 0.85;
+
+.dangerBtn:hover {
+  background: #c0392b;
+}
+
+.dangerBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .deleteConfirm {
   display: flex;
   flex-direction: column;
-  gap: var(--sp-4);
+  gap: 1rem;
 }
