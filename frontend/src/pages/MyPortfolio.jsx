@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { api } from '../hooks/useApi'
+import PortfolioComparison from '../components/PortfolioComparison'
 import s from './MyPortfolio.module.css'
 
 const TICKER_GROUPS = [
@@ -189,6 +190,11 @@ export default function MyPortfolio() {
         </div>
         {error && <p className={s.error}>{error}</p>}
       </div>
+
+      {/* Portfolio vs MPT comparison */}
+      {holdings.length > 0 && (
+        <PortfolioComparison holdings={holdings} livePrices={livePrices} />
+      )}
 
       {/* Holdings table */}
       {holdings.length > 0 ? (

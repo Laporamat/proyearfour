@@ -21,7 +21,12 @@
 - Google OAuth via Emergent (`/api/auth/session` with `X-Session-ID`).
 - Email/password registration with OTP verification (`/api/auth/register` → `/api/auth/verify-otp`).
 - Session cookie: `session_token`, httpOnly, Secure, SameSite=None.
-- `ProtectedRoute` wraps `/dashboard`, `/chat`, `/analysis/:metric`.
+- `ProtectedRoute` wraps `/dashboard`, `/chat`, `/analysis/:metric`, `/portfolio`, `/watchlist`.
+
+## My Portfolio & Watchlist
+- My Portfolio (`/portfolio`): track stock holdings with buy date → backend fetches historical price via `/api/price/at` (yfinance, converts USD→THB). P/L shown against live prices. Data in localStorage.
+- Watchlist (`/watchlist`): track stocks with price targets, shows live price vs target. Data in localStorage.
+- Portfolio Comparison: component in My Portfolio that compares user's actual allocation vs MPT optimal weights.
 
 ## Verification
 - Health check: `curl http://localhost:8001/health` → `{"status": "ok", ...}`
