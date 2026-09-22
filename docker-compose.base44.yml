@@ -1,0 +1,50 @@
+# Base44 development compose — runs the app from bind-mounted source with live reload.
+services:
+  mongo:
+    image: mongo:7
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: quantix
+      MONGO_INITDB_ROOT_PASSWORD: quantixpass
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend.Dockerfile
+    working_dir: /app/backend
+    volumes:
+      - ./backend:/app/backend
+    environment:
+      - MONGO_URL=mongodb://quantix:quantixpass@mongo:27017/
+      - DB_NAME=quantix
+      - PYTHONUNBUFFERED=1
+    env_file:
+      - /run/base44/app.env
+    depends_on:
+      mongo:
+        condition: service_healthy
+    ports:
+      - "8001:8001"
+
+  frontend:
+    image: node:22
+    working_dir: /app/frontend
+    volumes:
+      - ./frontend:/app/frontend
+    environment:
+      - VITE_PROXY_TARGET=http://backend:8001
+      - __VITE_ADDITIONAL_SERVER_ALLOWED_HOSTS
+    command: sh -c "npm install && npm run dev"
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
+volumes:
+  mongo_data:

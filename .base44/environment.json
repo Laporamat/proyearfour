@@ -1,0 +1,17 @@
+{
+  "previewPort": 3000,
+  "healthPath": "/",
+  "startCommand": "docker compose -f docker-compose.base44.yml up -d",
+  "secrets": [
+    {
+      "name": "OPENAI_API_KEY",
+      "description": "OpenAI API key for the AI chat feature (optional — app falls back to rule-based responses without it). Get it from platform.openai.com/api-keys.",
+      "requiredAtBoot": false
+    },
+    {
+      "name": "RESEND_API_KEY",
+      "description": "Resend API key for transactional email — OTP verification and password reset (optional, app skips email without it). Get it from resend.com/api-keys.",
+      "requiredAtBoot": false
+    }
+  ]
+}
