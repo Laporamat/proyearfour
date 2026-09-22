@@ -1,0 +1,132 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+  max-width: 640px;
+}
+
+.header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--sp-4);
+}
+.sub {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-top: var(--sp-1);
+}
+
+.section {
+  padding: var(--sp-5) var(--sp-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+
+.sectionTitle {
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-4);
+}
+
+.label {
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--text-head);
+}
+.desc {
+  font-size: 0.76rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.themeToggle {
+  min-width: 120px;
+  justify-content: center;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+.fieldLabel {
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.input {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 9px 12px;
+  font-size: 0.86rem;
+  font-family: inherit;
+  color: var(--text-head);
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-dim);
+}
+.input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.fieldActions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--sp-3);
+  margin-top: var(--sp-2);
+}
+
+.infoText {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  padding: var(--sp-3);
+  background: var(--surface2);
+  border-radius: var(--r-md);
+}
+
+.error {
+  font-size: 0.78rem;
+  color: var(--red);
+}
+.successMsg {
+  font-size: 0.78rem;
+  color: var(--green);
+  margin-right: auto;
+}
+
+.dangerZone {
+  border-color: rgba(214, 69, 69, 0.25);
+}
+.dangerTitle {
+  color: var(--red);
+}
+.dangerBtn {
+  background: var(--red);
+  color: #fff;
+}
+.dangerBtn:hover:not(:disabled) {
+  opacity: 0.85;
+}
+
+.deleteConfirm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}

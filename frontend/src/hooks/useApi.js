@@ -134,4 +134,35 @@ export const api = {
 
   priceAt: (ticker, date) =>
     apiFetch(`/api/price/at?ticker=${encodeURIComponent(ticker)}&date=${encodeURIComponent(date)}`),
+
+  // ── User data (portfolio, watchlist, tickers) ──
+  getPortfolio: () =>
+    apiFetch('/api/user/portfolio'),
+
+  addHolding: (body) =>
+    apiFetch('/api/user/portfolio', { method: 'POST', body: JSON.stringify(body) }),
+
+  deleteHolding: (id) =>
+    apiFetch(`/api/user/portfolio/${id}`, { method: 'DELETE' }),
+
+  getWatchlist: () =>
+    apiFetch('/api/user/watchlist'),
+
+  addWatchlistItem: (body) =>
+    apiFetch('/api/user/watchlist', { method: 'POST', body: JSON.stringify(body) }),
+
+  deleteWatchlistItem: (id) =>
+    apiFetch(`/api/user/watchlist/${id}`, { method: 'DELETE' }),
+
+  checkAlerts: () =>
+    apiFetch('/api/user/watchlist/check-alerts', { method: 'POST' }),
+
+  getCustomTickers: () =>
+    apiFetch('/api/user/tickers'),
+
+  addCustomTicker: (ticker) =>
+    apiFetch('/api/user/tickers', { method: 'POST', body: JSON.stringify({ ticker }) }),
+
+  deleteCustomTicker: (ticker) =>
+    apiFetch(`/api/user/tickers/${encodeURIComponent(ticker)}`, { method: 'DELETE' }),
 }

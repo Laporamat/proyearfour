@@ -119,3 +119,25 @@ async def send_otp(to: str, code: str, purpose: str = "register") -> Optional[st
 
 async def send_reset_link(to: str, link: str) -> Optional[str]:
     return await send_email(to, "รีเซ็ตรหัสผ่าน QuantAI", reset_email_html(link))
+
+
+def price_alert_html(name: str, ticker: str, current: float, target: float, note: str) -> str:
+    body = f"""
+      <p>สวัสดี{name and f' {name}' or ''},</p>
+      <p>หุ้น <b>{ticker}</b> ที่คุณติดตามใน Watchlist <b>ถึงราคาเป้าหมายแล้ว!</b></p>
+      <table role="presentation" cellspacing="0" cellpadding="0"
+             style="margin:20px 0;border:1px solid #e5e5e4;border-radius:8px;overflow:hidden;">
+        <tr><td style="padding:12px 20px;background:#f5f5f4;color:#6b7280;font-size:13px;">ราคาปัจจุบัน</td>
+            <td style="padding:12px 20px;font-weight:700;color:#0f9d58;font-size:16px;">฿{current:,.2f}</td></tr>
+        <tr><td style="padding:12px 20px;background:#f5f5f4;color:#6b7280;font-size:13px;">ราคาเป้าหมาย</td>
+            <td style="padding:12px 20px;font-weight:700;color:#0b0f19;font-size:16px;">฿{target:,.2f}</td></tr>
+      </table>
+      {f'<p style="color:#6b7280;font-size:13px;">หมายเหตุ: {note}</p>' if note else ''}
+      <p>เข้าสู่ระบบเพื่อดู Watchlist ของคุณ</p>
+    """
+    return _base_template("🎯 หุ้นถึงเป้าหมายแล้ว", body)
+
+
+async def send_price_alert(to: str, name: str, ticker: str, current: float, target: float, note: str = "") -> Optional[str]:
+    return await send_email(to, f"🎯 {ticker} ถึงราคาเป้าหมายแล้ว — QuantAI",
+                            price_alert_html(name, ticker, current, target, note))

@@ -79,6 +79,38 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* ═══════════════════════════════════════════════
+   DARK MODE TOKENS
+═══════════════════════════════════════════════ */
+[data-theme="dark"] {
+  --bg:        #0c0e14;
+  --surface:   #141721;
+  --surface2:  #1c2030;
+  --surface3:  #262b3d;
+
+  --border:    rgba(255, 255, 255, 0.08);
+  --border-hi: rgba(255, 255, 255, 0.16);
+
+  --text:       #a8b0c0;
+  --text-muted: #6b7488;
+  --text-head:  #e8ecf4;
+
+  --accent:       #5b8def;
+  --accent-light: #7aa1f5;
+  --accent-dim:   rgba(91, 141, 239, 0.12);
+
+  --green:      #22c55e;
+  --green-dim:  rgba(34, 197, 94, 0.12);
+  --red:        #ef5a5a;
+  --red-dim:    rgba(239, 90, 90, 0.12);
+  --yellow:     #fbbf24;
+  --yellow-dim: rgba(251, 191, 36, 0.12);
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
 /* ── Reset ─────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 body  { min-height: 100vh; }

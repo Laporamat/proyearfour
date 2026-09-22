@@ -209,3 +209,23 @@
   flex-shrink: 0;
 }
 .logoutBtn:hover { background: var(--surface3); color: var(--red); }
+
+/* ── Theme toggle ───────────────────────────── */
+.themeBtn {
+  margin-left: auto;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--tx);
+}
+.themeBtn:hover {
+  border-color: var(--border-hi);
+  color: var(--accent);
+  background: var(--surface2);
+}

@@ -1,29 +1,47 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { api } from '../hooks/useApi'
+import { TICKER_GROUPS, ALL_PREDEFINED } from '../lib/tickers'
 import s from './Watchlist.module.css'
 
-const TICKER_GROUPS = [
-  { label: '🇺🇸 US Stocks', items: ['AAPL','MSFT','GOOGL','AMZN','NVDA','TSLA','META','JNJ','V','JPM'] },
-  { label: '🇹🇭 Thai Stocks', items: ['PTT.BK','AOT.BK','CPALL.BK','BDMS.BK','DELTA.BK','GULF.BK','ADVANC.BK','SCB.BK','KBANK.BK','PTTEP.BK'] },
-  { label: '🏦 Bonds & Gold', items: ['TLT','IEF','SHY','GLD','BIL'] },
-]
-
-const STORAGE_KEY = 'watchlist-items'
 const fmt = (n, d = 2) => n != null ? Number(n).toLocaleString('th-TH', { minimumFractionDigits: d, maximumFractionDigits: d }) : '—'
 
 export default function Watchlist() {
-  const [items, setItems] = useState(() => {
-    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]') } catch { return [] }
-  })
+  const [items, setItems] = useState([])
+  const [loading, setLoading] = useState(true)
   const [livePrices, setLivePrices] = useState({})
   const [liveMeta, setLiveMeta] = useState(null)
   const [form, setForm] = useState({ ticker: '', target: '', note: '' })
   const [error, setError] = useState('')
+  const [customTickers, setCustomTickers] = useState([])
+  const [alertMsg, setAlertMsg] = useState('')
   const timerRef = useRef(null)
 
+  // ── Load watchlist from backend ──
+  const loadWatchlist = useCallback(async () => {
+    try {
+      const data = await api.getWatchlist()
+      setItems(data?.items || [])
+    } catch (e) {
+      console.warn('failed to load watchlist:', e.message)
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  // ── Load custom tickers ──
+  const loadCustomTickers = useCallback(async () => {
+    try {
+      const data = await api.getCustomTickers()
+      setCustomTickers(data?.tickers || [])
+    } catch (e) {
+      console.warn('failed to load custom tickers:', e.message)
+    }
+  }, [])
+
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(items))
-  }, [items])
+    loadWatchlist()
+    loadCustomTickers()
+  }, [loadWatchlist, loadCustomTickers])
 
   const loadLive = useCallback(async () => {
     try {
@@ -43,23 +61,62 @@ export default function Watchlist() {
     return () => clearInterval(timerRef.current)
   }, [loadLive])
 
-  const handleAdd = () => {
+  // ── Check price alerts when live prices update ──
+  useEffect(() => {
+    if (items.length > 0 && Object.keys(livePrices).length > 0) {
+      api.checkAlerts().catch(e => console.warn('alert check failed:', e.message))
+    }
+  }, [livePrices, items.length])
+
+  const handleAdd = async () => {
     setError('')
-    if (!form.ticker) { setError('กรุณาเลือกหุ้น'); return }
-    if (items.some(i => i.ticker === form.ticker)) { setError('หุ้นนี้อยู่ใน Watchlist แล้ว'); return }
+    const ticker = form.ticker.trim().toUpperCase()
+    if (!ticker) { setError('กรุณาเลือกหุ้น'); return }
+    if (items.some(i => i.ticker === ticker)) { setError('หุ้นนี้อยู่ใน Watchlist แล้ว'); return }
     const target = form.target ? parseFloat(form.target) : null
     if (form.target && target <= 0) { setError('ราคาเป้าหมายต้องมากกว่า 0'); return }
-    setItems(prev => [...prev, {
-      id:     Date.now().toString(),
-      ticker: form.ticker,
-      target,
-      note:   form.note.trim(),
-    }])
-    setForm({ ticker: '', target: '', note: '' })
+    try {
+      const item = await api.addWatchlistItem({
+        ticker,
+        target,
+        note: form.note.trim(),
+      })
+      if (item) {
+        setItems(prev => [...prev, item])
+        // If custom ticker, add to custom list
+        if (!ALL_PREDEFINED.includes(ticker)) {
+          await api.addCustomTicker(ticker)
+          setCustomTickers(prev => prev.includes(ticker) ? prev : [...prev, ticker])
+        }
+      }
+      setForm({ ticker: '', target: '', note: '' })
+    } catch (e) {
+      setError(e.message || 'เกิดข้อผิดพลาด')
+    }
   }
 
-  const handleDelete = (id) =>
-    setItems(prev => prev.filter(i => i.id !== id))
+  const handleDelete = async (id) => {
+    try {
+      await api.deleteWatchlistItem(id)
+      setItems(prev => prev.filter(i => i.id !== id))
+    } catch (e) {
+      console.warn('delete failed:', e.message)
+    }
+  }
+
+  const handleCheckAlerts = async () => {
+    setAlertMsg('')
+    try {
+      const result = await api.checkAlerts()
+      if (result?.alerts_sent > 0) {
+        setAlertMsg(`ส่งการแจ้งเตือน ${result.alerts_sent} รายการทางอีเมล ✓`)
+      } else {
+        setAlertMsg('ยังไม่มีหุ้นที่ถึงราคาเป้าหมาย')
+      }
+    } catch (e) {
+      setAlertMsg('ตรวจสอบไม่สำเร็จ: ' + e.message)
+    }
+  }
 
   const rows = items.map(item => {
     const current = livePrices[item.ticker] ?? null
@@ -85,24 +142,35 @@ export default function Watchlist() {
             )}
           </p>
         </div>
+        {items.length > 0 && (
+          <button className="btn btn-ghost" onClick={handleCheckAlerts}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+              <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+            </svg>
+            ตรวจสอบการแจ้งเตือน
+          </button>
+        )}
       </header>
+
+      {alertMsg && <p className={s.alertMsg}>{alertMsg}</p>}
 
       {/* Add form */}
       <div className={`card ${s.formCard}`}>
         <h3>เพิ่มหุ้นที่ติดตาม</h3>
         <div className={s.form}>
-          <select
-            className={s.select}
+          <input
+            className={`${s.select} ${s.tickerInput}`}
+            type="text"
+            list="wl-ticker-list"
+            placeholder="เลือกหรือพิมพ์ ticker…"
             value={form.ticker}
-            onChange={e => setForm(f => ({ ...f, ticker: e.target.value }))}
-          >
-            <option value="">เลือกหุ้น…</option>
-            {TICKER_GROUPS.map(({ label, items: tickers }) => (
-              <optgroup key={label} label={label}>
-                {tickers.map(t => <option key={t} value={t}>{t}</option>)}
-              </optgroup>
-            ))}
-          </select>
+            onChange={e => setForm(f => ({ ...f, ticker: e.target.value.toUpperCase() }))}
+          />
+          <datalist id="wl-ticker-list">
+            {TICKER_GROUPS.flatMap(g => g.items).map(t => <option key={t} value={t} />)}
+            {customTickers.map(t => <option key={t} value={t} />)}
+          </datalist>
           <input
             className={s.input}
             type="number"
@@ -125,7 +193,9 @@ export default function Watchlist() {
       </div>
 
       {/* Table */}
-      {items.length > 0 ? (
+      {loading ? (
+        <div className={`card ${s.empty}`}>กำลังโหลด…</div>
+      ) : items.length > 0 ? (
         <div className={`card ${s.tableCard}`}>
           <div className={s.tableWrap}>
             <table className={s.table}>

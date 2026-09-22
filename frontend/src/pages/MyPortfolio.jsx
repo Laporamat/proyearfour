@@ -1,40 +1,49 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { api } from '../hooks/useApi'
+import { TICKER_GROUPS, ALL_PREDEFINED } from '../lib/tickers'
 import PortfolioComparison from '../components/PortfolioComparison'
 import s from './MyPortfolio.module.css'
-
-const TICKER_GROUPS = [
-  { group: 'US', label: '🇺🇸 US Stocks', items: [
-    'AAPL','MSFT','GOOGL','AMZN','NVDA','TSLA','META','JNJ','V','JPM',
-  ]},
-  { group: 'TH', label: '🇹🇭 Thai Stocks', items: [
-    'PTT.BK','AOT.BK','CPALL.BK','BDMS.BK','DELTA.BK',
-    'GULF.BK','ADVANC.BK','SCB.BK','KBANK.BK','PTTEP.BK',
-  ]},
-  { group: 'BD', label: '🏦 Bonds & Gold', items: [
-    'TLT','IEF','SHY','GLD','BIL',
-  ]},
-]
-
-const STORAGE_KEY = 'my-portfolio-holdings'
 
 const fmt = (n, d = 2) =>
   n != null ? Number(n).toLocaleString('th-TH', { minimumFractionDigits: d, maximumFractionDigits: d }) : '—'
 
 export default function MyPortfolio() {
-  const [holdings, setHoldings] = useState(() => {
-    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]') } catch { return [] }
-  })
+  const [holdings, setHoldings] = useState([])
+  const [loading, setLoading] = useState(true)
   const [livePrices, setLivePrices] = useState({})
   const [liveMeta, setLiveMeta] = useState(null)
   const [form, setForm] = useState({ ticker: '', shares: '', date: '' })
   const [adding, setAdding] = useState(false)
   const [error, setError] = useState('')
+  const [customTickers, setCustomTickers] = useState([])
   const timerRef = useRef(null)
 
+  // ── Load holdings from backend ──
+  const loadHoldings = useCallback(async () => {
+    try {
+      const data = await api.getPortfolio()
+      setHoldings(data?.items || [])
+    } catch (e) {
+      console.warn('failed to load portfolio:', e.message)
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  // ── Load custom tickers ──
+  const loadCustomTickers = useCallback(async () => {
+    try {
+      const data = await api.getCustomTickers()
+      setCustomTickers(data?.tickers || [])
+    } catch (e) {
+      console.warn('failed to load custom tickers:', e.message)
+    }
+  }, [])
+
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(holdings))
-  }, [holdings])
+    loadHoldings()
+    loadCustomTickers()
+  }, [loadHoldings, loadCustomTickers])
 
   const loadLive = useCallback(async () => {
     try {
@@ -56,7 +65,8 @@ export default function MyPortfolio() {
 
   const handleAdd = async () => {
     setError('')
-    if (!form.ticker || !form.shares || !form.date) {
+    const ticker = form.ticker.trim().toUpperCase()
+    if (!ticker || !form.shares || !form.date) {
       setError('กรุณากรอกข้อมูลให้ครบ')
       return
     }
@@ -66,18 +76,25 @@ export default function MyPortfolio() {
     }
     setAdding(true)
     try {
-      const result = await api.priceAt(form.ticker, form.date)
+      const result = await api.priceAt(ticker, form.date)
       if (!result || result.close_thb == null) {
         setError('ไม่สามารถดึงราคาในวันที่เลือกได้')
         return
       }
-      setHoldings(prev => [...prev, {
-        id:       Date.now().toString(),
-        ticker:   form.ticker,
-        shares:   parseFloat(form.shares),
-        buyDate:  result.date,
+      const item = await api.addHolding({
+        ticker,
+        shares: parseFloat(form.shares),
+        buyDate: result.date,
         buyPrice: result.close_thb,
-      }])
+      })
+      if (item) {
+        setHoldings(prev => [...prev, item])
+        // If it's a custom ticker (not in predefined list), add to custom list
+        if (!ALL_PREDEFINED.includes(ticker)) {
+          await api.addCustomTicker(ticker)
+          setCustomTickers(prev => prev.includes(ticker) ? prev : [...prev, ticker])
+        }
+      }
       setForm({ ticker: '', shares: '', date: '' })
     } catch (e) {
       setError(e.message || 'เกิดข้อผิดพลาด')
@@ -86,10 +103,41 @@ export default function MyPortfolio() {
     }
   }
 
-  const handleDelete = (id) =>
-    setHoldings(prev => prev.filter(h => h.id !== id))
+  const handleDelete = async (id) => {
+    try {
+      await api.deleteHolding(id)
+      setHoldings(prev => prev.filter(h => h.id !== id))
+    } catch (e) {
+      console.warn('delete failed:', e.message)
+    }
+  }
 
-  const rows = holdings.map(h => {
+  // ── CSV Export ──
+  const handleExportCSV = () => {
+    const headers = ['Ticker', 'Shares', 'Buy Date', 'Buy Price (THB)', 'Current Price (THB)', 'Value (THB)', 'P/L (THB)', 'P/L (%)']
+    const rows = rowsData.map(r => [
+      r.ticker,
+      r.shares,
+      r.buyDate,
+      r.buyPrice,
+      r.currentPrice ?? '',
+      r.value ?? '',
+      r.pl ?? '',
+      r.plPct != null ? r.plPct.toFixed(2) : '',
+    ])
+    const csv = [headers, ...rows]
+      .map(row => row.map(cell => `"${cell}"`).join(','))
+      .join('\n')
+    const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `my-portfolio-${new Date().toISOString().split('T')[0]}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  const rowsData = holdings.map(h => {
     const currentPrice = livePrices[h.ticker] ?? null
     const cost   = h.buyPrice * h.shares
     const value  = currentPrice != null ? currentPrice * h.shares : null
@@ -98,8 +146,8 @@ export default function MyPortfolio() {
     return { ...h, currentPrice, cost, value, pl, plPct }
   })
 
-  const totalCost  = rows.reduce((sum, r) => sum + r.cost, 0)
-  const totalValue = rows.reduce((sum, r) => sum + (r.value ?? 0), 0)
+  const totalCost  = rowsData.reduce((sum, r) => sum + r.cost, 0)
+  const totalValue = rowsData.reduce((sum, r) => sum + (r.value ?? 0), 0)
   const totalPL    = totalValue - totalCost
   const totalPLPct = totalCost > 0 ? (totalPL / totalCost) * 100 : 0
 
@@ -120,6 +168,16 @@ export default function MyPortfolio() {
             )}
           </p>
         </div>
+        {holdings.length > 0 && (
+          <button className="btn btn-ghost" onClick={handleExportCSV}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            Export CSV
+          </button>
+        )}
       </header>
 
       {/* Summary */}
@@ -152,18 +210,18 @@ export default function MyPortfolio() {
       <div className={`card ${s.formCard}`}>
         <h3>เพิ่มหุ้นที่ซื้อ</h3>
         <div className={s.form}>
-          <select
-            className={s.select}
+          <input
+            className={`${s.select} ${s.tickerInput}`}
+            type="text"
+            list="ticker-list"
+            placeholder="เลือกหรือพิมพ์ ticker…"
             value={form.ticker}
-            onChange={e => setForm(f => ({ ...f, ticker: e.target.value }))}
-          >
-            <option value="">เลือกหุ้น…</option>
-            {TICKER_GROUPS.map(({ label, items }) => (
-              <optgroup key={label} label={label}>
-                {items.map(t => <option key={t} value={t}>{t}</option>)}
-              </optgroup>
-            ))}
-          </select>
+            onChange={e => setForm(f => ({ ...f, ticker: e.target.value.toUpperCase() }))}
+          />
+          <datalist id="ticker-list">
+            {TICKER_GROUPS.flatMap(g => g.items).map(t => <option key={t} value={t} />)}
+            {customTickers.map(t => <option key={t} value={t} />)}
+          </datalist>
           <input
             className={s.input}
             type="number"
@@ -197,7 +255,9 @@ export default function MyPortfolio() {
       )}
 
       {/* Holdings table */}
-      {holdings.length > 0 ? (
+      {loading ? (
+        <div className={`card ${s.empty}`}>กำลังโหลด…</div>
+      ) : holdings.length > 0 ? (
         <div className={`card ${s.tableCard}`}>
           <div className={s.tableWrap}>
             <table className={s.table}>
@@ -215,7 +275,7 @@ export default function MyPortfolio() {
                 </tr>
               </thead>
               <tbody>
-                {rows.map(r => (
+                {rowsData.map(r => (
                   <tr key={r.id}>
                     <td className={s.ticker}>{r.ticker}</td>
                     <td className={s.right}>{fmt(r.shares, 0)}</td>
