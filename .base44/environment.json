@@ -1,0 +1,27 @@
+{
+  "previewPort": 3000,
+  "healthPath": "/",
+  "startCommand": "docker compose -f docker-compose.base44.yml up -d",
+  "secrets": [
+    {
+      "name": "OPENAI_API_KEY",
+      "description": "OpenAI API key for the AI Chat feature (optional — app boots without it). Get it from https://platform.openai.com/api-keys",
+      "requiredAtBoot": false
+    },
+    {
+      "name": "OPENAI_BASE_URL",
+      "description": "Optional custom base URL for an OpenAI-compatible endpoint (e.g. Azure, Ollama). Defaults to OpenAI's official endpoint.",
+      "requiredAtBoot": false
+    },
+    {
+      "name": "OPENAI_MODEL",
+      "description": "Model name for the AI Chat feature (optional). Defaults to gpt-4o-mini.",
+      "requiredAtBoot": false
+    },
+    {
+      "name": "RESEND_API_KEY",
+      "description": "Resend API key for transactional email (OTP verification, password reset). Optional — app boots without it. Get it from https://resend.com/api-keys",
+      "requiredAtBoot": false
+    }
+  ]
+}
