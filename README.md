@@ -438,7 +438,10 @@ curl -H "Cookie: session_token=demo_session_persistent" \
 - [x] **Price Alert notifications** — แจ้งเตือนทางอีเมลเมื่อราคาถึงเป้าหมายใน Watchlist
 - [x] **Portfolio persistence** — บันทึก My Portfolio และ Watchlist ใน MongoDB (ปัจจุบันเก็บใน localStorage)
 - [x] **More tickers** — เพิ่มหุ้นนอกเหนือ 25 ตัว (ให้ผู้ใช้เพิ่มเอง)
--------------------------------------(ยังไม่ได้ทำ)--------------------------------------
+
+---
+(ยังไม่ได้ทำ)
+---
 ### 🎯 ระยะกลาง (Mid-term)
 - [ ] **Rebalancing suggestions** — แนะนำการปรับสัดส่วนพอร์ตตาม MPT + สภาวะตลาดปัจจุบัน
 - [ ] **Backtesting** — ทดสอบกลยุทธ์การลงทุนย้อนหลัง (buy & hold vs MPT vs regime-based)
