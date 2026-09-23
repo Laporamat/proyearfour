@@ -1,0 +1,183 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+  height: 100%;
+  min-height: 0;
+}
+
+/* ── Header ──────────────────────────────────── */
+.header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--sp-4);
+}
+.sub {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-top: var(--sp-1);
+}
+
+/* ── Period selector ─────────────────────────── */
+.periodBtns {
+  display: flex;
+  gap: var(--sp-1);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 3px;
+}
+.periodBtn {
+  padding: 6px 14px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-weight: 500;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  transition: all var(--tx);
+  font-family: inherit;
+}
+.periodBtn:hover { color: var(--text); }
+.periodActive {
+  background: var(--accent);
+  color: #fff;
+  font-weight: 600;
+}
+
+/* ── Info bar ────────────────────────────────── */
+.infoBar {
+  display: flex;
+  gap: var(--sp-5);
+  font-size: 0.76rem;
+  color: var(--text-muted);
+  padding: 0 var(--sp-2);
+}
+
+/* ── Chart card ──────────────────────────────── */
+.chartCard { padding: var(--sp-5); }
+.cardTitle { margin-bottom: var(--sp-4); }
+.chart {
+  width: 100%;
+  height: auto;
+  max-height: 280px;
+}
+.axisLabel {
+  fill: var(--text-muted);
+  font-size: 10px;
+  font-family: 'Geist', sans-serif;
+}
+
+.legend {
+  display: flex;
+  gap: var(--sp-5);
+  margin-top: var(--sp-4);
+  font-size: 0.74rem;
+  color: var(--text-muted);
+  flex-wrap: wrap;
+}
+.legend span { display: flex; align-items: center; gap: 6px; }
+.dot {
+  width: 12px; height: 3px;
+  border-radius: 2px;
+  display: inline-block;
+}
+
+/* ── Table ───────────────────────────────────── */
+.tableCard { padding: var(--sp-5); }
+.tableWrap { overflow-x: auto; }
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+}
+.table th {
+  text-align: left;
+  padding: var(--sp-3) var(--sp-4);
+  font-weight: 600;
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+.table td {
+  padding: var(--sp-3) var(--sp-4);
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+  white-space: nowrap;
+}
+.table tbody tr:last-child td { border-bottom: none; }
+.table tbody tr:hover { background: var(--surface2); }
+
+.right { text-align: right; }
+.strategyName { font-weight: 700; color: var(--text-head); }
+.profit { color: var(--green); font-weight: 600; }
+.loss   { color: var(--red);   font-weight: 600; }
+
+/* ── Strategy cards ──────────────────────────── */
+.strategyCards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--sp-4);
+}
+.strategyCard { padding: var(--sp-5); }
+.strategyHead {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-2);
+}
+.strategyDot {
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.strategyDesc {
+  font-size: 0.74rem;
+  color: var(--text-muted);
+  margin-bottom: var(--sp-3);
+  line-height: 1.4;
+}
+.strategyMetrics {
+  display: flex;
+  gap: var(--sp-4);
+}
+.metric {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.metricLabel {
+  font-size: 0.62rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 600;
+}
+.metricValue {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-head);
+}
+
+/* ── Empty ──────────────────────────────────── */
+.empty {
+  text-align: center;
+  padding: var(--sp-8);
+  color: var(--text-muted);
+  font-size: 0.86rem;
+}
+
+/* ── Responsive ──────────────────────────────── */
+@media (max-width: 900px) {
+  .strategyCards { grid-template-columns: 1fr; }
+}
+@media (max-width: 680px) {
+  .periodBtns { width: 100%; justify-content: center; }
+  .infoBar { flex-wrap: wrap; gap: var(--sp-3); }
+}

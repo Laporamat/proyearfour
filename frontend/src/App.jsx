@@ -7,6 +7,8 @@ import Dashboard       from './pages/Dashboard'
 import Chat            from './pages/Chat'
 import MetricAnalysis  from './pages/MetricAnalysis'
 import MyPortfolio     from './pages/MyPortfolio'
+import Rebalancing      from './pages/Rebalancing'
+import Backtesting      from './pages/Backtesting'
 import Watchlist        from './pages/Watchlist'
 import Settings        from './pages/Settings'
 import Landing         from './pages/Landing'
@@ -41,6 +43,8 @@ function AppRouter() {
         <Route path="/chat"      element={<Chat />} />
         <Route path="/analysis/:metric" element={<MetricAnalysis />} />
         <Route path="/portfolio" element={<MyPortfolio />} />
+        <Route path="/rebalancing" element={<Rebalancing />} />
+        <Route path="/backtesting" element={<Backtesting />} />
         <Route path="/watchlist" element={<Watchlist />} />
         <Route path="/settings" element={<Settings />} />
       </Route>

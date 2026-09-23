@@ -14,6 +14,18 @@
   flex-wrap: wrap;
   gap: var(--sp-4);
 }
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  flex-wrap: wrap;
+}
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  flex-wrap: wrap;
+}
 .sub {
   font-size: 0.78rem;
   color: var(--text-muted);
@@ -35,15 +47,150 @@
   letter-spacing: 0.02em;
 }
 
+/* ── Portfolio selector ──────────────────────── */
+.portfolioSelector {
+  position: relative;
+}
+.portfolioBtn {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: 6px 12px;
+  border-radius: var(--r-md);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text-head);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all var(--tx);
+}
+.portfolioBtn:hover { border-color: var(--border-hi); background: var(--surface2); }
+.portfolioIcon { font-size: 1rem; }
+.portfolioName { white-space: nowrap; }
+
+.menuOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+}
+.portfolioMenu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  min-width: 240px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-lg);
+  z-index: 51;
+  padding: var(--sp-2);
+  max-height: 360px;
+  overflow-y: auto;
+}
+.menuItem {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: 8px 10px;
+  border-radius: var(--r-md);
+  cursor: pointer;
+  font-size: 0.82rem;
+  color: var(--text);
+  transition: background var(--tx);
+}
+.menuItem:hover { background: var(--surface2); }
+.menuItemActive { background: var(--accent-dim); color: var(--accent); font-weight: 600; }
+.menuIcon { font-size: 1rem; width: 20px; text-align: center; flex-shrink: 0; }
+.menuText { flex: 1; min-width: 0; }
+.menuCount {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  background: var(--surface2);
+  padding: 2px 8px;
+  border-radius: var(--r-pill);
+  font-weight: 600;
+}
+.menuDelete {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: var(--r-sm);
+  font-size: 0.72rem;
+  transition: all var(--tx);
+}
+.menuDelete:hover { color: var(--red); background: var(--red-dim); }
+.menuDivider {
+  height: 1px;
+  background: var(--border);
+  margin: var(--sp-2) 0;
+}
+
+/* ── Currency toggle ────────────────────────── */
+.currencyToggle {
+  display: flex;
+  gap: 2px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 3px;
+}
+.curBtn {
+  padding: 5px 12px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.74rem;
+  font-weight: 600;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  transition: all var(--tx);
+  font-family: inherit;
+}
+.curBtn:hover { color: var(--text); }
+.curActive {
+  background: var(--accent);
+  color: #fff;
+}
+
+/* ── Create portfolio form ──────────────────── */
+.createForm { padding: var(--sp-5); }
+.createForm h3 { margin-bottom: var(--sp-4); }
+.createRow {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  flex-wrap: wrap;
+}
+.iconPicker {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+.iconBtn {
+  width: 32px; height: 32px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--tx);
+}
+.iconBtn:hover { border-color: var(--border-hi); }
+.iconActive { border-color: var(--accent); background: var(--accent-dim); }
+
 /* ── Summary cards ───────────────────────────── */
 .summary {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: var(--sp-4);
 }
-@media (max-width: 900px) { .summary { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 480px) { .summary { grid-template-columns: 1fr; } }
-
 .sumCard {
   display: flex;
   flex-direction: column;
@@ -65,6 +212,86 @@
 }
 .sumCard.profit .sumValue { color: var(--green); }
 .sumCard.loss   .sumValue { color: var(--red); }
+
+/* ── Dividend section ────────────────────────── */
+.divCard { padding: var(--sp-5); }
+.cardTitle { margin-bottom: var(--sp-4); }
+.divSummary {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--sp-4);
+  margin-bottom: var(--sp-4);
+}
+.divMetric {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+}
+.divLabel {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.divValue {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--text-head);
+  letter-spacing: -0.02em;
+}
+.divBreakdown {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-3);
+}
+.divBarRow {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+}
+.divBarLabel {
+  font-size: 0.74rem;
+  color: var(--text-muted);
+  width: 140px;
+  flex-shrink: 0;
+}
+.divBarBg {
+  flex: 1;
+  height: 10px;
+  background: var(--surface2);
+  border-radius: var(--r-pill);
+  overflow: hidden;
+}
+.divBarFill {
+  height: 100%;
+  border-radius: var(--r-pill);
+  transition: width 0.4s ease;
+}
+.divBarPct {
+  font-size: 0.74rem;
+  font-weight: 600;
+  width: 60px;
+  text-align: right;
+}
+.divDetails {
+  margin-top: var(--sp-3);
+}
+.divDetails summary {
+  cursor: pointer;
+  font-size: 0.78rem;
+  color: var(--accent);
+  font-weight: 600;
+  padding: var(--sp-2) 0;
+}
+.divDetails summary:hover { text-decoration: underline; }
+.divLoading {
+  text-align: center;
+  padding: var(--sp-4);
+  color: var(--text-muted);
+  font-size: 0.82rem;
+}
 
 /* ── Add form ────────────────────────────────── */
 .formCard { padding: var(--sp-5); }
@@ -166,4 +393,24 @@
   padding: var(--sp-8);
   color: var(--text-muted);
   font-size: 0.86rem;
+}
+
+/* ── Responsive ──────────────────────────────── */
+@media (max-width: 900px) {
+  .summary { grid-template-columns: repeat(2, 1fr); }
+  .divSummary { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 680px) {
+  .header { flex-direction: column; align-items: stretch; }
+  .headerActions { justify-content: space-between; }
+  .titleRow { flex-wrap: wrap; }
+  .portfolioBtn { width: 100%; justify-content: center; }
+  .portfolioMenu { left: 0; right: 0; min-width: auto; }
+}
+@media (max-width: 480px) {
+  .summary { grid-template-columns: 1fr; }
+  .divSummary { grid-template-columns: 1fr; }
+  .form { flex-direction: column; align-items: stretch; }
+  .select, .input, .tickerInput { width: 100%; }
+  .divBarLabel { width: 100px; font-size: 0.68rem; }
 }
