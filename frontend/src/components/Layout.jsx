@@ -17,15 +17,6 @@ const NAV = [
     ),
   },
   {
-    to: '/chat',
-    label: 'AI Chat',
-    icon: (
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-      </svg>
-    ),
-  },
-  {
     to: '/portfolio',
     label: 'My Portfolio',
     icon: (
@@ -36,12 +27,40 @@ const NAV = [
     ),
   },
   {
+    to: '/rebalancing',
+    label: 'Rebalancing',
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/>
+        <path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/>
+      </svg>
+    ),
+  },
+  {
+    to: '/backtesting',
+    label: 'Backtesting',
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M3 3v18h18"/><path d="M7 12l4-4 4 4 5-5"/>
+      </svg>
+    ),
+  },
+  {
     to: '/watchlist',
     label: 'Watchlist',
     icon: (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M1 12s4-8 11-8 11 8-4 8-11 8-11-8-11-8z"/>
         <circle cx="12" cy="12" r="3"/>
+      </svg>
+    ),
+  },
+  {
+    to: '/chat',
+    label: 'AI Chat',
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
       </svg>
     ),
   },
@@ -59,6 +78,7 @@ const NAV = [
 
 export default function Layout() {
   const [online, setOnline] = useState(null)
+  const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const { user, logout } = useAuth()
   const { theme, toggle } = useTheme()
 
@@ -70,9 +90,52 @@ export default function Layout() {
     return () => clearInterval(id)
   }, [])
 
+  // Close mobile nav on route change
+  const handleNavClick = () => setMobileNavOpen(false)
+
   return (
     <div className={s.shell}>
-      <aside className={s.sidebar}>
+      {/* ── Mobile top bar ── */}
+      <header className={s.mobileTopBar}>
+        <button className={s.hamburger} onClick={() => setMobileNavOpen(v => !v)} aria-label="Menu">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            {mobileNavOpen
+              ? <><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>
+              : <><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></>
+            }
+          </svg>
+        </button>
+        <div className={s.mobileLogo}>
+          <div className={s.logoMark}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/>
+              <polyline points="16 7 22 7 22 13"/>
+            </svg>
+          </div>
+          <span className={s.mobileLogoText}>QuantAI</span>
+        </div>
+        <button className={s.themeBtn} onClick={toggle} title={theme === 'light' ? 'โหมดกลางคืน' : 'โหมดกลางวัน'}>
+          {theme === 'light' ? (
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+            </svg>
+          ) : (
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="5"/>
+              <line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
+              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+              <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
+              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+            </svg>
+          )}
+        </button>
+      </header>
+
+      {/* ── Mobile nav overlay ── */}
+      {mobileNavOpen && <div className={s.overlay} onClick={() => setMobileNavOpen(false)} />}
+
+      {/* ── Sidebar ── */}
+      <aside className={`${s.sidebar} ${mobileNavOpen ? s.sidebarOpen : ''}`}>
         {/* ── Logo ── */}
         <div className={s.logo}>
           <div className={s.logoMark}>
@@ -95,6 +158,7 @@ export default function Layout() {
               key={to}
               to={to}
               className={({ isActive }) => `${s.navItem} ${isActive ? s.active : ''}`}
+              onClick={handleNavClick}
             >
               <span className={s.navIcon}>{icon}</span>
               <span>{label}</span>
@@ -144,13 +208,27 @@ export default function Layout() {
               )}
             </button>
           </div>
-          <div className={s.meta}>25 Assets · THB · v1.0</div>
+          <div className={s.meta}>25 Assets · THB · v2.0</div>
         </div>
       </aside>
 
       <main className={s.main}>
         <Outlet />
       </main>
+
+      {/* ── Mobile bottom nav ── */}
+      <nav className={s.bottomNav}>
+        {NAV.slice(0, 5).map(({ to, label, icon }) => (
+          <NavLink
+            key={to}
+            to={to}
+            className={({ isActive }) => `${s.bottomNavItem} ${isActive ? s.bottomNavActive : ''}`}
+          >
+            <span className={s.bottomNavIcon}>{icon}</span>
+            <span className={s.bottomNavLabel}>{label}</span>
+          </NavLink>
+        ))}
+      </nav>
     </div>
   )
 }

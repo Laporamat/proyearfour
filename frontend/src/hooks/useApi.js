@@ -165,4 +165,38 @@ export const api = {
 
   deleteCustomTicker: (ticker) =>
     apiFetch(`/api/user/tickers/${encodeURIComponent(ticker)}`, { method: 'DELETE' }),
+
+  // ── Multi-portfolio ──
+  listPortfolios: () =>
+    apiFetch('/api/user/portfolios'),
+
+  createPortfolio: (body) =>
+    apiFetch('/api/user/portfolios', { method: 'POST', body: JSON.stringify(body) }),
+
+  deletePortfolio: (id) =>
+    apiFetch(`/api/user/portfolios/${id}`, { method: 'DELETE' }),
+
+  updatePortfolio: (id, body) =>
+    apiFetch(`/api/user/portfolios/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),
+
+  getHoldings: (portfolioId) =>
+    apiFetch(`/api/user/portfolios/${portfolioId}/holdings`),
+
+  addHoldingToPortfolio: (portfolioId, body) =>
+    apiFetch(`/api/user/portfolios/${portfolioId}/holdings`, { method: 'POST', body: JSON.stringify(body) }),
+
+  deleteHoldingFromPortfolio: (portfolioId, itemId) =>
+    apiFetch(`/api/user/portfolios/${portfolioId}/holdings/${itemId}`, { method: 'DELETE' }),
+
+  // ── Dividends ──
+  getDividends: (portfolioId) =>
+    apiFetch(`/api/user/portfolios/${portfolioId}/dividends`),
+
+  // ── Rebalancing ──
+  rebalancingSuggestions: (holdings) =>
+    apiFetch('/api/rebalancing/suggestions', { method: 'POST', body: JSON.stringify({ holdings }) }),
+
+  // ── Backtesting ──
+  backtest: (period = 'all') =>
+    apiFetch(`/api/backtest?period=${period}`),
 }

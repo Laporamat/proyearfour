@@ -4,6 +4,11 @@
   min-height: 100vh;
 }
 
+/* ── Mobile top bar (hidden on desktop) ─────── */
+.mobileTopBar {
+  display: none;
+}
+
 /* ── Sidebar ─────────────────────────────────── */
 .sidebar {
   width: 220px;
@@ -16,6 +21,7 @@
   top: 0;
   height: 100vh;
   overflow: hidden;
+  z-index: 100;
 }
 
 /* ── Logo ────────────────────────────────────── */
@@ -62,6 +68,7 @@
   gap: 2px;
   padding: var(--sp-4) var(--sp-3);
   flex: 1;
+  overflow-y: auto;
 }
 
 .navSection {
@@ -150,9 +157,10 @@
   background: var(--bg);
 }
 
-@media (max-width: 900px) { .sidebar { width: 200px; } .main { padding: var(--sp-5); } }
-@media (max-width: 680px) { .sidebar { display: none; } .main { padding: var(--sp-4); } }
-
+/* ── Bottom nav (mobile) ─────────────────────── */
+.bottomNav {
+  display: none;
+}
 
 /* ── User chip in footer ─────────────── */
 .userChip {
@@ -228,4 +236,148 @@
   border-color: var(--border-hi);
   color: var(--accent);
   background: var(--surface2);
+}
+
+/* ── Overlay for mobile nav ─────────────────── */
+.overlay {
+  display: none;
+}
+
+/* ═══════════════════════════════════════════════
+   RESPONSIVE — TABLET
+═══════════════════════════════════════════════ */
+@media (max-width: 900px) {
+  .sidebar { width: 200px; }
+  .main { padding: var(--sp-5); }
+}
+
+/* ═══════════════════════════════════════════════
+   RESPONSIVE — MOBILE
+═══════════════════════════════════════════════ */
+@media (max-width: 680px) {
+  .shell {
+    flex-direction: column;
+  }
+
+  /* ── Mobile top bar ── */
+  .mobileTopBar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--sp-3) var(--sp-4);
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 200;
+    min-height: 52px;
+  }
+
+  .hamburger {
+    background: transparent;
+    border: none;
+    color: var(--text-head);
+    cursor: pointer;
+    padding: 6px;
+    border-radius: var(--r-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .hamburger:hover { background: var(--surface2); }
+
+  .mobileLogo {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+  }
+  .mobileLogo .logoMark {
+    width: 28px;
+    height: 28px;
+  }
+  .mobileLogoText {
+    font-size: 0.9rem;
+    font-weight: 800;
+    color: var(--text-head);
+    letter-spacing: -0.02em;
+  }
+
+  /* ── Sidebar as slide-in drawer ── */
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: 260px;
+    transform: translateX(-100%);
+    transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+    box-shadow: var(--shadow-lg);
+  }
+  .sidebarOpen {
+    transform: translateX(0);
+  }
+
+  /* ── Overlay ── */
+  .overlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 90;
+  }
+
+  /* ── Main content ── */
+  .main {
+    flex: 1;
+    padding: var(--sp-4);
+    padding-bottom: 70px; /* space for bottom nav */
+    overflow-y: auto;
+  }
+
+  /* ── Bottom navigation bar ── */
+  .bottomNav {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    z-index: 150;
+    padding: 6px 4px;
+    justify-content: space-around;
+    max-width: 100%;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .bottomNav::-webkit-scrollbar { display: none; }
+
+  .bottomNavItem {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    padding: 4px 8px;
+    border-radius: var(--r-sm);
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 0.62rem;
+    font-weight: 500;
+    flex-shrink: 0;
+    transition: color var(--tx);
+  }
+  .bottomNavActive {
+    color: var(--accent);
+    font-weight: 600;
+  }
+  .bottomNavIcon {
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .bottomNavLabel {
+    white-space: nowrap;
+  }
 }

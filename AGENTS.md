@@ -36,7 +36,17 @@
 - Dark mode: `ThemeContext` toggles `data-theme` on `<html>`. Toggle button in sidebar footer. Persisted in localStorage.
 - Auth endpoints: `/api/auth/change-password`, `/api/auth/profile` (PATCH), `/api/auth/account` (DELETE).
 
+## Rebalancing, Backtesting, Multi-Portfolio & Dividends
+- **Rebalancing** (`/rebalancing`): POST `/api/rebalancing/suggestions` — compares user holdings vs MPT optimal weights adjusted by current regime (Bull → tilt equity +15%, Bear → tilt safe +80%). GET `/api/rebalancing/regime-tilt` for tilt factors. Backend: `rebalancing.py`.
+- **Backtesting** (`/backtesting`): GET `/api/backtest?period=1y|3y|all` — runs 3 strategies (Buy & Hold, MPT Optimized with monthly rebalance, Regime-Based) and returns equity curves + metrics (CAGR, Sharpe, Max DD, Volatility). Backend: `backtest.py`.
+- **Multi-Portfolio**: GET/POST/DELETE/PATCH `/api/user/portfolios` — CRUD for named portfolios (e.g. พอร์ตเกษียณ, พอร์ตเก็งกำไร). Holdings scoped per portfolio: `/api/user/portfolios/{id}/holdings`. Auto-migrates old single-portfolio data. Backend: `portfolio_manager.py`. Old `/api/user/portfolio` endpoints still work for backward compat.
+- **Dividend Tracking**: GET `/api/user/portfolios/{id}/dividends` — fetches dividend history via yfinance, computes total dividends (THB), capital gain, and total return %. Shown in My Portfolio when dividends exist.
+- **Multi-Currency**: THB/USD toggle in My Portfolio header. Converts all values using live FX rate from `/api/prices/live` (`fx_thb_per_usd`). Handled client-side.
+- **Mobile Responsive**: Layout has hamburger menu (slide-in sidebar drawer) + bottom nav bar on mobile (<680px). All new pages have responsive grid/table layouts.
+
 ## Verification
 - Health check: `curl http://localhost:8001/health` → `{"status": "ok", ...}`
 - Frontend: `curl http://localhost:3000/` → landing page HTML.
 - Live prices: `curl http://localhost:8001/api/prices/live` (may take ~30s on first boot while pipeline runs).
+- Backtest: `curl http://localhost:8001/api/backtest?period=1y` → 3 strategies with metrics.
+- Rebalancing tilt: `curl http://localhost:8001/api/rebalancing/regime-tilt` → current regime + tilt factors.

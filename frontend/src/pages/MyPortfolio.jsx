@@ -7,7 +7,18 @@ import s from './MyPortfolio.module.css'
 const fmt = (n, d = 2) =>
   n != null ? Number(n).toLocaleString('th-TH', { minimumFractionDigits: d, maximumFractionDigits: d }) : '—'
 
+const PORTFOLIO_ICONS = ['📊', '💰', '🎯', '🏠', '🚀', '🛡️', '📈', '💎']
+
 export default function MyPortfolio() {
+  // ── Multi-portfolio state ──
+  const [portfolios, setPortfolios] = useState([])
+  const [activePortfolioId, setActivePortfolioId] = useState(null)
+  const [showPortfolioMenu, setShowPortfolioMenu] = useState(false)
+  const [showCreateForm, setShowCreateForm] = useState(false)
+  const [newPortfolioName, setNewPortfolioName] = useState('')
+  const [newPortfolioIcon, setNewPortfolioIcon] = useState('📊')
+
+  // ── Holdings state ──
   const [holdings, setHoldings] = useState([])
   const [loading, setLoading] = useState(true)
   const [livePrices, setLivePrices] = useState({})
@@ -18,17 +29,46 @@ export default function MyPortfolio() {
   const [customTickers, setCustomTickers] = useState([])
   const timerRef = useRef(null)
 
-  // ── Load holdings from backend ──
-  const loadHoldings = useCallback(async () => {
+  // ── Currency state ──
+  const [currency, setCurrency] = useState('THB') // 'THB' | 'USD'
+  const fxRate = liveMeta?.fx_thb_per_usd ?? 35
+
+  // ── Dividend state ──
+  const [dividends, setDividends] = useState(null)
+  const [divLoading, setDivLoading] = useState(false)
+
+  const cur = (thbVal) => {
+    if (thbVal == null) return null
+    return currency === 'USD' ? thbVal / fxRate : thbVal
+  }
+  const curSym = currency === 'USD' ? '$' : '฿'
+
+  // ── Load portfolios ──
+  const loadPortfolios = useCallback(async () => {
     try {
-      const data = await api.getPortfolio()
+      const data = await api.listPortfolios()
+      const list = data?.portfolios || []
+      setPortfolios(list)
+      if (list.length && !activePortfolioId) {
+        setActivePortfolioId(list[0].id)
+      }
+    } catch (e) {
+      console.warn('failed to load portfolios:', e.message)
+    }
+  }, [activePortfolioId])
+
+  // ── Load holdings for active portfolio ──
+  const loadHoldings = useCallback(async () => {
+    if (!activePortfolioId) return
+    try {
+      const data = await api.getHoldings(activePortfolioId)
       setHoldings(data?.items || [])
     } catch (e) {
-      console.warn('failed to load portfolio:', e.message)
+      console.warn('failed to load holdings:', e.message)
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [activePortfolioId])
 
   // ── Load custom tickers ──
   const loadCustomTickers = useCallback(async () => {
@@ -41,9 +81,34 @@ export default function MyPortfolio() {
   }, [])
 
   useEffect(() => {
-    loadHoldings()
+    loadPortfolios()
     loadCustomTickers()
-  }, [loadHoldings, loadCustomTickers])
+  }, [loadPortfolios, loadCustomTickers])
+
+  useEffect(() => {
+    if (activePortfolioId) loadHoldings()
+  }, [activePortfolioId, loadHoldings])
+
+  // ── Load dividends ──
+  const loadDividends = useCallback(async () => {
+    if (!activePortfolioId || holdings.length === 0) {
+      setDividends(null)
+      return
+    }
+    setDivLoading(true)
+    try {
+      const data = await api.getDividends(activePortfolioId)
+      setDividends(data)
+    } catch (e) {
+      console.warn('failed to load dividends:', e.message)
+    } finally {
+      setDivLoading(false)
+    }
+  }, [activePortfolioId, holdings.length])
+
+  useEffect(() => {
+    loadDividends()
+  }, [loadDividends])
 
   const loadLive = useCallback(async () => {
     try {
@@ -63,6 +128,39 @@ export default function MyPortfolio() {
     return () => clearInterval(timerRef.current)
   }, [loadLive])
 
+  // ── Portfolio actions ──
+  const handleCreatePortfolio = async () => {
+    if (!newPortfolioName.trim()) return
+    try {
+      const result = await api.createPortfolio({ name: newPortfolioName.trim(), icon: newPortfolioIcon })
+      if (result) {
+        setPortfolios(prev => [...prev, { ...result, item_count: 0 }])
+        setActivePortfolioId(result.id)
+        setHoldings([])
+        setNewPortfolioName('')
+        setShowCreateForm(false)
+      }
+    } catch (e) {
+      setError(e.message)
+    }
+  }
+
+  const handleDeletePortfolio = async (id) => {
+    if (portfolios.length <= 1) return
+    if (!confirm('ลบพอร์ตนี้และหุ้นทั้งหมดในพอร์ต?')) return
+    try {
+      await api.deletePortfolio(id)
+      const updated = portfolios.filter(p => p.id !== id)
+      setPortfolios(updated)
+      if (activePortfolioId === id) {
+        setActivePortfolioId(updated[0].id)
+      }
+    } catch (e) {
+      setError(e.message)
+    }
+  }
+
+  // ── Holding actions ──
   const handleAdd = async () => {
     setError('')
     const ticker = form.ticker.trim().toUpperCase()
@@ -81,7 +179,7 @@ export default function MyPortfolio() {
         setError('ไม่สามารถดึงราคาในวันที่เลือกได้')
         return
       }
-      const item = await api.addHolding({
+      const item = await api.addHoldingToPortfolio(activePortfolioId, {
         ticker,
         shares: parseFloat(form.shares),
         buyDate: result.date,
@@ -89,7 +187,6 @@ export default function MyPortfolio() {
       })
       if (item) {
         setHoldings(prev => [...prev, item])
-        // If it's a custom ticker (not in predefined list), add to custom list
         if (!ALL_PREDEFINED.includes(ticker)) {
           await api.addCustomTicker(ticker)
           setCustomTickers(prev => prev.includes(ticker) ? prev : [...prev, ticker])
@@ -105,7 +202,7 @@ export default function MyPortfolio() {
 
   const handleDelete = async (id) => {
     try {
-      await api.deleteHolding(id)
+      await api.deleteHoldingFromPortfolio(activePortfolioId, id)
       setHoldings(prev => prev.filter(h => h.id !== id))
     } catch (e) {
       console.warn('delete failed:', e.message)
@@ -114,15 +211,15 @@ export default function MyPortfolio() {
 
   // ── CSV Export ──
   const handleExportCSV = () => {
-    const headers = ['Ticker', 'Shares', 'Buy Date', 'Buy Price (THB)', 'Current Price (THB)', 'Value (THB)', 'P/L (THB)', 'P/L (%)']
+    const headers = ['Ticker', 'Shares', 'Buy Date', `Buy Price (${currency})`, `Current Price (${currency})`, `Value (${currency})`, `P/L (${currency})`, 'P/L (%)']
     const rows = rowsData.map(r => [
       r.ticker,
       r.shares,
       r.buyDate,
-      r.buyPrice,
-      r.currentPrice ?? '',
-      r.value ?? '',
-      r.pl ?? '',
+      cur(r.buyPrice),
+      cur(r.currentPrice) ?? '',
+      cur(r.value) ?? '',
+      cur(r.pl) ?? '',
       r.plPct != null ? r.plPct.toFixed(2) : '',
     ])
     const csv = [headers, ...rows]
@@ -132,7 +229,7 @@ export default function MyPortfolio() {
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `my-portfolio-${new Date().toISOString().split('T')[0]}.csv`
+    a.download = `portfolio-${new Date().toISOString().split('T')[0]}.csv`
     a.click()
     URL.revokeObjectURL(url)
   }
@@ -151,12 +248,64 @@ export default function MyPortfolio() {
   const totalPL    = totalValue - totalCost
   const totalPLPct = totalCost > 0 ? (totalPL / totalCost) * 100 : 0
 
+  const activePortfolio = portfolios.find(p => p.id === activePortfolioId)
+
   return (
     <div className={s.page}>
       {/* Header */}
       <header className={s.header}>
         <div>
-          <h1>My Portfolio</h1>
+          <div className={s.titleRow}>
+            <h1>My Portfolio</h1>
+            {/* Portfolio selector */}
+            {portfolios.length > 0 && (
+              <div className={s.portfolioSelector}>
+                <button
+                  className={s.portfolioBtn}
+                  onClick={() => setShowPortfolioMenu(v => !v)}
+                >
+                  <span className={s.portfolioIcon}>{activePortfolio?.icon || '📊'}</span>
+                  <span className={s.portfolioName}>{activePortfolio?.name || 'เลือกพอร์ต'}</span>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="6 9 12 15 18 9"/>
+                  </svg>
+                </button>
+                {showPortfolioMenu && (
+                  <>
+                    <div className={s.menuOverlay} onClick={() => setShowPortfolioMenu(false)} />
+                    <div className={s.portfolioMenu}>
+                      {portfolios.map(p => (
+                        <div
+                          key={p.id}
+                          className={`${s.menuItem} ${p.id === activePortfolioId ? s.menuItemActive : ''}`}
+                          onClick={() => {
+                            setActivePortfolioId(p.id)
+                            setShowPortfolioMenu(false)
+                          }}
+                        >
+                          <span className={s.menuIcon}>{p.icon}</span>
+                          <span className={s.menuText}>{p.name}</span>
+                          <span className={s.menuCount}>{p.item_count}</span>
+                          {portfolios.length > 1 && (
+                            <button
+                              className={s.menuDelete}
+                              onClick={(e) => { e.stopPropagation(); handleDeletePortfolio(p.id) }}
+                              title="ลบพอร์ต"
+                            >✕</button>
+                          )}
+                        </div>
+                      ))}
+                      <div className={s.menuDivider} />
+                      <div className={s.menuItem} onClick={() => { setShowCreateForm(true); setShowPortfolioMenu(false) }}>
+                        <span className={s.menuIcon}>＋</span>
+                        <span className={s.menuText}>สร้างพอร์ตใหม่</span>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
           <p className={s.sub}>
             ติดตามพอร์ต — เทียบราคาซื้อกับราคาปัจจุบัน
             {liveMeta?.date && <> · <time>{liveMeta.date}</time></>}
@@ -168,33 +317,74 @@ export default function MyPortfolio() {
             )}
           </p>
         </div>
-        {holdings.length > 0 && (
-          <button className="btn btn-ghost" onClick={handleExportCSV}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-              <polyline points="7 10 12 15 17 10"/>
-              <line x1="12" y1="15" x2="12" y2="3"/>
-            </svg>
-            Export CSV
-          </button>
-        )}
+        <div className={s.headerActions}>
+          {/* Currency toggle */}
+          <div className={s.currencyToggle}>
+            <button
+              className={`${s.curBtn} ${currency === 'THB' ? s.curActive : ''}`}
+              onClick={() => setCurrency('THB')}
+            >฿ THB</button>
+            <button
+              className={`${s.curBtn} ${currency === 'USD' ? s.curActive : ''}`}
+              onClick={() => setCurrency('USD')}
+            >$ USD</button>
+          </div>
+          {holdings.length > 0 && (
+            <button className="btn btn-ghost" onClick={handleExportCSV}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+              Export CSV
+            </button>
+          )}
+        </div>
       </header>
+
+      {/* Create portfolio form */}
+      {showCreateForm && (
+        <div className={`card ${s.createForm}`}>
+          <h3>สร้างพอร์ตใหม่</h3>
+          <div className={s.createRow}>
+            <div className={s.iconPicker}>
+              {PORTFOLIO_ICONS.map(ic => (
+                <button
+                  key={ic}
+                  className={`${s.iconBtn} ${newPortfolioIcon === ic ? s.iconActive : ''}`}
+                  onClick={() => setNewPortfolioIcon(ic)}
+                >{ic}</button>
+              ))}
+            </div>
+            <input
+              className={s.input}
+              type="text"
+              placeholder="ชื่อพอร์ต (เช่น พอร์ตเกษียณ, พอร์ตเก็งกำไร)"
+              value={newPortfolioName}
+              onChange={e => setNewPortfolioName(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && handleCreatePortfolio()}
+            />
+            <button className="btn btn-primary" onClick={handleCreatePortfolio}>สร้าง</button>
+            <button className="btn btn-ghost" onClick={() => setShowCreateForm(false)}>ยกเลิก</button>
+          </div>
+        </div>
+      )}
 
       {/* Summary */}
       {holdings.length > 0 && (
         <div className={s.summary}>
           <div className={`card ${s.sumCard}`}>
             <span className={s.sumLabel}>ต้นทุนรวม</span>
-            <span className={s.sumValue}>฿{fmt(totalCost)}</span>
+            <span className={s.sumValue}>{curSym}{fmt(cur(totalCost))}</span>
           </div>
           <div className={`card ${s.sumCard}`}>
             <span className={s.sumLabel}>มูลค่าปัจจุบัน</span>
-            <span className={s.sumValue}>฿{fmt(totalValue)}</span>
+            <span className={s.sumValue}>{curSym}{fmt(cur(totalValue))}</span>
           </div>
           <div className={`card ${s.sumCard} ${totalPL >= 0 ? s.profit : s.loss}`}>
             <span className={s.sumLabel}>กำไร/ขาดทุน</span>
             <span className={s.sumValue}>
-              {totalPL >= 0 ? '+' : '-'}฿{fmt(Math.abs(totalPL))}
+              {totalPL >= 0 ? '+' : '-'}{curSym}{fmt(Math.abs(cur(totalPL)))}
             </span>
           </div>
           <div className={`card ${s.sumCard} ${totalPL >= 0 ? s.profit : s.loss}`}>
@@ -204,6 +394,91 @@ export default function MyPortfolio() {
             </span>
           </div>
         </div>
+      )}
+
+      {/* Dividend summary */}
+      {holdings.length > 0 && dividends && dividends.total_dividends > 0 && (
+        <div className={`card ${s.divCard}`}>
+          <h3 className={s.cardTitle}>เงินปันผล + ผลตอบแทนรวม (Total Return)</h3>
+          <div className={s.divSummary}>
+            <div className={s.divMetric}>
+              <span className={s.divLabel}>ปันผลรวม</span>
+              <span className={s.divValue}>฿{fmt(dividends.total_dividends)}</span>
+            </div>
+            <div className={s.divMetric}>
+              <span className={s.divLabel}>กำไร/ขาดทุนจากราคา</span>
+              <span className={`${s.divValue} ${dividends.capital_gain >= 0 ? s.profit : s.loss}`}>
+                {dividends.capital_gain >= 0 ? '+' : '-'}฿{fmt(Math.abs(dividends.capital_gain))}
+              </span>
+            </div>
+            <div className={s.divMetric}>
+              <span className={s.divLabel}>ผลตอบแทนรวม</span>
+              <span className={`${s.divValue} ${dividends.total_return_value >= 0 ? s.profit : s.loss}`}>
+                {dividends.total_return_value >= 0 ? '+' : '-'}฿{fmt(Math.abs(dividends.total_return_value))}
+              </span>
+            </div>
+            <div className={s.divMetric}>
+              <span className={s.divLabel}>Total Return %</span>
+              <span className={`${s.divValue} ${dividends.total_return_pct >= 0 ? s.profit : s.loss}`}>
+                {dividends.total_return_pct >= 0 ? '+' : ''}{fmt(dividends.total_return_pct)}%
+              </span>
+            </div>
+          </div>
+          <div className={s.divBreakdown}>
+            <div className={s.divBarRow}>
+              <span className={s.divBarLabel}>ผลตอบแทนจากราคา</span>
+              <div className={s.divBarBg}>
+                <div className={s.divBarFill} style={{
+                  width: `${Math.min(Math.abs(dividends.capital_return_pct), 100)}%`,
+                  background: dividends.capital_return_pct >= 0 ? 'var(--green)' : 'var(--red)',
+                }} />
+              </div>
+              <span className={s.divBarPct}>{fmt(dividends.capital_return_pct)}%</span>
+            </div>
+            <div className={s.divBarRow}>
+              <span className={s.divBarLabel}>ผลตอบแทนจากปันผล</span>
+              <div className={s.divBarBg}>
+                <div className={s.divBarFill} style={{
+                  width: `${Math.min(dividends.dividend_return_pct * 3, 100)}%`,
+                  background: 'var(--accent)',
+                }} />
+              </div>
+              <span className={s.divBarPct}>{fmt(dividends.dividend_return_pct)}%</span>
+            </div>
+          </div>
+          {dividends.dividends.length > 0 && (
+            <details className={s.divDetails}>
+              <summary>ดูประวัติการจ่ายปันผล ({dividends.dividends.length} ครั้ง)</summary>
+              <div className={s.tableWrap}>
+                <table className={s.table}>
+                  <thead>
+                    <tr>
+                      <th>หุ้น</th>
+                      <th>วันที่</th>
+                      <th className={s.right}>ปันผล/หุ้น (฿)</th>
+                      <th className={s.right}>จำนวนหุ้น</th>
+                      <th className={s.right}>รวม (฿)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {dividends.dividends.map((d, i) => (
+                      <tr key={i}>
+                        <td className={s.ticker}>{d.ticker}</td>
+                        <td className={s.dateCell}>{d.date}</td>
+                        <td className={s.right}>{fmt(d.per_share_thb, 4)}</td>
+                        <td className={s.right}>{fmt(d.shares, 0)}</td>
+                        <td className={s.right}>฿{fmt(d.total)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </details>
+          )}
+        </div>
+      )}
+      {divLoading && holdings.length > 0 && (
+        <div className={`card ${s.divLoading}`}>กำลังคำนวณเงินปันผล…</div>
       )}
 
       {/* Add form */}
@@ -241,7 +516,7 @@ export default function MyPortfolio() {
           <button
             className="btn btn-primary"
             onClick={handleAdd}
-            disabled={adding}
+            disabled={adding || !activePortfolioId}
           >
             {adding ? <span className="spinner" /> : 'เพิ่ม'}
           </button>
@@ -266,9 +541,9 @@ export default function MyPortfolio() {
                   <th>หุ้น</th>
                   <th className={s.right}>จำนวน</th>
                   <th>วันที่ซื้อ</th>
-                  <th className={s.right}>ราคาซื้อ (฿)</th>
-                  <th className={s.right}>ราคาล่าสุด (฿)</th>
-                  <th className={s.right}>มูลค่า (฿)</th>
+                  <th className={s.right}>ราคาซื้อ ({curSym})</th>
+                  <th className={s.right}>ราคาล่าสุด ({curSym})</th>
+                  <th className={s.right}>มูลค่า ({curSym})</th>
                   <th className={s.right}>กำไร/ขาดทุน</th>
                   <th className={s.right}>%</th>
                   <th />
@@ -280,15 +555,15 @@ export default function MyPortfolio() {
                     <td className={s.ticker}>{r.ticker}</td>
                     <td className={s.right}>{fmt(r.shares, 0)}</td>
                     <td className={s.dateCell}>{r.buyDate}</td>
-                    <td className={s.right}>฿{fmt(r.buyPrice)}</td>
+                    <td className={s.right}>{curSym}{fmt(cur(r.buyPrice))}</td>
                     <td className={s.right}>
-                      {r.currentPrice != null ? `฿${fmt(r.currentPrice)}` : '—'}
+                      {r.currentPrice != null ? `${curSym}${fmt(cur(r.currentPrice))}` : '—'}
                     </td>
                     <td className={s.right}>
-                      {r.value != null ? `฿${fmt(r.value)}` : '—'}
+                      {r.value != null ? `${curSym}${fmt(cur(r.value))}` : '—'}
                     </td>
                     <td className={`${s.right} ${r.pl != null ? (r.pl >= 0 ? s.profit : s.loss) : ''}`}>
-                      {r.pl != null ? `${r.pl >= 0 ? '+' : '-'}฿${fmt(Math.abs(r.pl))}` : '—'}
+                      {r.pl != null ? `${r.pl >= 0 ? '+' : '-'}${curSym}${fmt(Math.abs(cur(r.pl)))}` : '—'}
                     </td>
                     <td className={`${s.right} ${r.plPct != null ? (r.plPct >= 0 ? s.profit : s.loss) : ''}`}>
                       {r.plPct != null ? `${r.plPct >= 0 ? '+' : ''}${fmt(r.plPct)}%` : '—'}
