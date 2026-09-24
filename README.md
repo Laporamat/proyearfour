@@ -442,12 +442,12 @@ curl -H "Cookie: session_token=demo_session_persistent" \
 - [x] **Custom tickers** — เพิ่มหุ้นนอกเหนือ 25 ตัว (ผู้ใช้เพิ่มเอง ผ่าน `/api/user/tickers`)
 
 ### 🎯 ระยะกลาง (Mid-term)
-- [ ] **Rebalancing suggestions** — แนะนำการปรับสัดส่วนพอร์ตตาม MPT + สภาวะตลาดปัจจุบัน
-- [ ] **Backtesting** — ทดสอบกลยุทธ์การลงทุนย้อนหลัง (buy & hold vs MPT vs regime-based)
-- [ ] **Dividend tracking** — ติดตามเงินปันผล + ผลตอบแทนรวม (total return)
-- [ ] **Multi-currency** — รองรับการดูพอร์ตในหลายสกุลเงิน (THB/USD)
-- [ ] **Custom portfolios** — สร้างหลายพอร์ต (เช่น พอร์ตเกษียณ, พอร์ตเก็งกำไร)
-- [ ] **Mobile responsive** — ปรับ layout ให้ใช้งานบนมือถือได้เต็มรูปแบบ
+- [x] **Rebalancing suggestions** — แนะนำการปรับสัดส่วนพอร์ตตาม MPT + สภาวะตลาดปัจจุบัน
+- [x] **Backtesting** — ทดสอบกลยุทธ์การลงทุนย้อนหลัง (buy & hold vs MPT vs regime-based)
+- [x] **Dividend tracking** — ติดตามเงินปันผล + ผลตอบแทนรวม (total return)
+- [x] **Multi-currency** — รองรับการดูพอร์ตในหลายสกุลเงิน (THB/USD)
+- [x] **Custom portfolios** — สร้างหลายพอร์ต (เช่น พอร์ตเกษียณ, พอร์ตเก็งกำไร)
+- [x] **Mobile responsive** — ปรับ layout ให้ใช้งานบนมือถือได้เต็มรูปแบบ
 
 ### 🚀 ระยะยาว (Long-term)
 - [ ] **Real-time trading** — เชื่อมต่อ broker API (เช่น Interactive Brokers, Sarathull)
