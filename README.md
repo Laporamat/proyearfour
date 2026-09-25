@@ -458,6 +458,7 @@ curl -H "Cookie: session_token=demo_session_persistent" \
 - [ ] **Tax reporting** — คำนวณภาษีจากกำไรการลงทุน (ภพ.50)
 - [ ] **Mobile app** — React Native หรือ PWA
 - [ ] **Chatbot** - ถามตอบได้จริง
+-เพิ่ม Api
 
 ---
 
