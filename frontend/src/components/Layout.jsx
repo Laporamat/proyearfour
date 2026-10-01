@@ -56,6 +56,16 @@ const NAV = [
     ),
   },
   {
+    to: '/terminal',
+    label: 'Terminal',
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <line x1="7" y1="3" x2="7" y2="21"/><rect x="4" y="8" width="6" height="8" rx="1"/>
+        <line x1="17" y1="3" x2="17" y2="21"/><rect x="14" y="6" width="6" height="10" rx="1"/>
+      </svg>
+    ),
+  },
+  {
     to: '/chat',
     label: 'AI Chat',
     icon: (

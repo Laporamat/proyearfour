@@ -10,6 +10,7 @@ import MyPortfolio     from './pages/MyPortfolio'
 import Rebalancing      from './pages/Rebalancing'
 import Backtesting      from './pages/Backtesting'
 import Watchlist        from './pages/Watchlist'
+import Terminal         from './pages/Terminal'
 import Settings        from './pages/Settings'
 import Landing         from './pages/Landing'
 import Login           from './pages/Login'
@@ -46,6 +47,7 @@ function AppRouter() {
         <Route path="/rebalancing" element={<Rebalancing />} />
         <Route path="/backtesting" element={<Backtesting />} />
         <Route path="/watchlist" element={<Watchlist />} />
+        <Route path="/terminal" element={<Terminal />} />
         <Route path="/settings" element={<Settings />} />
       </Route>
     </Routes>

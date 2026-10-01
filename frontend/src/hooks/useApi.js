@@ -199,4 +199,14 @@ export const api = {
   // ── Backtesting ──
   backtest: (period = 'all') =>
     apiFetch(`/api/backtest?period=${period}`),
+
+  // ── Trading terminal ──
+  terminalSymbols: () =>
+    apiFetch('/api/terminal/symbols'),
+
+  terminalCandles: (symbol, tf = '1h') =>
+    apiFetch(`/api/terminal/candles?symbol=${encodeURIComponent(symbol)}&tf=${encodeURIComponent(tf)}`),
+
+  terminalQuotes: (symbols = []) =>
+    apiFetch(`/api/terminal/quotes?symbols=${encodeURIComponent(symbols.join(','))}`),
 }

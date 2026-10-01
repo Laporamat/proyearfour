@@ -1,0 +1,182 @@
+.page {
+  display: flex;
+  gap: 1px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  min-height: calc(100vh - 2 * var(--sp-8));
+  color: #c7cfdd;
+  font-family: 'Geist', sans-serif;
+  animation: fadeUp 0.25s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  background: #0b0d13;
+}
+
+/* ── Toolbar ── */
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 10px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  background: #0e1016;
+}
+
+.symBadge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--r-md);
+  background: #141721;
+}
+.symSource { font-size: 0.6rem; letter-spacing: 0.08em; color: #6b7488; font-weight: 600; }
+.symName { font-size: 0.9rem; font-weight: 700; color: #e8ecf4; letter-spacing: -0.01em; }
+
+.tfGroup { display: flex; gap: 2px; }
+.tfBtn {
+  padding: 5px 10px;
+  border: none;
+  background: transparent;
+  color: #6b7488;
+  font-size: 0.75rem;
+  font-weight: 600;
+  font-family: 'Geist Mono', monospace;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+.tfBtn:hover { color: #c7cfdd; background: rgba(255, 255, 255, 0.04); }
+.tfActive { color: #0b0d13; background: #5b8def; }
+.tfActive:hover { color: #0b0d13; background: #7aa1f5; }
+
+.price { display: flex; align-items: baseline; gap: 10px; margin-left: auto; }
+.priceVal { font-size: 1.25rem; font-weight: 700; color: #e8ecf4; font-family: 'Geist Mono', monospace; }
+.pricePct { font-size: 0.85rem; font-weight: 600; font-family: 'Geist Mono', monospace; }
+.pos { color: #26a69a; }
+.neg { color: #ef5350; }
+
+.status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  color: #6b7488;
+  font-weight: 600;
+}
+
+/* ── Instrument header ── */
+.instrument {
+  padding: 10px 16px 4px;
+  font-size: 0.9rem;
+  color: #e8ecf4;
+}
+.instrSub { color: #6b7488; font-weight: 400; margin-left: 6px; font-size: 0.78rem; }
+
+.chartArea { flex: 1; min-height: 0; padding: 4px 6px 8px; }
+
+.error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 468px;
+  color: #ef5350;
+  font-size: 0.85rem;
+  text-align: center;
+  padding: 0 24px;
+}
+
+/* ── Watchlist ── */
+.watchlist {
+  width: 320px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  background: #0e1016;
+}
+
+.wlHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 14px 16px 10px;
+}
+.wlTitle { font-size: 0.95rem; font-weight: 700; color: #e8ecf4; }
+.wlCount { font-size: 0.7rem; color: #6b7488; }
+
+.wlSearch {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 16px 10px;
+  padding: 7px 10px;
+  background: #141721;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: var(--r-md);
+  color: #6b7488;
+}
+.wlSearch input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  outline: none;
+  color: #e8ecf4;
+  font-size: 0.82rem;
+  font-family: inherit;
+}
+.wlSearch input::placeholder { color: #6b7488; }
+
+.wlCols {
+  display: grid;
+  grid-template-columns: 1fr 0.9fr 0.9fr 0.8fr;
+  gap: 8px;
+  padding: 6px 16px;
+  font-size: 0.62rem;
+  letter-spacing: 0.06em;
+  color: #556070;
+  font-weight: 600;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.wlRows { flex: 1; overflow-y: auto; }
+.wlEmpty { padding: 24px 16px; color: #6b7488; font-size: 0.8rem; text-align: center; }
+
+.wlRow {
+  display: grid;
+  grid-template-columns: 1fr 0.9fr 0.9fr 0.8fr;
+  gap: 8px;
+  align-items: center;
+  width: 100%;
+  padding: 9px 16px;
+  border: none;
+  background: transparent;
+  color: #c7cfdd;
+  font-size: 0.8rem;
+  font-family: 'Geist Mono', monospace;
+  cursor: pointer;
+  text-align: left;
+  border-left: 2px solid transparent;
+  transition: background-color 0.12s ease;
+}
+.wlRow:hover { background: rgba(255, 255, 255, 0.03); }
+.wlRowActive { background: rgba(91, 141, 239, 0.1); border-left-color: #5b8def; }
+
+.wlSym { display: flex; align-items: center; gap: 8px; font-weight: 600; color: #e8ecf4; }
+.wlDot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.right { text-align: right; }
+.muted { color: #6b7488; }
+
+/* ── Responsive ── */
+@media (max-width: 980px) {
+  .page { flex-direction: column; min-height: auto; }
+  .watchlist { width: 100%; }
+  .wlRows { max-height: 340px; }
+}

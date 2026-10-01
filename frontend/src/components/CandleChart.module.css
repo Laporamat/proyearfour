@@ -1,0 +1,44 @@
+.wrap {
+  position: relative;
+  width: 100%;
+  background: #0b0d13;
+}
+
+.svg {
+  display: block;
+  cursor: crosshair;
+  user-select: none;
+}
+
+.axisTxt { font: 500 10px/1 'Geist Mono', ui-monospace, monospace; }
+.axisTxtMid { font: 500 10px/1 'Geist Mono', ui-monospace, monospace; text-anchor: middle; }
+.tagTxt { font: 600 10px/1 'Geist Mono', ui-monospace, monospace; }
+.hlTxt { font: 600 9px/1 'Geist Mono', ui-monospace, monospace; text-anchor: middle; }
+
+.legend {
+  position: absolute;
+  top: 10px;
+  left: 14px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  z-index: 2;
+  pointer-events: none;
+}
+.legO {
+  font: 500 11px/1 'Geist Mono', ui-monospace, monospace;
+  color: #6b7488;
+}
+.legO b { font-weight: 600; margin-left: 2px; }
+.legVol { font: 500 11px/1 'Geist Mono', ui-monospace, monospace; color: #6b7488; }
+.legDate { font: 500 11px/1 'Geist', sans-serif; color: #4b5366; }
+
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 468px;
+  color: #6b7488;
+  font-size: 0.85rem;
+}

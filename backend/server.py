@@ -39,3 +39,7 @@ rebalancing.register(app)
 # Register backtesting engine (buy & hold vs MPT vs regime-based).
 import backtest  # noqa: E402, F401
 backtest.register(app)
+
+# Register trading-terminal data (candlestick OHLCV + watchlist quotes).
+import terminal  # noqa: E402, F401
+terminal.register(app)
