@@ -17,6 +17,6 @@
   "seed_data_creation": "None (demo session already seeded from iteration 1).",
   "retest_needed": false,
   "main_agent_can_self_test": true,
-  "context_for_next_testing_agent": "Preview URL: https://wealth-monitor-256.preview.emergentagent.com. Auth via cookie session_token=demo_session_persistent (add via page.context.add_cookies BEFORE first navigation). Backend regime pipeline healthy — output/regime_predictions.csv (1684 rows) and regime_model_random_forest.pkl present. New analysis endpoints /api/analysis/mpt and /api/analysis/regime and route /analysis/:metric all working.",
+  "context_for_next_testing_agent": "Preview URL: https://app-launcher-3667.preview.emergentagent.com. Auth via cookie session_token=demo_session_persistent (add via page.context.add_cookies BEFORE first navigation). Backend regime pipeline healthy — output/regime_predictions.csv (1684 rows) and regime_model_random_forest.pkl present. New analysis endpoints /api/analysis/mpt and /api/analysis/regime and route /analysis/:metric all working.",
   "rca of the issue": "Prior root cause (missing cloudpickle/narwhals/threadpoolctl blocking regime classifier) is verified fixed — regime_predictions.csv now exists, /api/regime/latest returns real data (regime=Neutral, prob_neutral=93.6%), and Market Regime KPI card is populated."
 }

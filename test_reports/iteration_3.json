@@ -18,6 +18,6 @@
   "seed_data_creation": "None — demo session already seeded from prior iterations.",
   "retest_needed": false,
   "main_agent_can_self_test": true,
-  "context_for_next_testing_agent": "Preview URL: https://3de14659-9879-492f-906e-8d58995ba183.preview.emergentagent.com. Add cookie session_token=demo_session_persistent BEFORE first navigation. Backend tests run with `cd /app/backend && python -m pytest tests/ -v` (defaults to localhost:8001 and DEMO_TOKEN env vars). Chat input is a plain <textarea> (no data-testid); consider adding data-testid=chat-input for more stable selection. Logout button has data-testid=logout-btn and works.",
+  "context_for_next_testing_agent": "Preview URL: https://app-launcher-3667.preview.emergentagent.com. Add cookie session_token=demo_session_persistent BEFORE first navigation. Backend tests run with `cd /app/backend && python -m pytest tests/ -v` (defaults to localhost:8001 and DEMO_TOKEN env vars). Chat input is a plain <textarea> (no data-testid); consider adding data-testid=chat-input for more stable selection. Logout button has data-testid=logout-btn and works.",
   "rca of the issue": "N/A — no regressions detected. All code-quality edits (env-based test config, empty-catch logging, stable Chat uid keys, MetricAnalysis Cell keying) preserved existing behavior."
 }
