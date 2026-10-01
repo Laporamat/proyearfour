@@ -4,7 +4,6 @@ import CandleChart from '../components/CandleChart'
 import s from './Terminal.module.css'
 
 const TIMEFRAMES = ['1m', '5m', '15m', '1h', '1d', '1wk', '1mo']
-const DEFAULT_SYMBOLS = ['AAPL', 'MSFT', 'NVDA', 'AMZN', 'GOOGL', 'META', 'TSLA', 'AVGO', 'JPM', 'XOM']
 
 const fmtPrice = (n) => n != null ? Number(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '—'
 const fmtDollar = (v) => {
@@ -24,31 +23,40 @@ export default function Terminal() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [quotes, setQuotes] = useState([])
+  const [quotesError, setQuotesError] = useState(false)
   const [search, setSearch] = useState('')
   const quoteTimer = useRef(null)
   const candleTimer = useRef(null)
+  const reqRef = useRef(0)
 
   const loadCandles = useCallback(async (sym, timeframe) => {
+    const id = ++reqRef.current
     setLoading(true)
     setError('')
     try {
       const data = await api.terminalCandles(sym, timeframe)
+      if (id !== reqRef.current) return   // ignore out-of-order response
       setCandles(data?.candles || [])
       setCandleStatus(data?.status || 'live')
     } catch (e) {
+      if (id !== reqRef.current) return
       setError(e.message || 'โหลดกราฟไม่สำเร็จ')
       setCandles([])
     } finally {
-      setLoading(false)
+      if (id === reqRef.current) setLoading(false)
     }
   }, [])
 
   const loadQuotes = useCallback(async () => {
     try {
-      const data = await api.terminalQuotes(DEFAULT_SYMBOLS)
-      if (data?.quotes) setQuotes(data.quotes)
+      const data = await api.terminalQuotes()
+      if (data?.quotes) {
+        setQuotes(data.quotes)
+        setQuotesError(false)
+      }
     } catch (e) {
       console.warn('terminal quotes failed:', e.message)
+      setQuotesError(true)
     }
   }, [])
 
@@ -72,16 +80,18 @@ export default function Terminal() {
     const q = quoteMap[symbol]
     if (q) return { price: q.price, pct: q.change_pct }
     if (candles.length >= 2) {
+      // fallback: change over the loaded window (consistent with the chart shown)
       const last = candles[candles.length - 1]
-      const prev = candles[candles.length - 2]
-      return { price: last.c, pct: prev.c ? ((last.c - prev.c) / prev.c) * 100 : 0 }
+      const first = candles[0]
+      return { price: last.c, pct: first.c ? ((last.c - first.c) / first.c) * 100 : 0 }
     }
     if (candles.length === 1) return { price: candles[0].c, pct: 0 }
     return { price: null, pct: null }
   }, [quoteMap, symbol, candles])
 
   const filtered = quotes.filter(q => q.symbol.toLowerCase().includes(search.toLowerCase()))
-  const up = (header.pct ?? 0) >= 0
+  const pct = header.pct
+  const up = pct != null && pct >= 0
 
   return (
     <div className={s.page} data-testid="terminal-page">
@@ -106,7 +116,7 @@ export default function Terminal() {
 
           <div className={s.price}>
             <span className={s.priceVal} data-testid="terminal-price">{fmtPrice(header.price)}</span>
-            <span className={`${s.pricePct} ${up ? s.pos : s.neg}`}>{fmtPct(header.pct)}</span>
+            <span className={`${s.pricePct} ${pct == null ? s.muted : up ? s.pos : s.neg}`}>{fmtPct(pct)}</span>
           </div>
 
           <div className={s.status}>
@@ -156,7 +166,11 @@ export default function Terminal() {
         </div>
 
         <div className={s.wlRows}>
-          {quotes.length === 0 && <div className={s.wlEmpty}>กำลังโหลดราคา…</div>}
+          {quotes.length === 0 && (
+            <div className={s.wlEmpty} data-testid="watchlist-status">
+              {quotesError ? 'โหลดราคาไม่สำเร็จ — ลองใหม่อีกครั้ง' : 'กำลังโหลดราคา…'}
+            </div>
+          )}
           {filtered.map(q => {
             const pos = q.change_pct >= 0
             return (

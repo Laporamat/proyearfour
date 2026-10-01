@@ -45,8 +45,29 @@ QUOTE_TTL = 30             # seconds
 
 _candle_cache: dict[str, tuple[float, dict[str, Any]]] = {}
 _quote_cache: dict[str, tuple[float, dict[str, Any]]] = {}
-_candle_lock = asyncio.Lock()
-_quote_lock = asyncio.Lock()
+_candle_locks: dict[str, asyncio.Lock] = {}
+_quote_locks: dict[str, asyncio.Lock] = {}
+
+
+def _lock_for(store: dict[str, asyncio.Lock], key: str) -> asyncio.Lock:
+    """Per-key lock so only duplicate fetches of the SAME key de-dupe;
+    distinct symbols/timeframes fetch in parallel. Safe on the single-
+    threaded event loop (no await between get and set)."""
+    lk = store.get(key)
+    if lk is None:
+        lk = asyncio.Lock()
+        store[key] = lk
+    return lk
+
+
+def _num(x: Any, fallback: float = 0.0) -> float:
+    """Coerce to float, mapping None/NaN/invalid to a fallback (avoids
+    emitting non-JSON `NaN` literals that the client cannot parse)."""
+    try:
+        f = float(x)
+    except (TypeError, ValueError):
+        return fallback
+    return fallback if f != f else f  # f != f is True only for NaN
 
 
 def _series(raw: pd.DataFrame, field: str) -> pd.Series:
@@ -84,13 +105,14 @@ def _download_candles(symbol: str, tf: str) -> dict[str, Any]:
         ts = idx.to_pydatetime()
         if ts.tzinfo is None:
             ts = ts.replace(tzinfo=timezone.utc)
+        cval = float(c)
         candles.append({
             "t": int(ts.timestamp() * 1000),
-            "o": round(float(open_.get(idx, c)), 4),
-            "h": round(float(high.get(idx, c)), 4),
-            "l": round(float(low.get(idx, c)), 4),
-            "c": round(float(c), 4),
-            "v": float(volume.get(idx, 0) or 0),
+            "o": round(_num(open_.get(idx), cval), 4),
+            "h": round(_num(high.get(idx), cval), 4),
+            "l": round(_num(low.get(idx), cval), 4),
+            "c": round(cval, 4),
+            "v": _num(volume.get(idx), 0.0),
         })
 
     candles = candles[-MAX_CANDLES:]
@@ -170,7 +192,7 @@ async def _get_candles(symbol: str, tf: str) -> dict[str, Any]:
     if cached and (now - cached[0]) < CANDLE_TTL:
         return cached[1]
 
-    async with _candle_lock:
+    async with _lock_for(_candle_locks, key):
         cached = _candle_cache.get(key)
         if cached and (time.time() - cached[0]) < CANDLE_TTL:
             return cached[1]
@@ -190,13 +212,13 @@ async def _get_candles(symbol: str, tf: str) -> dict[str, Any]:
 
 
 async def _get_quotes(symbols: list[str]) -> dict[str, Any]:
-    key = ",".join(symbols)
+    key = ",".join(sorted(symbols))
     now = time.time()
     cached = _quote_cache.get(key)
     if cached and (now - cached[0]) < QUOTE_TTL:
         return cached[1]
 
-    async with _quote_lock:
+    async with _lock_for(_quote_locks, key):
         cached = _quote_cache.get(key)
         if cached and (time.time() - cached[0]) < QUOTE_TTL:
             return cached[1]

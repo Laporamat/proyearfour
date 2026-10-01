@@ -43,3 +43,7 @@ backtest.register(app)
 # Register trading-terminal data (candlestick OHLCV + watchlist quotes).
 import terminal  # noqa: E402, F401
 terminal.register(app)
+
+# Register OpenMarket crypto data proxy (candles + markets) for /terminal.
+import omarket  # noqa: E402, F401
+omarket.register(app)
