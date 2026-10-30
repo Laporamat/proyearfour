@@ -97,6 +97,8 @@ def _download_all() -> list[dict[str, Any]]:
 async def get_news(force: bool = False) -> list[dict[str, Any]]:
     global _cache, _cache_ts
     now = time.time()
+    if force and _cache and (now - _cache_ts) < FORCE_MIN_INTERVAL:
+        force = False
     if not force and _cache and (now - _cache_ts) < CACHE_TTL:
         return _cache
 

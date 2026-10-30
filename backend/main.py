@@ -18,13 +18,14 @@ LLM Function Calling:
 
 import os
 import json
+import uuid
 import asyncio
 from pathlib import Path
 from datetime import datetime
 from typing import Any
 
 import pandas as pd
-from fastapi import FastAPI, HTTPException, BackgroundTasks
+from fastapi import FastAPI, HTTPException, BackgroundTasks, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
@@ -85,7 +86,7 @@ class RegimeRequest(BaseModel):
 
 class ChatRequest(BaseModel):
     model_config = {"protected_namespaces": ()}
-    message:     str  = Field(...,  description="ข้อความจากผู้ใช้")
+    message:     str  = Field(...,  min_length=1, max_length=4000, description="ข้อความจากผู้ใช้")
     model:       str  = Field("gpt-4o-mini", description="ชื่อ LLM model")
     api_key:     str | None = Field(None, description="OpenAI API key (ถ้าไม่ใส่ ใช้ ENV)")
     base_url:    str | None = Field(None, description="base_url สำหรับ Ollama หรือ Azure")
@@ -176,7 +177,7 @@ TOOLS = [
     {
         "type": "function",
         "function": {
-            "name": "get_portfolio_summary",
+            "name": "portfolio_summaryget_",
             "description": "ดึงผลการคำนวณพอร์ตล่าสุด (น้ำหนักสินทรัพย์, Sharpe, Return, Volatility)",
             "parameters": {"type": "object", "properties": {}, "required": []},
         },
@@ -187,6 +188,38 @@ TOOLS = [
             "name": "get_regime_summary",
             "description": "ดึงสภาวะตลาดล่าสุดพร้อม probability (Bull/Neutral/Bear)",
             "parameters": {"type": "object", "properties": {}, "required": []},
+        },
+    },
+        {
+        "type": "function",
+        "function": {
+            "name": "get_live_quotes",
+            "description": "ดึงราคาสดล่าสุด (THB) และ % เปลี่ยนแปลง 1 วันของสินทรัพย์ 25 ตัว พร้อมอัตรา FX บาท/ดอลลาร์",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "tickers": {
+                        "type": "array", "items": {"type": "string"},
+                        "description": "รายชื่อ ticker ที่ต้องการ เช่น ['AAPL','PTT.BK'] (ว่าง = ทั้งหมด)",
+                    },
+                },
+                "required": [],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_stock_news",
+            "description": "ดึงข่าวล่าสุดจาก Yahoo Finance ของหุ้นในระบบ หรือของ ticker ที่ระบุ",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "ticker": {"type": "string", "description": "ticker เช่น NVDA (ว่าง = ข่าวรวมทุกตัว)"},
+                    "limit": {"type": "integer", "description": "จำนวนข่าวสูงสุด (default 8)"},
+                },
+                "required": [],
+            },
         },
     },
     {
@@ -208,6 +241,21 @@ TOOLS = [
     },
 ]
 
+SYSTEM_PROMPT = (
+    "คุณคือ Quantix AI ผู้ช่วยด้านการลงทุนในแอป Quantix Portfolio System ตอบเป็นภาษาไทยเสมอ "
+    "(ถ้าผู้ใช้พิมพ์ภาษาอื่นให้ตอบภาษานั้น) กระชับ ชัดเจน ใช้ markdown ได้ (ห้ามใช้ LaTeX ให้เขียนสูตรเป็นข้อความธรรมดา)\n"
+    "ขอบเขต: ตอบได้ทุกคำถามที่เกี่ยวกับการลงทุนและการเงิน เช่น หุ้นไทย/ต่างประเทศ กองทุน ETF พันธบัตร ทองคำ คริปโต "
+    "เศรษฐกิจมหภาค ดอกเบี้ย ภาษีการลงทุน การวางแผนการเงิน การวิเคราะห์ปัจจัยพื้นฐาน/เทคนิค ความเสี่ยง "
+    "ทฤษฎีพอร์ต (MPT, Sharpe) และวิธีใช้ฟีเจอร์ในแอปนี้\n"
+    "ถ้าคำถามไม่เกี่ยวกับการลงทุนหรือการเงิน ให้ปฏิเสธอย่างสุภาพสั้นๆ ว่าตอบได้เฉพาะเรื่องการลงทุน "
+    "แล้วเสนอตัวอย่างคำถามด้านการลงทุน 2-3 ข้อ — ห้ามตอบเนื้อหานอกขอบเขต\n"
+    "ข้อมูลในระบบ: สินทรัพย์ 25 ตัว (หุ้น US, หุ้นไทย .BK, ETF พันธบัตร, ทองคำ) ราคาเป็นบาท "
+    "เมื่อคำถามเกี่ยวกับพอร์ต ราคา สภาวะตลาด หรือข่าว ให้เรียก tools เพื่อใช้ข้อมูลจริงก่อนตอบ "
+    "(ใช้ get_live_quotes / get_portfolio_summary / get_regime_summary / get_stock_news ก่อนเสมอ "
+    "ห้ามเรียก run_data_pipeline, optimize_portfolio หรือ classify_market_regime เว้นแต่ผู้ใช้ขอให้อัปเดตข้อมูล/คำนวณใหม่ชัดเจน) "
+    "ถ้าไม่มีข้อมูลใน tools ให้ตอบจากความรู้ทั่วไปและบอกว่าข้อมูลอาจไม่เป็นปัจจุบัน ห้ามแต่งตัวเลข\n"
+    "เมื่อให้คำแนะนำการลงทุน ให้ลงท้ายสั้นๆ ว่าเป็นข้อมูลเพื่อการศึกษา ไม่ใช่คำแนะนำการลงทุน"
+)
 
 # ─────────────────────────────────────────────
 # TOOL EXECUTION
@@ -318,10 +366,31 @@ async def execute_tool(name: str, args: dict) -> dict:
             "date_range": f"{latest.index[0].date()} → {latest.index[-1].date()}",
             "prices":     latest.iloc[-1].to_dict(),
         }
+    elif name == "get_live_quotes":
+        from live import get_live_snapshot
+        snap = await get_live_snapshot()
+        want = {t.upper() for t in (args.get("tickers") or [])}
+        keep = lambda d: {k: v for k, v in d.items() if not want or k in want}  # noqa: E731
+        return {
+            "date": snap.get("date"), "status": snap.get("status"),
+            "fx_thb_per_usd": snap.get("fx_thb_per_usd"),
+            "prices_thb": keep(snap.get("prices", {})),
+            "change_1d_pct": keep(snap.get("changes", {})),
+        }
+
+    elif name == "get_stock_news":
+        limit = int(args.get("limit") or 8)
+        ticker = (args.get("ticker") or "").upper().strip()
+        if ticker:
+            from news import _fetch_search
+            items = await asyncio.get_running_loop().run_in_executor(None, _fetch_search, ticker)
+        else:
+            from news import get_news
+            items = await get_news()
+        return {"news": [{k: n.get(k) for k in ("ticker", "title", "publisher", "published", "url")} for n in items[:limit]]}
 
     else:
         return {"status": "error", "message": f"ไม่รู้จัก tool: {name}"}
-
 
 # ─────────────────────────────────────────────
 # ENDPOINTS
@@ -464,84 +533,86 @@ async def api_returns_history(period: str = "1y"):
 
 
 @app.post("/api/chat", response_model=ChatResponse)
-async def api_chat(req: ChatRequest):
+async def api_chat(req: ChatRequest, request: Request):
     """
     LLM chat endpoint พร้อม Function Calling
-    - ถ้ามี API key และ openai SDK → ใช้ LLM จริง
+    - ถ้ามี EMERGENT_LLM_KEY → ใช้ LLM จริง
     - ถ้าไม่มี หรือ LLM error → fallback rule-based keyword matching
     """
-    tool_calls_log:   list[dict] = []
+    from auth import _current_user
+    if not await _current_user(request):
+        raise HTTPException(status_code=401, detail="กรุณาเข้าสู่ระบบก่อนใช้ AI Chat")
+    tool_calls_log:  list[dict] = []
     tool_results_log: list[dict] = []
 
     # ── Path A: OpenAI Function Calling ──────────────────────────────
-    if OPENAI_AVAILABLE and (req.api_key or os.getenv("OPENAI_API_KEY")):
+    if os.environ.get("EMERGENT_LLM_KEY"):
         try:
-            client = AsyncOpenAI(
-                api_key=req.api_key or os.getenv("OPENAI_API_KEY"),
-                base_url=req.base_url or os.getenv("OPENAI_BASE_URL"),
-            )
-            system_prompt = (
-                "คุณคือ Quant AI Assistant ผู้เชี่ยวชาญด้านการวิเคราะห์พอร์ตการลงทุน "
-                "และสภาวะตลาด ตอบเป็นภาษาไทยเสมอ\n"
-                "เมื่อผู้ใช้ถามเกี่ยวกับพอร์ต, หุ้น, หรือตลาด — ให้ใช้ tools ที่มีอยู่ "
-                "เพื่อดึงข้อมูลจริงก่อนตอบ"
-            )
-            messages = [{"role": "system", "content": system_prompt}]
-            messages.extend(req.history)
-            messages.append({"role": "user", "content": req.message})
+            from emergentintegrations.llm.chat import LlmChat, UserMessage
+            history = [
+                {"role": h["role"], "content": str(h.get("content", ""))}
+                for h in req.history[-10:]
+                if h.get("role") in ("user", "assistant") and h.get("content")
+            ]
+            chat = LlmChat(
+                api_key=os.environ["EMERGENT_LLM_KEY"],
+                session_id=f"chat-{uuid.uuid4().hex}",
+                system_message=SYSTEM_PROMPT,
+                initial_messages=[{"role": "system", "content": SYSTEM_PROMPT}, *history],
+            ).with_model("openai", os.environ["LLM_MODEL"]).with_tools(TOOLS, tool_choice="auto")
 
-            resp = await client.chat.completions.create(
-                model=req.model or os.getenv("OPENAI_MODEL", "gpt-4o-mini"), messages=messages,
-                tools=TOOLS, tool_choice="auto", max_tokens=1024,
+            resp = await chat.send_message_with_tools(UserMessage(text=req.message))
+            
+           # วนลูปจัดการ Tool Calls (สูงสุด 5 รอบ เผื่อโมเดลเรียกต่อเนื่อง)
+            for _ in range(5):
+                if not resp.tool_calls:
+                    break
+                for tc in resp.tool_calls:
+                    args = tc.arguments or {}
+                    result = None
+                    
+                    # ตรวจสอบว่าเคยเรียก Tool ตัวนี้ด้วย Args นี้ไปแล้วหรือยัง (Cache ผลลัพธ์เดิม)
+                    for prev_call, prev_res in zip(tool_calls_log, tool_results_log):
+                        if prev_call["tool"] == tc.name and prev_call["args"] == args:
+                            result = prev_res["result"]
+                    
+                    if result is None:
+                        tool_calls_log.append({"tool": tc.name, "args": args})
+                        try:
+                            result = await execute_tool(tc.name, args)
+                        except Exception as tool_err:  # noqa: BLE001
+                            result = {"status": "error", "message": str(tool_err)}
+                        tool_results_log.append({"tool": tc.name, "result": result})
+                    
+                    chat.add_tool_result(tc.id, json.dumps(result, ensure_ascii=False, default=str))
+                # ส่งผลลัพธ์ Tool กลับไปให้ LLM ประมวลผลต่อ
+                resp = await chat.send_message_with_tools()
+
+            # เมื่อจัดการ Tool ครบหรือไม่มี Tool แล้ว ให้ส่งคำตอบกลับไปหา Client
+            return ChatResponse(
+                reply=resp.content or "ขออภัยครับ ตอนนี้ยังสรุปคำตอบไม่ได้ ลองถามใหม่อีกครั้ง",
+                tool_calls=tool_calls_log,
+                tool_results=tool_results_log
             )
-            msg = resp.choices[0].message
-            messages.append(msg.model_dump(exclude_none=True))
-
-            if msg.tool_calls:
-                for tc in msg.tool_calls:
-                    fn_name = tc.function.name
-                    fn_args = json.loads(tc.function.arguments or "{}")
-                    tool_calls_log.append({"tool": fn_name, "args": fn_args})
-                    tool_result = await execute_tool(fn_name, fn_args)
-                    tool_results_log.append({"tool": fn_name, "result": tool_result})
-                    messages.append({
-                        "role": "tool", "tool_call_id": tc.id,
-                        "content": json.dumps(tool_result, ensure_ascii=False),
-                    })
-                resp2 = await client.chat.completions.create(
-                    model=req.model or os.getenv("OPENAI_MODEL", "gpt-4o-mini"), messages=messages, max_tokens=1024,
-                )
-                final_reply = resp2.choices[0].message.content or ""
-            else:
-                final_reply = msg.content or ""
-
-            return ChatResponse(reply=final_reply,
-                                tool_calls=tool_calls_log,
-                                tool_results=tool_results_log)
 
         except Exception as llm_err:
             import logging
             logging.warning("LLM error → rule-based fallback: %s", llm_err)
-            # fall through to Path B
-
+            tool_calls_log, tool_results_log = [], []
+            # (ถ้ามี Rule-based fallback ต่อ ให้เขียนโค้ดต่อตรงนี้ หรือส่ง Response เปล่ากลับไป)
     # ── Path B: Rule-based fallback ──────────────────────────────────
     msg_lower = req.message.lower()
     reply_parts: list[str] = []
     keywords_map = {
-        ("pipeline", "data", "update", "refresh",
-         "\u0e14\u0e36\u0e07\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25",
-         "\u0e2d\u0e31\u0e1e\u0e40\u0e14\u0e17"): "run_data_pipeline",
         ("portfolio", "mpt", "sharpe", "weight", "allocat",
          "\u0e1e\u0e2d\u0e23\u0e4c\u0e15",
-         "\u0e19\u0e49\u0e33\u0e2b\u0e19\u0e31\u0e01",
-         "\u0e08\u0e31\u0e14\u0e1e\u0e2d\u0e23\u0e4c\u0e15",
-         "\u0e25\u0e07\u0e17\u0e38\u0e19"): "optimize_portfolio",
+         "\u0e19\u0e49\u0e33\u0e2b\u0e19\u0e31\u0e01"): "get_portfolio_summary",
         ("regime", "bull", "bear", "neutral", "market",
          "\u0e2a\u0e20\u0e32\u0e27\u0e30",
-         "\u0e15\u0e25\u0e32\u0e14"): "classify_market_regime",
+         "\u0e15\u0e25\u0e32\u0e14"): "get_regime_summary",
         ("price", "latest", "\u0e23\u0e32\u0e04\u0e32",
          "\u0e25\u0e48\u0e32\u0e2a\u0e38\u0e14",
-         "\u0e2b\u0e38\u0e49\u0e19"): "get_latest_prices",
+         "\u0e2b\u0e38\u0e49\u0e19"): "get_live_quotes",
     }
     matched_tools: list[str] = []
     for keywords, tool_name in keywords_map.items():
@@ -556,7 +627,7 @@ async def api_chat(req: ChatRequest):
             reply_parts.append(
                 f"**{tool_name}**: {json.dumps(result, ensure_ascii=False, indent=2)}"
             )
-        reply = "ผลการวิเคราะห์:\n\n" + "\n\n".join(reply_parts)
+        reply = "⚠️ AI ไม่พร้อมใช้งานชั่วคราว — แสดงข้อมูลจากระบบแทน (ดูรายละเอียดในการ์ดด้านล่าง)"
     else:
         reply = (
             "สวัสดีครับ! ผมเป็น Quant AI Assistant ช่วยได้เรื่อง:\n"

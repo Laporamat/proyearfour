@@ -24,15 +24,16 @@ async function safeJson(res) {
 
 /* ── core fetch ───────────────────────────────── */
 async function apiFetch(path, options = {}) {
+  const { timeoutMs = 15_000, ...fetchOpts } = options
   const controller = new AbortController()
-  const timeout = setTimeout(() => controller.abort(), 15_000)   // 15s timeout
+  const timeout = setTimeout(() => controller.abort(), timeoutMs)
 
   try {
     const res = await fetch(path, {
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
       signal: controller.signal,
-      ...options,
+      ...fetchOpts,
     })
 
     clearTimeout(timeout)
@@ -118,6 +119,7 @@ export const api = {
     apiFetch('/api/chat', {
       method: 'POST',
       body: JSON.stringify(body),
+      timeoutMs: 120_000,
     }),
 
   returnsHistory: (period = '1y') =>
@@ -125,6 +127,8 @@ export const api = {
 
   news: (limit = 30) =>
     apiFetch(`/api/news?limit=${limit}`),
+    newsEda: (scope = 'all') =>
+    apiFetch(`/api/news/eda?scope=${scope}`),
 
   analysisMpt: () =>
     apiFetch('/api/analysis/mpt'),

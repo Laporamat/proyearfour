@@ -2,6 +2,8 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import { api }      from '../hooks/useApi'
 import { useChart } from '../context/ChartContext'
 import s            from './Chat.module.css'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm    from 'remark-gfm'
 
 /* current time label (module-scope → stable, no hook dep churn) */
 const now = () =>
@@ -31,20 +33,28 @@ const TOOL_LABELS = {
   get_regime_summary:     'Regime Summary',
   get_latest_prices:      'Latest Prices',
   run_data_pipeline:      'Data Pipeline',
+  get_live_quotes:        'Live Quotes',
+  get_stock_news:         'Stock News',
 }
+const CHART_TOOLS = new Set([
+  'optimize_portfolio', 'classify_market_regime', 'get_portfolio_summary',
+  'get_regime_summary', 'get_latest_prices', 'run_data_pipeline',
+])
 
-/* ── Inline bold renderer ────────────────────── */
+
+/* ── Markdown renderer ───────────────────────── */
 function RichText({ text }) {
   if (!text) return null
-  return text.split('\n').map((line, i, arr) => {
-    const parts = line.split(/\*\*(.*?)\*\*/g)
     return (
-      <span key={i}>
-        {parts.map((p, j) => j % 2 === 1 ? <strong key={j}>{p}</strong> : p)}
-        {i < arr.length - 1 && <br />}
-      </span>
+      <div className={s.md}>
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        components={{ a: (props) => <a {...props} target="_blank" rel="noreferrer" /> }}
+      >
+        {text}
+      </ReactMarkdown>
+    </div>
     )
-  })
 }
 
 /* ── Tool result card ────────────────────────── */
@@ -127,11 +137,12 @@ export default function Chat({ embedded = false }) {
   const [input, setInput] = useState('')
   const [busy,  setBusy]  = useState(false)
 
-  const bottomRef   = useRef(null)
+  const messagesRef = useRef(null)
   const textareaRef = useRef(null)
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+    const el = messagesRef.current
+    if (el) el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' })
   }, [messages, busy])
 
   useEffect(() => {
@@ -155,8 +166,9 @@ export default function Chat({ embedded = false }) {
       const data = await api.chat({ message: msg, history })
       const toolResults = data.tool_results ?? []
       let chartUpdated = false
-      if (toolResults.length > 0) {
-        applyToolResults(toolResults)
+      const chartResults = toolResults.filter(t => CHART_TOOLS.has(t.tool) && t.result && t.result.status !== 'error')
+      if (chartResults.length > 0) {
+        applyToolResults(chartResults)
         chartUpdated = true
       }
       setMessages(prev => [...prev, {
@@ -194,7 +206,7 @@ export default function Chat({ embedded = false }) {
               <span className={s.onlineDot} />
               <span className={s.title}>AI Chat</span>
             </div>
-            <span className={s.model}>GPT-4o-mini</span>
+              <span className={s.model}>GPT-6 Luna</span>
           </>
         ) : (
           <div className={s.headerLeft}>
@@ -217,10 +229,9 @@ export default function Chat({ embedded = false }) {
       )}
 
       {/* messages */}
-      <div className={s.messages}>
+      <div className={s.messages} ref={messagesRef} data-testid="chat-messages">
         {messages.map((m) => <Bubble key={m.id} msg={m} />)}
         {busy && <Typing />}
-        <div ref={bottomRef} />
       </div>
 
       {/* input */}
