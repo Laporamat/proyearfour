@@ -16,6 +16,9 @@ auth.register(app)
 import news  # noqa: E402, F401
 news.register(app)
 
+import news_eda  # noqa: E402, F401
+news_eda.register(app)
+
 # Register detail-page analysis endpoints (MPT + Regime real data).
 import analysis  # noqa: E402, F401
 analysis.register(app)
@@ -47,3 +50,4 @@ terminal.register(app)
 # Register OpenMarket crypto data proxy (candles + markets) for /terminal.
 import omarket  # noqa: E402, F401
 omarket.register(app)
+

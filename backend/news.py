@@ -27,6 +27,7 @@ log = logging.getLogger("news")
 CACHE_TTL = 600          # seconds — merged news snapshot reuse window
 PER_TICKER = 4           # max headlines pulled per ticker before merge
 MAX_ITEMS = 40           # cap on merged list
+FORCE_MIN_INTERVAL = 30  # seconds — throttle forced refreshes
 
 _cache: list[dict[str, Any]] | None = None
 _cache_ts: float = 0.0
