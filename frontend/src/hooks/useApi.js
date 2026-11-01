@@ -27,7 +27,6 @@ async function apiFetch(path, options = {}) {
   const { timeoutMs = 15_000, ...fetchOpts } = options
   const controller = new AbortController()
   const timeout = setTimeout(() => controller.abort(), timeoutMs)
-
   try {
     const res = await fetch(path, {
       headers: { 'Content-Type': 'application/json' },

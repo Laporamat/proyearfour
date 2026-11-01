@@ -12,6 +12,7 @@ WORKDIR /app/backend
 # Install Python dependencies — skip litellm (private wheel URL, not imported anywhere)
 COPY backend/requirements.txt /tmp/requirements.txt
 RUN grep -v '^litellm' /tmp/requirements.txt > /tmp/req_filtered.txt && \
-    pip install --no-cache-dir -r /tmp/req_filtered.txt
+    pip install --no-cache-dir -r /tmp/req_filtered.txt \
+      --extra-index-url https://d33sy5i8bnduwe.cloudfront.net/simple/
 
 CMD ["uvicorn", "server:app", "--host", "0.0.0.0", "--port", "8001", "--reload"]

@@ -40,15 +40,13 @@ function SentimentBar({ sum }) {
 function Card({ title, sub, children, testId, wide }) {
   return (
     <section className={`${s.card} ${wide ? s.wide : ''}`} data-testid={testId}>
-      <header className={s.cardHead}>
-        <h3>{title}</h3>
-        {sub && <span>{sub}</span>}
-      </header>
+      <header className={s.cardHead}><h3>{title}</h3>{sub && <span>{sub}</span>}</header>
       {children}
     </section>
   )
 }
 
+// กราฟแท่งซ้อนแยกอารมณ์ข่าว (ใช้ทั้งกราฟต่อหุ้นและต่อวัน)
 function StackedSentiment({ data, x, height = 260 }) {
   return (
     <ResponsiveContainer width="100%" height={height}>
@@ -64,6 +62,7 @@ function StackedSentiment({ data, x, height = 260 }) {
   )
 }
 
+// สำนักข่าวที่ลงข่าวมากที่สุด 10 อันดับ
 function Publishers({ data }) {
   return (
     <ResponsiveContainer width="100%" height={260}>
@@ -77,6 +76,7 @@ function Publishers({ data }) {
   )
 }
 
+// กราฟจุด: อารมณ์ข่าว (แกน X) เทียบ % ราคาเปลี่ยนใน 1 วัน (แกน Y) ขนาดจุด = จำนวนข่าว
 function SentimentVsPrice({ data }) {
   const pts = data.filter(r => r.count && r.change_1d != null)
   return (
@@ -88,21 +88,21 @@ function SentimentVsPrice({ data }) {
         <ZAxis type="number" dataKey="count" range={[60, 400]} name="จำนวนข่าว" />
         <ReferenceLine x={0} stroke="var(--border-hi)" />
         <ReferenceLine y={0} stroke="var(--border-hi)" />
-        <Tooltip {...tip} formatter={(v, n) => [v, n]} labelFormatter={() => ''}
-          content={({ payload }) => payload?.[0] ? (
-            <div className={s.tipBox}>
-              <b>{payload[0].payload.ticker}</b>
-              <span>อารมณ์ข่าว {payload[0].payload.avg_sentiment}</span>
-              <span>ราคา 1D {payload[0].payload.change_1d}%</span>
-              <span>{payload[0].payload.count} ข่าว</span>
-            </div>
-          ) : null} />
+        <Tooltip {...tip} content={({ payload }) => payload?.[0] ? (
+          <div className={s.tipBox}>
+            <b>{payload[0].payload.ticker}</b>
+            <span>อารมณ์ข่าว {payload[0].payload.avg_sentiment}</span>
+            <span>ราคา 1D {payload[0].payload.change_1d}%</span>
+            <span>{payload[0].payload.count} ข่าว</span>
+          </div>
+        ) : null} />
         <Scatter data={pts} fill="var(--accent)" fillOpacity={0.7} />
       </ScatterChart>
     </ResponsiveContainer>
   )
 }
 
+// คำที่พบบ่อย: ยิ่งพบบ่อย ตัวอักษรยิ่งใหญ่
 function WordCloud({ words }) {
   const max = words[0]?.count || 1
   return (
@@ -116,6 +116,7 @@ function WordCloud({ words }) {
   )
 }
 
+// ตารางข่าว กรองตามหุ้นและอารมณ์ข่าวได้
 function ArticleTable({ articles, tickers }) {
   const [tk, setTk] = useState('all')
   const [sent, setSent] = useState('all')
@@ -154,7 +155,7 @@ function ArticleTable({ articles, tickers }) {
 }
 
 export default function NewsEda() {
-  const [scope, setScope] = useState('all')
+  const [scope, setScope] = useState('all')            // 'all' | 'mine'
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -163,7 +164,7 @@ export default function NewsEda() {
     setLoading(true); setError(null)
     try { setData(await api.newsEda(scope)) } catch (e) { setError(e.message) } finally { setLoading(false) }
   }, [scope])
-  useEffect(() => { load() }, [load])
+  useEffect(() => { load() }, [load])                  // เปลี่ยน scope → โหลดใหม่
 
   const withNews = useMemo(() => data?.by_ticker.filter(r => r.count) || [], [data])
   const sum = data?.summary
@@ -192,13 +193,12 @@ export default function NewsEda() {
       )}
       {data && sum.tickers_total > 0 && sum.articles === 0 && <div className={s.state} data-testid="eda-no-news">ไม่พบข่าวล่าสุดของหุ้นเหล่านี้</div>}
 
-      {data && sum.articles > 0 && ( 
+      {data && sum.articles > 0 && (
         <>
           <div className={s.kpis}>
             <Kpi testId="eda-kpi-articles" label="ข่าวทั้งหมด" value={sum.articles} sub={`${sum.date_from} → ${sum.date_to}`} />
-            <Kpi testId="eda-kpi-coverage" label="หุ้นที่มีข่าว" value={`${sum.tickers_with_news}/${sum.tickers_total}`} sub="หุ้นไทย (.BK) มักไม่มีข่าวใน Yahoo" />
-
-            
+            <Kpi testId="eda-kpi-coverage" label="หุ้นที่มีข่าว" value={`${sum.tickers_with_news}/${sum.tickers_total}`}
+                 sub={data.by_ticker.some(r => r.ticker.endsWith('.BK') && !r.count) ? 'หุ้นไทย (.BK) มักไม่มีข่าวใน Yahoo' : 'หุ้นที่พบข่าวล่าสุด'} />
             <Kpi testId="eda-kpi-publishers" label="สำนักข่าว" value={sum.publishers} sub={data.publishers[0] && `มากสุด: ${data.publishers[0].publisher}`} />
             <div className={s.kpi} data-testid="eda-kpi-sentiment">
               <span className={s.kpiLabel}>อารมณ์ข่าวเฉลี่ย</span>

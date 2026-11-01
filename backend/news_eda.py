@@ -20,8 +20,11 @@ from yh import ALL_TICKERS
 
 log = logging.getLogger("news_eda")
 
-PER_TICKER = 10
-CACHE_TTL = 900
+PER_TICKER = 10          # ข่าวสูงสุดต่อหุ้น
+CACHE_TTL = 900          # cache 15 นาที
+DAYS_SHOWN = 14          # กราฟรายวันแสดง 14 วันล่าสุด
+_executor = ThreadPoolExecutor(max_workers=8)
+_lock = asyncio.Lock()
 _cache: dict[str, tuple[float, list[dict[str, Any]]]] = {}
 
 POS_WORDS = {
@@ -29,12 +32,16 @@ POS_WORDS = {
     "rise", "rises", "beat", "beats", "record", "growth", "upgrade", "upgraded", "strong",
     "bullish", "boost", "boosts", "profit", "profits", "outperform", "buy", "high", "higher",
     "win", "wins", "positive", "optimism", "climb", "climbs", "rebound", "best", "top", "opportunity",
+    "soaring", "surging", "jumped", "rallied", "skyrocket", "skyrockets", "beat", "tops", "upbeat",
+    "gained", "rose", "rising", "boom", "booming", "breakout", "double", "winner", "winners",
 }
 NEG_WORDS = {
     "fall", "falls", "drop", "drops", "plunge", "plunges", "slump", "slumps", "crash", "loss",
     "losses", "miss", "misses", "downgrade", "downgraded", "weak", "bearish", "cut", "cuts",
     "lawsuit", "probe", "risk", "risks", "fear", "fears", "decline", "declines", "sell", "selloff",
     "lower", "low", "tumble", "tumbles", "warning", "worst", "concern", "concerns", "dives", "lost",
+    "plummet", "plummets", "plummeted", "crushed", "tumbled", "tumbling", "slides", "slid", "sinks",
+    "sank", "dropped", "fell", "falling", "plunged", "slumped", "dive", "recession", "layoffs", "bad",
 }
 STOP = {
     "the", "a", "an", "and", "or", "of", "to", "in", "on", "for", "with", "is", "are", "as", "at",
@@ -47,6 +54,7 @@ STOP = {
 _WORD = re.compile(r"[A-Za-z][A-Za-z'\-]+")
 
 
+# ① ให้คะแนนอารมณ์ข่าวจากหัวข่าว: (คำบวก − คำลบ) ÷ (คำบวก + คำลบ) → ได้ค่า -1 ถึง +1
 def _sentiment(title: str) -> tuple[float, str]:
     words = [w.lower() for w in _WORD.findall(title)]
     p = sum(w in POS_WORDS for w in words)
@@ -57,6 +65,7 @@ def _sentiment(title: str) -> tuple[float, str]:
     return score, "positive" if score > 0 else "negative"
 
 
+# ② ดึงข่าวของหุ้น 1 ตัวจาก Yahoo search (มี cache)
 def _fetch(ticker: str) -> list[dict[str, Any]]:
     hit = _cache.get(ticker)
     if hit and time.time() - hit[0] < CACHE_TTL:
@@ -70,7 +79,7 @@ def _fetch(ticker: str) -> list[dict[str, Any]]:
     for it in raw:
         related = it.get("relatedTickers") or []
         if not it.get("title") or (related and ticker not in related):
-            continue
+            continue                                   # ข่าวไม่เกี่ยวกับหุ้นนี้ → ข้าม
         ts = it.get("providerPublishTime")
         score, label = _sentiment(it["title"])
         out.append({
@@ -86,16 +95,23 @@ def _fetch(ticker: str) -> list[dict[str, Any]]:
     _cache[ticker] = (time.time(), out)
     return out
 
+
+# ③ รวมสถิติทั้งหมดที่หน้าเว็บใช้
 def _analyze(articles: list[dict[str, Any]], tickers: list[str], changes: dict[str, float]) -> dict[str, Any]:
     by_t: dict[str, dict[str, Any]] = {t: {"ticker": t, "count": 0, "positive": 0, "neutral": 0, "negative": 0, "_s": 0.0} for t in tickers}
     by_day: dict[str, Counter] = defaultdict(Counter)
     pubs: Counter = Counter()
     words: Counter = Counter()
+    seen: set[str] = set()
     for a in articles:
         row = by_t[a["ticker"]]
         row["count"] += 1
         row[a["label"]] += 1
         row["_s"] += a["sentiment"]
+        uid = a["id"] or a["title"]
+        if uid in seen:                                # ข่าวเดียวกันที่อยู่หลายหุ้น นับครั้งเดียว
+            continue
+        seen.add(uid)
         pubs[a["publisher"]] += 1
         if a["published"]:
             day = a["published"][:10]
@@ -107,12 +123,13 @@ def _analyze(articles: list[dict[str, Any]], tickers: list[str], changes: dict[s
     for row in by_t.values():
         s = row.pop("_s")
         row["avg_sentiment"] = round(s / row["count"], 3) if row["count"] else 0.0
-        row["change_1d"] = changes.get(row["ticker"])
+        row["change_1d"] = changes.get(row["ticker"])  # % ราคาเปลี่ยนใน 1 วัน ใช้ทำกราฟจุด
         ticker_rows.append(row)
     ticker_rows.sort(key=lambda r: r["count"], reverse=True)
 
     labels = Counter(a["label"] for a in articles)
-    dates = sorted(by_day)
+    all_dates = sorted(by_day)
+    dates = all_dates[-DAYS_SHOWN:]
     return {
         "summary": {
             "articles": len(articles),
@@ -121,8 +138,9 @@ def _analyze(articles: list[dict[str, Any]], tickers: list[str], changes: dict[s
             "publishers": len(pubs),
             "avg_sentiment": round(sum(a["sentiment"] for a in articles) / len(articles), 3) if articles else 0.0,
             "positive": labels["positive"], "neutral": labels["neutral"], "negative": labels["negative"],
-            "date_from": dates[0] if dates else None,
-            "date_to": dates[-1] if dates else None,
+            "unique_articles": len(seen),
+            "date_from": all_dates[0] if all_dates else None,
+            "date_to": all_dates[-1] if all_dates else None,
         },
         "by_ticker": ticker_rows,
         "by_day": [{"date": d, "count": by_day[d]["count"], "positive": by_day[d]["positive"],
@@ -133,6 +151,7 @@ def _analyze(articles: list[dict[str, Any]], tickers: list[str], changes: dict[s
     }
 
 
+# หุ้นในพอร์ตของผู้ใช้ (ใช้เมื่อเลือก scope=mine ต้องล็อกอิน)
 async def _user_tickers(request: Request) -> list[str]:
     user = await _current_user(request)
     if not user:
@@ -141,13 +160,14 @@ async def _user_tickers(request: Request) -> list[str]:
     return sorted({h["ticker"] for p in portfolios for h in p.get("items", [])})
 
 
+# ④ Endpoint
 def register(app: FastAPI) -> None:
     @app.get("/api/news/eda")
     async def api_news_eda(request: Request, scope: str = Query("all", pattern="^(all|mine)$")):
         tickers = list(ALL_TICKERS) if scope == "all" else await _user_tickers(request)
-        loop = asyncio.get_event_loop()
-        with ThreadPoolExecutor(max_workers=8) as ex:
-            chunks = await asyncio.gather(*[loop.run_in_executor(ex, _fetch, t) for t in tickers])
+        loop = asyncio.get_running_loop()
+        async with _lock:                              # กันคำขอซ้อนกันไปเรียก Yahoo พร้อมกัน
+            chunks = await asyncio.gather(*[loop.run_in_executor(_executor, _fetch, t) for t in tickers])
         seen: set[str] = set()
         articles = []
         for a in (x for c in chunks for x in c):

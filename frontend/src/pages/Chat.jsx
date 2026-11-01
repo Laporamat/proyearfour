@@ -1,21 +1,15 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm    from 'remark-gfm'
 import { api }      from '../hooks/useApi'
 import { useChart } from '../context/ChartContext'
 import s            from './Chat.module.css'
-import ReactMarkdown from 'react-markdown'
-import remarkGfm    from 'remark-gfm'
 
-/* current time label (module-scope → stable, no hook dep churn) */
-const now = () =>
-  new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })
+const now = () => new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })
+const uid = () => (typeof crypto !== 'undefined' && crypto.randomUUID)
+  ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`
 
-/* stable unique id for message keys */
-const uid = () =>
-  (typeof crypto !== 'undefined' && crypto.randomUUID)
-    ? crypto.randomUUID()
-    : `${Date.now()}-${Math.random().toString(36).slice(2)}`
-
-/* ── Suggestions ────────────────────────────── */
+// คำถามแนะนำ
 const SUGGESTIONS = [
   { icon: '💼', text: 'จัดพอร์ตให้หน่อย Sharpe ดีที่สุด' },
   { icon: '🧭', text: 'ตลาดตอนนี้ Bull หรือ Bear?' },
@@ -25,39 +19,33 @@ const SUGGESTIONS = [
   { icon: '📋', text: 'สรุปพอร์ตปัจจุบันให้หน่อย' },
 ]
 
-/* ── Tool labels ────────────────────────────── */
+// ชื่อที่แสดงบนการ์ดผลจาก tool
 const TOOL_LABELS = {
-  optimize_portfolio:     'MPT Optimizer',
-  classify_market_regime: 'Market Regime',
-  get_portfolio_summary:  'Portfolio Summary',
-  get_regime_summary:     'Regime Summary',
-  get_latest_prices:      'Latest Prices',
-  run_data_pipeline:      'Data Pipeline',
-  get_live_quotes:        'Live Quotes',
-  get_stock_news:         'Stock News',
+  optimize_portfolio: 'MPT Optimizer', classify_market_regime: 'Market Regime',
+  get_portfolio_summary: 'Portfolio Summary', get_regime_summary: 'Regime Summary',
+  get_latest_prices: 'Latest Prices', run_data_pipeline: 'Data Pipeline',
+  get_live_quotes: 'Live Quotes', get_stock_news: 'Stock News',
 }
+// tools ที่ทำให้กราฟใน Dashboard อัปเดต
 const CHART_TOOLS = new Set([
   'optimize_portfolio', 'classify_market_regime', 'get_portfolio_summary',
   'get_regime_summary', 'get_latest_prices', 'run_data_pipeline',
 ])
 
-
-/* ── Markdown renderer ───────────────────────── */
+// แสดงคำตอบแบบ Markdown
 function RichText({ text }) {
   if (!text) return null
-    return (
-      <div className={s.md}>
-      <ReactMarkdown
-        remarkPlugins={[remarkGfm]}
-        components={{ a: (props) => <a {...props} target="_blank" rel="noreferrer" /> }}
-      >
+  return (
+    <div className={s.md}>
+      <ReactMarkdown remarkPlugins={[remarkGfm]}
+        components={{ a: (props) => <a {...props} target="_blank" rel="noreferrer" /> }}>
         {text}
       </ReactMarkdown>
     </div>
-    )
+  )
 }
 
-/* ── Tool result card ────────────────────────── */
+// การ์ดผลจาก tool (กดเพื่อดู JSON)
 function ToolCard({ tool, result }) {
   const [open, setOpen] = useState(false)
   const ok = result?.status !== 'error'
@@ -68,83 +56,65 @@ function ToolCard({ tool, result }) {
         <span className={s.toolName}>{TOOL_LABELS[tool] ?? tool}</span>
         <span className={s.toolChev}>{open ? '▲' : '▼'}</span>
       </button>
-      {open && (
-        <pre className={s.toolPre}>{JSON.stringify(result, null, 2)}</pre>
-      )}
+      {open && <pre className={s.toolPre}>{JSON.stringify(result, null, 2)}</pre>}
     </div>
   )
 }
 
-/* ── Message bubble ──────────────────────────── */
+// กล่องข้อความแต่ละอัน
 function Bubble({ msg }) {
   const isUser = msg.role === 'user'
   return (
     <div className={`${s.bRow} ${isUser ? s.bRowUser : ''}`}>
-      <div className={`${s.avatar} ${isUser ? s.avatarUser : s.avatarBot}`}>
-        {isUser ? 'U' : 'AI'}
-      </div>
+      <div className={`${s.avatar} ${isUser ? s.avatarUser : s.avatarBot}`}>{isUser ? 'U' : 'AI'}</div>
       <div className={s.bContent}>
         <div className={s.bMeta}>
           <span className={s.bRole}>{isUser ? 'You' : 'Quant AI'}</span>
           {msg.time && <span className={s.bTime}>{msg.time}</span>}
         </div>
-        <div className={`${s.bubble} ${isUser ? s.bUser : s.bBot}`}>
-          <RichText text={msg.content} />
-        </div>
+        <div className={`${s.bubble} ${isUser ? s.bUser : s.bBot}`}><RichText text={msg.content} /></div>
         {msg.toolResults?.length > 0 && (
           <div className={s.tools}>
-            {msg.toolResults.map((tr, i) => (
-              <ToolCard key={`${tr.tool}-${i}`} tool={tr.tool} result={tr.result} />
-            ))}
+            {msg.toolResults.map((tr, i) => <ToolCard key={`${tr.tool}-${i}`} tool={tr.tool} result={tr.result} />)}
           </div>
         )}
-        {msg.chartUpdated && (
-          <div className={s.chartPing}>
-            <span className={s.pingDot} />
-            กราฟอัพเดทแล้ว
-          </div>
-        )}
+        {msg.chartUpdated && <div className={s.chartPing}><span className={s.pingDot} />กราฟอัพเดทแล้ว</div>}
       </div>
     </div>
   )
 }
 
-/* ── Typing dots ─────────────────────────────── */
+// จุดแสดงว่ากำลังพิมพ์
 function Typing() {
   return (
     <div className={s.bRow}>
       <div className={`${s.avatar} ${s.avatarBot}`}>AI</div>
       <div className={s.bContent}>
         <div className={s.bMeta}><span className={s.bRole}>Quant AI</span></div>
-        <div className={`${s.bubble} ${s.bBot} ${s.bTyping}`}>
-          <span /><span /><span />
-        </div>
+        <div className={`${s.bubble} ${s.bBot} ${s.bTyping}`}><span /><span /><span /></div>
       </div>
     </div>
   )
 }
 
-/* ── Main Chat ───────────────────────────────── */
 export default function Chat({ embedded = false }) {
   const { applyToolResults } = useChart()
-
   const [messages, setMessages] = useState([{
-    id: uid(),
-    role: 'bot',
+    id: uid(), role: 'bot', time: now(),
     content: 'สวัสดีครับ! ผมเป็น **Quant AI** 📊\nถามเรื่องพอร์ต, สภาวะตลาด หรือราคาหุ้นได้เลย\nกราฟจะขยับอัตโนมัติตามคำตอบ',
-    time: now(),
   }])
   const [input, setInput] = useState('')
   const [busy,  setBusy]  = useState(false)
-
   const messagesRef = useRef(null)
   const textareaRef = useRef(null)
 
+  // เลื่อนลงล่างสุดเฉพาะในกล่องแชท หน้าเว็บไม่เลื่อนตาม
   useEffect(() => {
     const el = messagesRef.current
     if (el) el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' })
   }, [messages, busy])
 
+  // ช่องพิมพ์ขยายสูงตามข้อความ (สูงสุด 130px)
   useEffect(() => {
     const el = textareaRef.current
     if (!el) return
@@ -152,6 +122,7 @@ export default function Chat({ embedded = false }) {
     el.style.height = Math.min(el.scrollHeight, 130) + 'px'
   }, [input])
 
+  // ส่งคำถาม
   const send = useCallback(async (text) => {
     const msg = text.trim()
     if (!msg || busy) return
@@ -160,53 +131,37 @@ export default function Chat({ embedded = false }) {
     setBusy(true)
     try {
       const history = messages.slice(-10).map(m => ({
-        role:    m.role === 'user' ? 'user' : 'assistant',
-        content: m.content,
+        role: m.role === 'user' ? 'user' : 'assistant', content: m.content,
       }))
-      const data = await api.chat({ message: msg, history })
+      const data = await api.chat({ message: msg, history })             // POST /api/chat
       const toolResults = data.tool_results ?? []
       let chartUpdated = false
       const chartResults = toolResults.filter(t => CHART_TOOLS.has(t.tool) && t.result && t.result.status !== 'error')
       if (chartResults.length > 0) {
-        applyToolResults(chartResults)
+        applyToolResults(chartResults)                                    // อัปเดตกราฟใน Dashboard
         chartUpdated = true
       }
       setMessages(prev => [...prev, {
-        id: uid(),
-        role: 'bot',
-        content: data.reply || '(ไม่มีคำตอบ)',
-        toolResults, chartUpdated,
-        time: now(),
+        id: uid(), role: 'bot', content: data.reply || '(ไม่มีคำตอบ)',
+        toolResults, chartUpdated, time: now(),
       }])
     } catch (e) {
-      setMessages(prev => [...prev, {
-        id: uid(),
-        role: 'bot',
-        content: `❌ ${e.message}`,
-        time: now(),
-      }])
+      setMessages(prev => [...prev, { id: uid(), role: 'bot', content: `❌ ${e.message}`, time: now() }])
     }
     setBusy(false)
   }, [busy, messages, applyToolResults])
 
-  const onKey = e => {
-    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(input) }
-  }
-
+  // Enter = ส่ง, Shift+Enter = ขึ้นบรรทัดใหม่
+  const onKey = e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(input) } }
   const showSuggestions = messages.length <= 1 && !busy
 
   return (
     <div className={`${s.page} ${embedded ? s.embedded : ''}`}>
-
-      {/* header */}
       <div className={s.header}>
         {embedded ? (
           <>
-            <div className={s.headerLeft}>
-              <span className={s.onlineDot} />
-              <span className={s.title}>AI Chat</span>
-            </div>
-              <span className={s.model}>GPT-6 Luna</span>
+            <div className={s.headerLeft}><span className={s.onlineDot} /><span className={s.title}>AI Chat</span></div>
+            <span className={s.model}>GPT-6 Luna</span>
           </>
         ) : (
           <div className={s.headerLeft}>
@@ -216,51 +171,31 @@ export default function Chat({ embedded = false }) {
         )}
       </div>
 
-      {/* suggestions */}
       {showSuggestions && (
         <div className={s.suggestions}>
           {SUGGESTIONS.map(({ icon, text }) => (
             <button key={text} className={s.chip} onClick={() => send(text)}>
-              <span className={s.chipIcon}>{icon}</span>
-              <span>{text}</span>
+              <span className={s.chipIcon}>{icon}</span><span>{text}</span>
             </button>
           ))}
         </div>
       )}
 
-      {/* messages */}
       <div className={s.messages} ref={messagesRef} data-testid="chat-messages">
         {messages.map((m) => <Bubble key={m.id} msg={m} />)}
         {busy && <Typing />}
       </div>
 
-      {/* input */}
       <div className={`${s.inputBar} ${busy ? s.inputDisabled : ''}`}>
-        <textarea
-          ref={textareaRef}
-          className={s.input}
-          rows={1}
+        <textarea ref={textareaRef} className={s.input} rows={1}
           placeholder="ถามเกี่ยวกับพอร์ต, ตลาด หรือราคาหุ้น…"
-          value={input}
-          onChange={e => setInput(e.target.value)}
-          onKeyDown={onKey}
-          disabled={busy}
-        />
-        <button
-          className={s.sendBtn}
-          onClick={() => send(input)}
-          disabled={busy || !input.trim()}
-          aria-label="ส่ง"
-        >
-          {busy
-            ? <span className="spinner" style={{ color: '#fff' }} />
-            : (
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="22" y1="2" x2="11" y2="13"/>
-                <polygon points="22 2 15 22 11 13 2 9 22 2"/>
-              </svg>
-            )
-          }
+          value={input} onChange={e => setInput(e.target.value)} onKeyDown={onKey} disabled={busy} />
+        <button className={s.sendBtn} onClick={() => send(input)} disabled={busy || !input.trim()} aria-label="ส่ง">
+          {busy ? <span className="spinner" style={{ color: '#fff' }} /> : (
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+            </svg>
+          )}
         </button>
       </div>
     </div>

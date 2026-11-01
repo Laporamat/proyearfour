@@ -25,7 +25,8 @@ services:
       - DB_NAME=quantix
       - PYTHONUNBUFFERED=1
     env_file:
-      - /run/base44/app.env
+      - path: ./backend/.env
+        required: false
     depends_on:
       mongo:
         condition: service_healthy
