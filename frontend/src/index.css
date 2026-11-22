@@ -131,12 +131,34 @@ h2 { font-size: 1.05rem;  font-weight: 600; color: var(--text-head); letter-spac
 h3 { font-size: 0.875rem; font-weight: 600; color: var(--text-head); }
 p  { color: var(--text); }
 
+/* ── Modern Glass & Quant Utility Styles ──────── */
+.glass-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-sm);
+  transition: border-color var(--tx), box-shadow var(--tx);
+}
+.glass-panel:hover {
+  border-color: var(--border-hi);
+  box-shadow: var(--shadow-md);
+}
+
+.mono {
+  font-family: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
 /* ── Card ───────────────────────────────────── */
 .card {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--r-lg);
   padding: var(--sp-5) var(--sp-6);
+  box-shadow: var(--shadow-sm);
+  transition: border-color var(--tx), box-shadow var(--tx);
+}
+.card:hover {
+  border-color: var(--border-hi);
 }
 
 /* ── Badge ──────────────────────────────────── */

@@ -34,9 +34,11 @@ except ImportError:
     MT5_AVAILABLE = False
     log.info("Native MetaTrader5 not available. Paper Trading will use yfinance live prices.")
 
-# ใช้ worker เดียว + lock เพื่อลดอาการ IPC timeout (-10005) จากการเรียก mt5 ซ้อนกันหลาย thread
-_executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="mt5-worker")
+# ใช้ worker 2 thread + lock เพื่อลดอาการ IPC timeout (-10005) จากการเรียก mt5 ซ้อนกันหลาย thread
+# max_workers=2 ให้มี 1 thread สำรองป้องกัน deadlock เมื่อ yfinance และ MT5 ถูกเรียกพร้อมกัน
+_executor = ThreadPoolExecutor(max_workers=2, thread_name_prefix="mt5-worker")
 _mt5_lock = threading.Lock()
+_MT5_EXEC_TIMEOUT = 15.0  # seconds — max time to wait for a native MT5 / yfinance call
 
 DEFAULT_PATH = r"C:\Program Files\MetaTrader 5\terminal64.exe"
 BRIDGE_URLS = [
@@ -164,14 +166,27 @@ def _yf_fetch_price(symbol: str) -> dict:
 
 
 async def _get_live_price(symbol: str) -> dict:
-    """Get cached live price or fetch fresh from yfinance."""
+    """Get cached live price or fetch fresh from yfinance. Enforces 15s timeout to prevent hanging."""
     clean = symbol.strip().upper().replace(".BK", "").replace(".US", "")
     cached = _price_cache.get(clean)
     if cached and (time.time() - cached.get("ts", 0)) < _PRICE_TTL:
         return cached
 
     loop = asyncio.get_running_loop()
-    data = await loop.run_in_executor(_executor, _yf_fetch_price, clean)
+    try:
+        data = await asyncio.wait_for(
+            loop.run_in_executor(_executor, _yf_fetch_price, clean),
+            timeout=_MT5_EXEC_TIMEOUT
+        )
+    except asyncio.TimeoutError:
+        log.warning(f"yfinance price fetch timed out for {clean} — using fallback price")
+        fallback = QUANTIX_25_BASE_PRICES.get(clean, 100.0)
+        data = {
+            "symbol": clean, "bid": round(fallback * 0.9995, 2),
+            "ask": round(fallback * 1.0005, 2), "last": fallback,
+            "spread": round(fallback * 0.001, 4), "time": int(time.time()),
+            "source": "fallback_timeout",
+        }
     data["ts"] = time.time()
     _price_cache[clean] = data
     return data
@@ -755,7 +770,13 @@ async def _execute_order_core(req: OrderRequest) -> dict[str, Any]:
 
     if _state["mode"] == "native" and MT5_AVAILABLE:
         loop = asyncio.get_running_loop()
-        return await loop.run_in_executor(_executor, _native_send_order, req)
+        try:
+            return await asyncio.wait_for(
+                loop.run_in_executor(_executor, _native_send_order, req),
+                timeout=_MT5_EXEC_TIMEOUT
+            )
+        except asyncio.TimeoutError:
+            raise RuntimeError(f"MT5 order execution timed out after {_MT5_EXEC_TIMEOUT}s — MT5 terminal may be unresponsive")
 
     raise RuntimeError("ไม่สามารถส่งคำสั่งได้ — MT5 ยังไม่ได้เชื่อมต่อ")
 
@@ -822,7 +843,13 @@ def register(app: FastAPI) -> None:
 
         if MT5_AVAILABLE:
             loop = asyncio.get_running_loop()
-            acc = await loop.run_in_executor(_executor, _native_get_account)
+            try:
+                acc = await asyncio.wait_for(
+                    loop.run_in_executor(_executor, _native_get_account),
+                    timeout=_MT5_EXEC_TIMEOUT
+                )
+            except asyncio.TimeoutError:
+                acc = None
             if acc and acc.get("login"):
                 _state["connected"] = True
                 _state["mode"] = "native"
