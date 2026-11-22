@@ -51,11 +51,11 @@ export default function Mt5Trade() {
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
 
-  // Connection form state
+  // Connection form state (Preset to VantageMarkets-Demo for instant access)
   const [showConnectModal, setShowConnectModal] = useState(false)
-  const [loginInput, setLoginInput] = useState('')
-  const [passwordInput, setPasswordInput] = useState('')
-  const [serverInput, setServerInput] = useState('MetaQuotes-Demo')
+  const [loginInput, setLoginInput] = useState('26462314')
+  const [passwordInput, setPasswordInput] = useState('#d1rnoPM')
+  const [serverInput, setServerInput] = useState('VantageMarkets-Demo')
 
   // Order pad state (default symbol: AAPL from the 25 assets)
   const [symbol, setSymbol] = useState('AAPL')

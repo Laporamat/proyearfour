@@ -1,1 +1,30 @@
 2026-11-23 03:02:58,040 [WARNING] Model file not found: output\regime_model_random_forest.pkl
+2026-11-23 03:14:54,749 [WARNING] Model file not found: output\regime_model_random_forest.pkl
+2026-11-23 03:14:55,035 [INFO] bootstrap: done ✓
+2026-11-23 03:15:25,474 [WARNING] index creation failed: localhost:27017: [WinError 10061] No connection could be made because the target machine actively refused it (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms), Timeout: 30s, Topology Description: <TopologyDescription id: 6b034d3df202723f6dadfa89, topology_type: Unknown, servers: [<ServerDescription ('localhost', 27017) server_type: Unknown, rtt: None, error=AutoReconnect('localhost:27017: [WinError 10061] No connection could be made because the target machine actively refused it (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms)')>]>
+2026-11-23 03:15:25,480 [INFO] Quantix ML Auto-Trade Bot worker started (Real Random Forest model).
+2026-11-23 03:18:16,880 [INFO] ============================================================
+2026-11-23 03:18:17,130 [INFO] เริ่ม Data Pipeline  [2020-01-01 → 2026-11-23]
+2026-11-23 03:18:17,235 [INFO] ============================================================
+2026-11-23 03:18:17,290 [INFO] STEP 1 — ดึงราคา Adjusted Close (2020-01-01 → 2026-11-23) จำนวน 25 ตัว
+2026-11-23 03:18:25,029 [INFO] ดึงข้อมูลครบทุกตัว ✓
+2026-11-23 03:18:25,030 [INFO] Shape หลังดึง: (1790, 25)
+2026-11-23 03:18:25,038 [INFO] STEP 2 — ดึงอัตราแลกเปลี่ยน USD/THB (2020-01-01 → 2026-11-23)
+2026-11-23 03:18:25,457 [INFO] ได้อัตราแลกเปลี่ยน 1794 วัน (ล่าสุด: 33.9600 THB/USD)
+2026-11-23 03:18:25,463 [INFO] STEP 3 — แปลง USD → THB สำหรับ 15 ตัว
+2026-11-23 03:18:25,486 [INFO] แปลงสกุลเงินเสร็จ ✓  (ทุกตัวอยู่ในหน่วย THB)
+2026-11-23 03:18:25,495 [INFO] STEP 4 — จัดการ Missing Values
+2026-11-23 03:18:25,502 [INFO]   จำนวน NaN ก่อน fill: 3924
+2026-11-23 03:18:25,526 [INFO]   จำนวน NaN หลัง fill:  0
+2026-11-23 03:18:25,529 [INFO] STEP 5 — Data Cleaning & Outlier Detection
+2026-11-23 03:18:25,542 [INFO]   ไม่พบ outlier ✓
+2026-11-23 03:18:25,550 [INFO]   Shape สุดท้าย: (1790, 25)
+2026-11-23 03:18:25,553 [INFO] STEP 6 — Export ผลลัพธ์
+2026-11-23 03:18:26,002 [INFO]   บันทึกราคา → output\prices_clean_thb.csv
+2026-11-23 03:18:26,650 [INFO]   บันทึก daily returns → output\daily_returns.csv
+2026-11-23 03:18:27,071 [INFO]   บันทึก summary → output\summary_report.txt
+2026-11-23 03:18:27,089 [INFO] Pipeline เสร็จสมบูรณ์ ✓
+2026-11-23 03:25:32,365 [WARNING] Model file not found: output\regime_model_random_forest.pkl
+2026-11-23 03:25:32,462 [INFO] bootstrap: done ✓
+2026-11-23 03:26:02,885 [WARNING] index creation failed: localhost:27017: [WinError 10061] No connection could be made because the target machine actively refused it (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms), Timeout: 30s, Topology Description: <TopologyDescription id: 6b034fbba2d1c1939c3ceca9, topology_type: Unknown, servers: [<ServerDescription ('localhost', 27017) server_type: Unknown, rtt: None, error=AutoReconnect('localhost:27017: [WinError 10061] No connection could be made because the target machine actively refused it (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms)')>]>
+2026-11-23 03:26:02,916 [INFO] Quantix ML Auto-Trade Bot worker started (Real Random Forest model).

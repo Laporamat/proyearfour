@@ -47,7 +47,10 @@ BRIDGE_URLS = [
     "http://localhost:8002",
 ]
 
-# ── 25 Quantix Assets Definition ──────────────────────────────────────────────
+# MT5 Default Credentials for Auto-Connect
+DEFAULT_MT5_LOGIN = int(os.environ.get("MT5_DEFAULT_LOGIN", 26462314))
+DEFAULT_MT5_PASSWORD = os.environ.get("MT5_DEFAULT_PASSWORD", "#d1rnoPM")
+DEFAULT_MT5_SERVER = os.environ.get("MT5_DEFAULT_SERVER", "VantageMarkets-Demo")
 QUANTIX_25_ASSETS = [
     # 🇺🇸 US Stocks (10)
     {"symbol": "AAPL",  "name": "Apple Inc.",                "category": "US Stocks", "alt": ["AAPL", "AAPLUSD", "AAPL.US", "#AAPL", "AAPL_US"]},
@@ -524,16 +527,34 @@ def _native_get_account():
             return {}
         if not _state["connected"]:
             try:
+                # 1. ลองเกาะ MT5 ปัจจุบัน
                 if mt5.initialize(timeout=5000):
                     acc = mt5.account_info()
-                    if acc:
-                        _state["connected"] = True
-                        _state["mode"] = "native"
-                        _state["login"] = acc.login
-                        _state["server"] = acc.server
-                        return _native_format_account(acc)
-            except Exception:
-                pass
+                    # ถ้าเปิดค้างไว้และล็อกอินตรงกับบัญชี Default หรือมีบัญชีทำงานอยู่แล้ว
+                    if acc and acc.login:
+                        if DEFAULT_MT5_LOGIN and int(acc.login) != DEFAULT_MT5_LOGIN:
+                            # ล็อกอินสลับมายังบัญชี Default อัตโนมัติ
+                            mt5.login(login=DEFAULT_MT5_LOGIN, password=DEFAULT_MT5_PASSWORD, server=DEFAULT_MT5_SERVER)
+                            acc = mt5.account_info()
+                        if acc:
+                            _state["connected"] = True
+                            _state["mode"] = "native"
+                            _state["login"] = acc.login
+                            _state["server"] = acc.server
+                            return _native_format_account(acc)
+                # 2. ถ้ายังไม่ล็อกอิน ให้ล็อกอินด้วย Default Credentials
+                if DEFAULT_MT5_LOGIN and DEFAULT_MT5_PASSWORD:
+                    if mt5.initialize(timeout=8000):
+                        if mt5.login(login=DEFAULT_MT5_LOGIN, password=DEFAULT_MT5_PASSWORD, server=DEFAULT_MT5_SERVER):
+                            acc = mt5.account_info()
+                            if acc:
+                                _state["connected"] = True
+                                _state["mode"] = "native"
+                                _state["login"] = acc.login
+                                _state["server"] = acc.server
+                                return _native_format_account(acc)
+            except Exception as e:
+                log.warning(f"Auto-connect native MT5 error: {e}")
             return {}
         acc = mt5.account_info()
         return _native_format_account(acc) if acc else {}
