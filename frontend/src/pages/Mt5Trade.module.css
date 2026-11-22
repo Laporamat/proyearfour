@@ -509,6 +509,40 @@
   color: #f1f5f9;
 }
 
+.subTabGroup {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.subTabBtn {
+  background: transparent;
+  border: 1px solid var(--border, rgba(15, 23, 42, 0.08));
+  padding: 4px 10px;
+  border-radius: var(--r-md, 8px);
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: var(--text-muted, #64748b);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+:global([data-theme="dark"]) .subTabBtn {
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.subTabBtnActive {
+  background: var(--surface2, #f5f5f4) !important;
+  color: var(--accent, #2f5bd6) !important;
+  border-color: var(--accent, #2f5bd6) !important;
+}
+
+:global([data-theme="dark"]) .subTabBtnActive {
+  background: #1c2030 !important;
+  color: #60a5fa !important;
+  border-color: #60a5fa !important;
+}
+
 .marketStatePill {
   font-family: 'Geist Mono', monospace;
   font-size: 0.65rem;

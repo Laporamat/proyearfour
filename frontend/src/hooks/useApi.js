@@ -247,6 +247,9 @@ export const api = {
   mt5AutoRebalance: (body) =>
     apiFetch('/api/mt5/auto-rebalance', { method: 'POST', body: JSON.stringify(body) }),
 
+  mt5History: () =>
+    apiFetch('/api/mt5/history'),
+
   // ── Quant Day Trading & ML Bot API ──
   daytradeSignals: () =>
     apiFetch('/api/quant/daytrade/signals'),

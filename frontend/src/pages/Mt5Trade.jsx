@@ -45,6 +45,8 @@ export default function Mt5Trade() {
   const [status, setStatus] = useState({ available: false, connected: false, mode: 'disconnected' })
   const [account, setAccount] = useState(null)
   const [positions, setPositions] = useState([])
+  const [history, setHistory] = useState([])
+  const [posTab, setPosTab] = useState('active') // 'active' | 'history'
   const [actionLoading, setActionLoading] = useState(false)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
@@ -110,6 +112,17 @@ export default function Mt5Trade() {
       setPositions(res.positions || [])
     } catch (e) {
       console.warn('MT5 positions fetch error:', e.message)
+    }
+  }, [status.connected])
+
+  // ── 2.1 Fetch Closed Trade History ──
+  const fetchHistory = useCallback(async () => {
+    if (!status.connected) return
+    try {
+      const res = await api.mt5History()
+      setHistory(res.trades || [])
+    } catch (e) {
+      console.warn('MT5 history fetch error:', e.message)
     }
   }, [status.connected])
 
@@ -180,9 +193,11 @@ export default function Mt5Trade() {
   useEffect(() => {
     if (status.connected) {
       fetchPositions()
+      fetchHistory()
       fetchTick()
       pollTimer.current = setInterval(() => {
         fetchPositions()
+        fetchHistory()
         fetchStatus()
         fetchBot()
       }, 3000)
@@ -192,7 +207,7 @@ export default function Mt5Trade() {
       clearInterval(pollTimer.current)
       clearInterval(tickTimer.current)
     }
-  }, [status.connected, fetchPositions, fetchStatus, fetchTick, fetchBot])
+  }, [status.connected, fetchPositions, fetchHistory, fetchStatus, fetchTick, fetchBot])
 
   // Auto-fill SL/TP based on active symbol ML setup if enabled
   const activeSignal = mlData?.signals?.find(s => s.symbol === symbol)
@@ -281,9 +296,11 @@ export default function Mt5Trade() {
   const handleClose = async (ticket) => {
     setActionLoading(true)
     try {
-      await api.mt5Close(ticket)
-      setMessage(`ปิดออเดอร์ Ticket #${ticket} สำเร็จ`)
+      const res = await api.mt5Close(ticket)
+      const p = res.profit != null ? ` (P/L: ${res.profit >= 0 ? '+' : ''}$${res.profit})` : ''
+      setMessage(`ปิดออเดอร์ Ticket #${ticket} สำเร็จ${p}`)
       fetchPositions()
+      fetchHistory()
       fetchStatus()
     } catch (err) {
       setError(err.message || 'ปิดออเดอร์ไม่สำเร็จ')
@@ -298,8 +315,9 @@ export default function Mt5Trade() {
     setActionLoading(true)
     try {
       const res = await api.mt5CloseAll()
-      setMessage(`ปิดออเดอร์ทั้งหมดสำเร็จ (${res.total_closed} รายการ)`)
+      setMessage(`ปิดออเดอร์ทั้งหมดสำเร็จ (${res.total_closed} รายการ, P/L: $${res.total_profit})`)
       fetchPositions()
+      fetchHistory()
       fetchStatus()
     } catch (err) {
       setError(err.message || 'ปิดออเดอร์ทั้งหมดไม่สำเร็จ')
@@ -401,8 +419,11 @@ export default function Mt5Trade() {
           <div className={s.badgeRow}>
             <span className={s.livePulse} />
             <span className={s.terminalTag}>QUANT TERMINAL</span>
+            <span className={s.terminalTag} style={{ borderColor: '#8b5cf6', color: '#8b5cf6', background: 'rgba(139,92,246,0.08)' }}>
+              ML: RANDOM FOREST (300 TREES)
+            </span>
             <span className={s.regimeBadge}>
-              REGIME: {mlData?.regime?.state?.toUpperCase() || 'BULL'} {mlData?.regime?.confidence ? `(${mlData.regime.confidence}%)` : ''}
+              REGIME: {mlData?.regime?.state?.toUpperCase() || 'NEUTRAL'} {mlData?.regime?.confidence ? `(${mlData.regime.confidence}%)` : ''}
             </span>
             {botState?.enabled && (
               <span className={s.botActivePill}>
@@ -643,70 +664,134 @@ export default function Mt5Trade() {
               </div>
             )}
 
-            {/* Open Positions Table */}
+            {/* Open Positions & Trade History Table */}
             <div className={s.positionsCard}>
               <div className={s.sectionTitle}>
-                <span>Active Order Tickets & Positions ({positions.length})</span>
-                {positions.length > 0 && (
+                <div className={s.subTabGroup}>
+                  <button
+                    className={`${s.subTabBtn} ${posTab === 'active' ? s.subTabBtnActive : ''}`}
+                    onClick={() => setPosTab('active')}
+                  >
+                    Active Deals ({positions.length})
+                  </button>
+                  <button
+                    className={`${s.subTabBtn} ${posTab === 'history' ? s.subTabBtnActive : ''}`}
+                    onClick={() => { setPosTab('history'); fetchHistory(); }}
+                  >
+                    Closed History ({history.length})
+                  </button>
+                </div>
+                {posTab === 'active' && positions.length > 0 && (
                   <button className={s.btnSmallCloseAll} onClick={handleCloseAll}>
-                    Close All
+                    Close All ({positions.length})
                   </button>
                 )}
               </div>
 
-              {positions.length === 0 ? (
-                <div className={s.emptyState}>
-                  ยังไม่มี Position ที่เปิดอยู่ — เลือกสินทรัพย์จาก 25 ตัวด้านบนแล้วกด Buy / Sell ใน Order Pad
-                </div>
-              ) : (
-                <div className={s.tableWrap}>
-                  <table className={s.table}>
-                    <thead>
-                      <tr>
-                        <th>Ticket</th>
-                        <th>Symbol</th>
-                        <th>Type</th>
-                        <th>Lots</th>
-                        <th>Entry Price</th>
-                        <th>Current Price</th>
-                        <th>SL / TP</th>
-                        <th>Profit ($)</th>
-                        <th>Action</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {positions.map((p) => (
-                        <tr key={p.ticket}>
-                          <td className={s.mono}>#{p.ticket}</td>
-                          <td><strong>{p.symbol}</strong></td>
-                          <td>
-                            <span className={p.type === 'BUY' ? s.badgeBuy : s.badgeSell}>
-                              {p.type}
-                            </span>
-                          </td>
-                          <td className={s.mono}>{p.volume}</td>
-                          <td className={s.mono}>{p.price_open}</td>
-                          <td className={s.mono}>{p.price_current}</td>
-                          <td className={s.mono}>
-                            {p.sl || '—'} / {p.tp || '—'}
-                          </td>
-                          <td className={`${s.mono} ${p.profit >= 0 ? s.profitPos : s.profitNeg}`}>
-                            {p.profit >= 0 ? '+' : ''}${p.profit.toFixed(2)}
-                          </td>
-                          <td>
-                            <button
-                              className={s.btnCloseSmall}
-                              onClick={() => handleClose(p.ticket)}
-                              disabled={actionLoading}
-                            >
-                              ✕ Close
-                            </button>
-                          </td>
+              {posTab === 'active' ? (
+                positions.length === 0 ? (
+                  <div className={s.emptyState}>
+                    ยังไม่มี Position ที่เปิดอยู่ — เลือกสินทรัพย์จาก 25 ตัวด้านบนแล้วกด Buy / Sell ใน Order Pad
+                  </div>
+                ) : (
+                  <div className={s.tableWrap}>
+                    <table className={s.table}>
+                      <thead>
+                        <tr>
+                          <th>Ticket</th>
+                          <th>Symbol</th>
+                          <th>Type</th>
+                          <th>Lots</th>
+                          <th>Entry Price</th>
+                          <th>Current Price</th>
+                          <th>SL / TP</th>
+                          <th>Profit ($)</th>
+                          <th>Action</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                      </thead>
+                      <tbody>
+                        {positions.map((p) => (
+                          <tr key={p.ticket}>
+                            <td className={s.mono}>#{p.ticket}</td>
+                            <td><strong>{p.symbol}</strong></td>
+                            <td>
+                              <span className={p.type === 'BUY' ? s.badgeBuy : s.badgeSell}>
+                                {p.type}
+                              </span>
+                            </td>
+                            <td className={s.mono}>{p.volume}</td>
+                            <td className={s.mono}>{p.price_open}</td>
+                            <td className={s.mono}>{p.price_current}</td>
+                            <td className={s.mono}>
+                              {p.sl || '—'} / {p.tp || '—'}
+                            </td>
+                            <td className={`${s.mono} ${p.profit >= 0 ? s.profitPos : s.profitNeg}`}>
+                              {p.profit >= 0 ? '+' : ''}${p.profit.toFixed(2)}
+                            </td>
+                            <td>
+                              <button
+                                className={s.btnCloseSmall}
+                                onClick={() => handleClose(p.ticket)}
+                                disabled={actionLoading}
+                              >
+                                ✕ Close
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )
+              ) : (
+                history.length === 0 ? (
+                  <div className={s.emptyState}>
+                    ยังไม่มีประวัติการปิดออเดอร์ — เมื่อปิดสถานะ ออเดอร์และกำไรขาดทุนจริง (Realized P/L) จะแสดงที่นี่
+                  </div>
+                ) : (
+                  <div className={s.tableWrap}>
+                    <table className={s.table}>
+                      <thead>
+                        <tr>
+                          <th>Ticket</th>
+                          <th>Symbol</th>
+                          <th>Type</th>
+                          <th>Lots</th>
+                          <th>Open Price</th>
+                          <th>Close Price</th>
+                          <th>Realized P/L ($)</th>
+                          <th>Reason</th>
+                          <th>Closed At</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {history.map((h) => (
+                          <tr key={h.ticket}>
+                            <td className={s.mono}>#{h.ticket}</td>
+                            <td><strong>{h.symbol}</strong></td>
+                            <td>
+                              <span className={h.type === 'BUY' ? s.badgeBuy : s.badgeSell}>
+                                {h.type}
+                              </span>
+                            </td>
+                            <td className={s.mono}>{h.volume}</td>
+                            <td className={s.mono}>{h.price_open}</td>
+                            <td className={s.mono}>{h.price_close}</td>
+                            <td className={`${s.mono} ${h.profit >= 0 ? s.profitPos : s.profitNeg}`}>
+                              {h.profit >= 0 ? '+' : ''}${Number(h.profit || 0).toFixed(2)}
+                            </td>
+                            <td>
+                              <span className={s.marketStatePill}>{h.close_reason || 'MANUAL'}</span>
+                            </td>
+                            <td className={s.mono}>
+                              {h.closed_at ? h.closed_at.split('T')[1].slice(0, 8) : '—'}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )
               )}
             </div>
           </div>

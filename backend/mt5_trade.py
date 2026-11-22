@@ -48,16 +48,16 @@ BRIDGE_URLS = [
 # ── 25 Quantix Assets Definition ──────────────────────────────────────────────
 QUANTIX_25_ASSETS = [
     # 🇺🇸 US Stocks (10)
-    {"symbol": "AAPL",  "name": "Apple Inc.",                "category": "US Stocks", "alt": ["AAPL", "AAPL.US", "#AAPL", "AAPL_US"]},
-    {"symbol": "MSFT",  "name": "Microsoft Corp.",           "category": "US Stocks", "alt": ["MSFT", "MSFT.US", "#MSFT", "MSFT_US"]},
-    {"symbol": "GOOGL", "name": "Alphabet Inc. (Google)",    "category": "US Stocks", "alt": ["GOOGL", "GOOG", "GOOGL.US", "#GOOGL"]},
-    {"symbol": "AMZN",  "name": "Amazon.com Inc.",           "category": "US Stocks", "alt": ["AMZN", "AMZN.US", "#AMZN", "AMZN_US"]},
-    {"symbol": "NVDA",  "name": "NVIDIA Corp.",              "category": "US Stocks", "alt": ["NVDA", "NVDA.US", "#NVDA", "NVDA_US"]},
-    {"symbol": "TSLA",  "name": "Tesla Inc.",                "category": "US Stocks", "alt": ["TSLA", "TSLA.US", "#TSLA", "TSLA_US"]},
-    {"symbol": "META",  "name": "Meta Platforms (Facebook)", "category": "US Stocks", "alt": ["META", "FB", "META.US", "#META"]},
-    {"symbol": "JNJ",   "name": "Johnson & Johnson",         "category": "US Stocks", "alt": ["JNJ", "JNJ.US", "#JNJ", "JNJ_US"]},
-    {"symbol": "V",     "name": "Visa Inc.",                 "category": "US Stocks", "alt": ["V", "V.US", "#V", "V_US"]},
-    {"symbol": "JPM",   "name": "JPMorgan Chase & Co.",      "category": "US Stocks", "alt": ["JPM", "JPM.US", "#JPM", "JPM_US"]},
+    {"symbol": "AAPL",  "name": "Apple Inc.",                "category": "US Stocks", "alt": ["AAPL", "AAPLUSD", "AAPL.US", "#AAPL", "AAPL_US"]},
+    {"symbol": "MSFT",  "name": "Microsoft Corp.",           "category": "US Stocks", "alt": ["MSFT", "MSFTUSD", "MSFT.US", "#MSFT", "MSFT_US"]},
+    {"symbol": "GOOGL", "name": "Alphabet Inc. (Google)",    "category": "US Stocks", "alt": ["GOOGLUSD", "GOOGL", "GOOG", "GOOGL.US", "#GOOGL"]},
+    {"symbol": "AMZN",  "name": "Amazon.com Inc.",           "category": "US Stocks", "alt": ["AMZNUSD", "AMZN", "AMZN.US", "#AMZN", "AMZN_US"]},
+    {"symbol": "NVDA",  "name": "NVIDIA Corp.",              "category": "US Stocks", "alt": ["NVDAUSD", "NVDA", "NVDA.US", "#NVDA", "NVDA_US"]},
+    {"symbol": "TSLA",  "name": "Tesla Inc.",                "category": "US Stocks", "alt": ["TSLA", "TSLAUSD", "TSLA.US", "#TSLA", "TSLA_US"]},
+    {"symbol": "META",  "name": "Meta Platforms (Facebook)", "category": "US Stocks", "alt": ["META", "METAUSD", "FB", "META.US", "#META"]},
+    {"symbol": "JNJ",   "name": "Johnson & Johnson",         "category": "US Stocks", "alt": ["JNJ", "JNJUSD", "JNJ.US", "#JNJ", "JNJ_US"]},
+    {"symbol": "V",     "name": "Visa Inc.",                 "category": "US Stocks", "alt": ["VUSD", "V", "V.US", "#V", "V_US"]},
+    {"symbol": "JPM",   "name": "JPMorgan Chase & Co.",      "category": "US Stocks", "alt": ["JPM", "JPMUSD", "JPM.US", "#JPM", "JPM_US"]},
 
     # 🇹🇭 Thai Stocks (10)
     {"symbol": "PTT",   "name": "PTT PCL",                   "category": "Thai Stocks", "alt": ["PTT", "PTT.BK", "PTT_TH"]},
@@ -381,22 +381,53 @@ async def _bridge_request(method: str, path: str, json_data: Any = None) -> Any:
 # ── Native MT5 Symbol Matcher ─────────────────────────────────────────────────
 
 def _resolve_broker_symbol(symbol: str) -> str:
+    """Smart resolve symbol based on broker naming conventions (e.g. VantageMarkets, IC Markets, Pepperstone)."""
     if not MT5_AVAILABLE:
         return symbol
     clean_sym = symbol.replace(".BK", "").strip().upper()
+
+    # 1. Exact match in broker symbols
     info = mt5.symbol_info(clean_sym)
     if info:
         return clean_sym
+
+    # 2. Match against QUANTIX_25_ASSETS alt list
     for asset in QUANTIX_25_ASSETS:
         if asset["symbol"] == clean_sym or asset["symbol"] == symbol:
             for alt in asset.get("alt", []):
                 info = mt5.symbol_info(alt)
                 if info:
                     return alt
-    for suffix in [f"{clean_sym}.US", f"#{clean_sym}", f"{clean_sym}_US", f"{clean_sym}m", f"{clean_sym}+"]:
-        info = mt5.symbol_info(suffix)
+
+    # 3. Dynamic candidate check (Common broker prefixes/suffixes)
+    # VantageMarkets uses: NVDAUSD, AMZNUSD, GOOGLUSD, AAPL, SPY, GLD, etc.
+    candidates = [
+        f"{clean_sym}USD",
+        f"{clean_sym}.US",
+        f"#{clean_sym}",
+        f"{clean_sym}_US",
+        f"{clean_sym}m",
+        f"{clean_sym}+",
+        f"{clean_sym}.24H",
+    ]
+    if clean_sym in ("GLD", "GOLD"):
+        candidates.extend(["XAUUSD", "GOLD", "XAUUSDm", "XAUUSD+"])
+    for cand in candidates:
+        info = mt5.symbol_info(cand)
         if info:
-            return suffix
+            return cand
+
+    # 4. Search all symbols from broker if not found yet
+    try:
+        all_syms = mt5.symbols_get()
+        if all_syms:
+            for s in all_syms:
+                s_name = s.name.upper()
+                if s_name == clean_sym or s_name.startswith(clean_sym) or s_name.endswith(clean_sym):
+                    return s.name
+    except Exception:
+        pass
+
     return clean_sym
 
 
@@ -531,14 +562,33 @@ def _native_send_order(req: OrderRequest):
         if not sym_info.visible:
             mt5.symbol_select(broker_sym, True)
         tick = mt5.symbol_info_tick(broker_sym)
-        if not tick:
-            raise RuntimeError(f"Cannot get live tick price for '{broker_sym}'. Market may be closed.")
-
+        price = 0.0
         action = req.action.upper()
         order_type = mt5.ORDER_TYPE_BUY if action == "BUY" else mt5.ORDER_TYPE_SELL
-        price = tick.ask if action == "BUY" else tick.bid
+
+        if tick and (tick.ask > 0 or tick.bid > 0):
+            price = tick.ask if action == "BUY" else tick.bid
+        else:
+            # Fallback to last M1 bar close if live tick stream is paused or market closed
+            rates = mt5.copy_rates_from_pos(broker_sym, mt5.TIMEFRAME_M1, 0, 1)
+            if rates is not None and len(rates) > 0 and rates[0][4] > 0:
+                price = float(rates[0][4])
+            else:
+                raise RuntimeError(f"Cannot get live tick or candle price for '{broker_sym}'. Market may be closed.")
+
         if not price or float(price) <= 0:
             raise RuntimeError(f"Invalid tick price ({price}) for '{broker_sym}'.")
+
+        # Adjust volume according to broker symbol requirements (min volume, step)
+        target_volume = float(req.volume)
+        if sym_info.volume_min > 0 and target_volume < sym_info.volume_min:
+            target_volume = float(sym_info.volume_min)
+        if sym_info.volume_step > 0:
+            steps = round((target_volume - sym_info.volume_min) / sym_info.volume_step)
+            target_volume = sym_info.volume_min + (steps * sym_info.volume_step)
+        if sym_info.volume_max > 0 and target_volume > sym_info.volume_max:
+            target_volume = float(sym_info.volume_max)
+        target_volume = round(target_volume, 2)
 
         filling = (
             mt5.ORDER_FILLING_IOC if (sym_info.filling_mode & 2)
@@ -550,7 +600,7 @@ def _native_send_order(req: OrderRequest):
         trade_req = {
             "action": mt5.TRADE_ACTION_DEAL,
             "symbol": broker_sym,
-            "volume": float(req.volume),
+            "volume": target_volume,
             "type": order_type,
             "price": float(price),
             "sl": float(req.sl) if req.sl else 0.0,
@@ -571,7 +621,10 @@ def _native_send_order(req: OrderRequest):
                 if result and result.retcode == mt5.TRADE_RETCODE_DONE:
                     break
         if result.retcode != mt5.TRADE_RETCODE_DONE:
-            raise RuntimeError(f"Broker rejected trade: {result.comment} (code {result.retcode})")
+            err_msg = f"Broker rejected trade: {result.comment} (code {result.retcode})"
+            if result.retcode == 10027:
+                err_msg += " -> กรุณากดเปิดปุ่ม 'Algo Trading' (AutoTrading) บนแถบเครื่องมือของโปรแกรม MT5 ให้เป็นสีเขียว"
+            raise RuntimeError(err_msg)
         return {
             "success": True,
             "order": int(result.order),
@@ -896,12 +949,55 @@ def register(app: FastAPI) -> None:
     # ── Trade History ─────────────────────────────────────────────────────────
     @app.get("/api/mt5/history")
     async def get_mt5_history():
-        """Returns closed trade history for simulation mode."""
+        """Returns closed trade history for simulation, native, and bridge modes."""
         if _state["mode"] == "simulation":
             return {
                 "trades": _sim_state.get("trade_history", []),
                 "total": len(_sim_state.get("trade_history", [])),
             }
+
+        if _state["mode"] == "bridge":
+            try:
+                return await _bridge_request("GET", "/api/mt5/history")
+            except Exception:
+                return {"trades": [], "total": 0}
+
+        if _state["mode"] == "native" and MT5_AVAILABLE:
+            def _fetch_native_history():
+                with _mt5_lock:
+                    from_dt = datetime.now(timezone.utc) - timedelta(days=30)
+                    to_dt = datetime.now(timezone.utc) + timedelta(days=1)
+                    deals = mt5.history_deals_get(from_dt, to_dt)
+                    if not deals:
+                        return []
+                    out = []
+                    # Filter only exit deals (entry == 1 means exit / close of a position)
+                    for d in reversed(deals):
+                        if d.entry == 1:
+                            t_dt = datetime.fromtimestamp(d.time, tz=timezone.utc)
+                            out.append({
+                                "ticket": int(d.position_id or d.order or d.ticket),
+                                "deal_ticket": int(d.ticket),
+                                "symbol": str(d.symbol),
+                                "type": "SELL" if d.type == 1 else "BUY",
+                                "volume": round(float(d.volume), 2),
+                                "price_close": float(d.price),
+                                "profit": round(float(d.profit), 2),
+                                "commission": round(float(d.commission), 2),
+                                "swap": round(float(d.swap), 2),
+                                "close_reason": str(d.comment or "CLOSED"),
+                                "closed_at": t_dt.strftime("%Y-%m-%d %H:%M:%S UTC"),
+                            })
+                    return out
+
+            loop = asyncio.get_running_loop()
+            try:
+                native_trades = await loop.run_in_executor(_executor, _fetch_native_history)
+                return {"trades": native_trades, "total": len(native_trades)}
+            except Exception as e:
+                log.warning(f"Error fetching native MT5 history: {e}")
+                return {"trades": [], "total": 0}
+
         return {"trades": [], "total": 0}
 
     # ── Symbols ───────────────────────────────────────────────────────────────
@@ -922,18 +1018,37 @@ def register(app: FastAPI) -> None:
             def _fetch():
                 with _mt5_lock:
                     broker_sym = _resolve_broker_symbol(symbol)
+                    sym_info = mt5.symbol_info(broker_sym)
+                    if not sym_info:
+                        raise RuntimeError(f"ไม่พบสินทรัพย์ '{symbol}' (หรือ '{broker_sym}') บนโบรกเกอร์นี้")
+                    if not sym_info.visible:
+                        mt5.symbol_select(broker_sym, True)
                     t = mt5.symbol_info_tick(broker_sym)
-                    if not t:
-                        raise RuntimeError(f"ไม่มีราคา Real-time สำหรับ {symbol} ({broker_sym})")
+                    bid = t.bid if t and t.bid > 0 else 0.0
+                    ask = t.ask if t and t.ask > 0 else 0.0
+                    last = t.last if t and t.last > 0 else 0.0
+
+                    if bid <= 0 or ask <= 0:
+                        # Fallback to last M1 candle close
+                        rates = mt5.copy_rates_from_pos(broker_sym, mt5.TIMEFRAME_M1, 0, 1)
+                        if rates is not None and len(rates) > 0 and rates[0][4] > 0:
+                            c = float(rates[0][4])
+                            bid = c
+                            ask = round(c * 1.0005, 2)
+                            last = c
+
+                    if bid <= 0 or ask <= 0:
+                        raise RuntimeError(f"ไม่มีราคา Real-time สำหรับ {symbol} ({broker_sym}) — ตลาดอาจปิดทำการ")
+
                     return {
                         "symbol": symbol.strip().upper(),
                         "broker_symbol": broker_sym,
-                        "bid": t.bid,
-                        "ask": t.ask,
-                        "last": t.last,
-                        "spread": round(t.ask - t.bid, 5),
-                        "volume": t.volume,
-                        "time": t.time,
+                        "bid": bid,
+                        "ask": ask,
+                        "last": last,
+                        "spread": round(ask - bid, 5),
+                        "volume": t.volume if t else 0,
+                        "time": t.time if t else 0,
                     }
             loop = asyncio.get_running_loop()
             try:
