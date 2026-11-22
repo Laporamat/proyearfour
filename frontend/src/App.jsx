@@ -11,6 +11,7 @@ import Rebalancing      from './pages/Rebalancing'
 import Backtesting      from './pages/Backtesting'
 import Watchlist        from './pages/Watchlist'
 import Terminal         from './pages/Terminal'
+import Mt5Trade         from './pages/Mt5Trade'
 import NewsEda          from './pages/NewsEda'
 import Settings        from './pages/Settings'
 import Landing         from './pages/Landing'
@@ -49,6 +50,7 @@ function AppRouter() {
         <Route path="/backtesting" element={<Backtesting />} />
         <Route path="/watchlist" element={<Watchlist />} />
         <Route path="/terminal" element={<Terminal />} />
+        <Route path="/mt5" element={<Mt5Trade />} />
         <Route path="/news-eda" element={<NewsEda />} />
         <Route path="/settings" element={<Settings />} />
       </Route>

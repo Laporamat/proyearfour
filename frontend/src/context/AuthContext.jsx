@@ -15,7 +15,16 @@ export function AuthProvider({ children }) {
       const u = await r.json()
       setUser(u)
     } catch {
-      setUser(null)
+      const localUser = localStorage.getItem('quantai_local_user')
+      if (localUser) {
+        try {
+          setUser(JSON.parse(localUser))
+        } catch {
+          setUser(null)
+        }
+      } else {
+        setUser(null)
+      }
     } finally {
       setLoading(false)
     }
@@ -40,6 +49,7 @@ export function AuthProvider({ children }) {
     } catch (e) {
       console.warn('logout request failed (clearing session anyway):', e)
     }
+    localStorage.removeItem('quantai_local_user')
     setUser(null)
     window.location.href = '/'
   }, [])

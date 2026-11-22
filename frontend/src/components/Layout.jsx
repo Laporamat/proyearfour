@@ -66,6 +66,16 @@ const NAV = [
     ),
   },
   {
+    to: '/mt5',
+    label: 'Quant Day Trade',
+    badge: 'LIVE',
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+      </svg>
+    ),
+  },
+  {
     to: '/news-eda',
     label: 'News EDA',
     icon: (
@@ -173,7 +183,7 @@ export default function Layout() {
         {/* ── Nav ── */}
         <nav className={s.nav}>
           <span className={s.navSection}>Menu</span>
-          {NAV.map(({ to, label, icon }) => (
+          {NAV.map(({ to, label, icon, badge }) => (
             <NavLink
               key={to}
               to={to}
@@ -181,7 +191,20 @@ export default function Layout() {
               onClick={handleNavClick}
             >
               <span className={s.navIcon}>{icon}</span>
-              <span>{label}</span>
+              <span style={{ flex: 1 }}>{label}</span>
+              {badge && (
+                <span style={{
+                  fontSize: '0.62rem',
+                  fontWeight: 700,
+                  padding: '2px 6px',
+                  borderRadius: '999px',
+                  background: 'linear-gradient(135deg, #10b981, #059669)',
+                  color: '#fff',
+                  letterSpacing: '0.04em',
+                }}>
+                  {badge}
+                </span>
+              )}
             </NavLink>
           ))}
         </nav>

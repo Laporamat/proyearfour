@@ -51,3 +51,12 @@ terminal.register(app)
 import omarket  # noqa: E402, F401
 omarket.register(app)
 
+# Register MetaTrader 5 live trading execution.
+import mt5_trade  # noqa: E402, F401
+mt5_trade.register(app)
+
+# Register Quant Day Trade & ML Signal Bot API.
+import quant_daytrade  # noqa: E402, F401
+quant_daytrade.register(app)
+
+

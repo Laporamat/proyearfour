@@ -10,10 +10,7 @@ Endpoints:
   GET  /api/portfolio/latest    — ดึง optimal portfolio ล่าสุด
   GET  /api/regime/latest       — ดึงสภาวะตลาดล่าสุด
   GET  /api/prices              — ดึงราคาล่าสุด N แถว
-
-LLM Function Calling:
-  LLM (OpenAI-compatible) จะ parse คำถามผู้ใช้ แล้วเรียก tool ที่ถูกต้องโดยอัตโนมัติ
-  รองรับ: OpenAI, Azure OpenAI, Ollama (openai-compatible)
+  *    /api/mt5/*               — MetaTrader 5 Live Trading & Bot
 """
 
 import os
@@ -25,9 +22,11 @@ from datetime import datetime
 from typing import Any
 
 import pandas as pd
-from fastapi import FastAPI, HTTPException, BackgroundTasks, Request
+from fastapi import FastAPI, HTTPException, BackgroundTasks, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
+
+import mt5_trade
 
 # โหลด .env ถ้ามี (ไม่ต้องติดตั้ง python-dotenv — อ่านไฟล์เอง)
 _env_path = Path(__file__).parent / ".env"
@@ -60,6 +59,46 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# ลงทะเบียนเส้นทาง MetaTrader 5 ทั้งหมด (/api/mt5/*)
+mt5_trade.register(app)
+
+
+# ─────────────────────────────────────────────
+# LOCAL AUTH ENDPOINTS (สำหรับใช้งานบน Windows Host)
+# ─────────────────────────────────────────────
+
+class AuthLoginReq(BaseModel):
+    email: str
+    password: str
+
+_LOCAL_USER = {
+    "id": "local-admin-01",
+    "email": "admin@quantai.com",
+    "name": "Poramat Iamong",
+    "picture": "",
+}
+
+@app.get("/api/auth/me")
+async def local_auth_me():
+    return _LOCAL_USER
+
+@app.post("/api/auth/login")
+async def local_auth_login(req: AuthLoginReq, response: Response):
+    if req.email.strip().lower() == "admin@quantai.com" and req.password == "12345678":
+        response.set_cookie(key="session", value="local-dev-token", httponly=True, samesite="lax")
+        return {"status": "ok", "user": _LOCAL_USER}
+    raise HTTPException(status_code=401, detail="อีเมลหรือรหัสผ่านไม่ถูกต้อง (ใช้ admin@quantai.com / 12345678)")
+
+@app.post("/api/auth/register")
+async def local_auth_register(req: dict, response: Response):
+    response.set_cookie(key="session", value="local-dev-token", httponly=True, samesite="lax")
+    return {"status": "ok", "user": _LOCAL_USER}
+
+@app.post("/api/auth/logout")
+async def local_auth_logout(response: Response):
+    response.delete_cookie(key="session")
+    return {"status": "ok"}
 
 
 # ─────────────────────────────────────────────
@@ -363,18 +402,15 @@ async def api_returns_history(period: str = "1y"):
 
     df = pd.read_csv(csv, index_col=0, parse_dates=True).sort_index()
 
-    # ใช้ได้ทุกตัว (เลือกแสดงฝั่ง frontend) — เรียงชื่อให้คงที่
     df = df.reindex(sorted(df.columns), axis=1)
     all_tickers = list(df.columns)
 
-    # daily_returns.csv เก็บเป็น decimal (0.01 = 1%) — guard เผื่อเก็บเป็น %
     if not df.empty and df.abs().mean().mean() > 1:
         df = df / 100
 
     if df.empty:
         return {"period": period, "tickers": [], "data": []}
 
-    # กรองช่วงเวลา (อ้างอิงจากวันข้อมูลล่าสุด ไม่ใช่ today เพื่อไม่ให้ช่วงว่าง)
     now = df.index.max()
     cutoff_map = {
         "1d":  now - pd.Timedelta(days=1),
@@ -391,14 +427,11 @@ async def api_returns_history(period: str = "1y"):
     if len(sliced) < 2:
         sliced = df.tail(2)
 
-    # cumulative return จริงด้วย compounding แล้ว rebase ให้เริ่มที่ 0% ณ ต้นช่วง
-    # (rebase แต่ละคอลัมน์จากค่าแรกที่ valid — รองรับหุ้นที่เริ่มมีข้อมูลทีหลัง)
     growth = (1 + sliced).cumprod()
     base = {c: growth[c].loc[growth[c].first_valid_index()]
             for c in growth.columns if growth[c].first_valid_index() is not None}
     cum = (growth.div(pd.Series(base), axis=1) - 1) * 100
 
-    # ลดจำนวนจุดให้กราฟอ่านง่าย ตามความยาวของช่วง
     gran = {
         "1d": "D", "1w": "D", "1m": "D", "3m": "D", "6m": "D",
         "1y": "W", "3y": "ME", "all": "ME",
@@ -420,9 +453,6 @@ async def api_returns_history(period: str = "1y"):
 
 @app.post("/api/chat", response_model=ChatResponse)
 async def api_chat(req: ChatRequest, request: Request):
-    from auth import _current_user
-    if not await _current_user(request):
-        raise HTTPException(status_code=401, detail="กรุณาเข้าสู่ระบบก่อนใช้ AI Chat")
     tool_calls_log:   list[dict] = []
     tool_results_log: list[dict] = []
 
@@ -443,24 +473,24 @@ async def api_chat(req: ChatRequest, request: Request):
             ).with_model("openai", os.environ["LLM_MODEL"]).with_tools(TOOLS, tool_choice="auto")
 
             resp = await chat.send_message_with_tools(UserMessage(text=req.message))
-            for _ in range(5):                                   # วนได้สูงสุด 5 รอบ
+            for _ in range(5):
                 if not resp.tool_calls:
-                    break                                        # AI ได้คำตอบแล้ว
+                    break
                 for tc in resp.tool_calls:
                     args = tc.arguments or {}
                     result = None
                     for prev_call, prev_res in zip(tool_calls_log, tool_results_log):
                         if prev_call["tool"] == tc.name and prev_call["args"] == args:
-                            result = prev_res["result"]          # เรียกซ้ำแบบเดิม → ใช้ผลเก่า
+                            result = prev_res["result"]
                     if result is None:
                         tool_calls_log.append({"tool": tc.name, "args": args})
                         try:
                             result = await execute_tool(tc.name, args)
-                        except Exception as tool_err:  # noqa: BLE001
+                        except Exception as tool_err:
                             result = {"status": "error", "message": str(tool_err)}
                         tool_results_log.append({"tool": tc.name, "result": result})
                     chat.add_tool_result(tc.id, json.dumps(result, ensure_ascii=False, default=str))
-                resp = await chat.send_message_with_tools()      # ให้ AI อ่านผลแล้วตอบต่อ
+                resp = await chat.send_message_with_tools()
 
             return ChatResponse(reply=resp.content or "ขออภัยครับ ตอนนี้ยังสรุปคำตอบไม่ได้ ลองถามใหม่อีกครั้ง",
                                 tool_calls=tool_calls_log, tool_results=tool_results_log)
@@ -497,12 +527,4 @@ async def api_chat(req: ChatRequest, request: Request):
 # ─────────────────────────────────────────────
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
-
-
-
-
-
-
-
-
+    uvicorn.run("main:app", host="0.0.0.0", port=8001, reload=True)

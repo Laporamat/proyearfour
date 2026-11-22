@@ -22,7 +22,7 @@ log = logging.getLogger("news_eda")
 
 PER_TICKER = 10          # ข่าวสูงสุดต่อหุ้น
 CACHE_TTL = 900          # cache 15 นาที
-DAYS_SHOWN = 14          # กราฟรายวันแสดง 14 วันล่าสุด
+DAYS_SHOWN = 10          # กราฟรายวันแสดง 14 วันล่าสุด
 _executor = ThreadPoolExecutor(max_workers=8)
 _lock = asyncio.Lock()
 _cache: dict[str, tuple[float, list[dict[str, Any]]]] = {}

@@ -5,6 +5,8 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: quantix
       MONGO_INITDB_ROOT_PASSWORD: quantixpass
+    ports:
+      - "27017:27017"
     volumes:
       - mongo_data:/data/db
     healthcheck:

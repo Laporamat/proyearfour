@@ -212,4 +212,60 @@ export const api = {
 
   terminalQuotes: (symbols = []) =>
     apiFetch(`/api/terminal/quotes?symbols=${encodeURIComponent(symbols.join(','))}`),
+
+  // ── MetaTrader 5 Live Trading ──
+  mt5Status: () =>
+    apiFetch('/api/mt5/status'),
+
+  mt5Connect: (body) =>
+    apiFetch('/api/mt5/connect', { method: 'POST', body: JSON.stringify(body) }),
+
+  mt5Disconnect: () =>
+    apiFetch('/api/mt5/disconnect', { method: 'POST' }),
+
+  mt5Account: () =>
+    apiFetch('/api/mt5/account'),
+
+  mt5Positions: () =>
+    apiFetch('/api/mt5/positions'),
+
+  mt5Symbols: (search = '') =>
+    apiFetch(`/api/mt5/symbols?search=${encodeURIComponent(search)}`),
+
+  mt5Tick: (symbol) =>
+    apiFetch(`/api/mt5/tick?symbol=${encodeURIComponent(symbol)}`),
+
+  mt5Order: (body) =>
+    apiFetch('/api/mt5/order', { method: 'POST', body: JSON.stringify(body) }),
+
+  mt5Close: (ticket) =>
+    apiFetch('/api/mt5/close', { method: 'POST', body: JSON.stringify({ ticket }) }),
+
+  mt5CloseAll: () =>
+    apiFetch('/api/mt5/close-all', { method: 'POST' }),
+
+  mt5AutoRebalance: (body) =>
+    apiFetch('/api/mt5/auto-rebalance', { method: 'POST', body: JSON.stringify(body) }),
+
+  // ── Quant Day Trading & ML Bot API ──
+  daytradeSignals: () =>
+    apiFetch('/api/quant/daytrade/signals'),
+
+  listApiKeys: () =>
+    apiFetch('/api/user/api-keys'),
+
+  createApiKey: (body) =>
+    apiFetch('/api/user/api-keys', { method: 'POST', body: JSON.stringify(body) }),
+
+  revokeApiKey: (keyId) =>
+    apiFetch(`/api/user/api-keys/${encodeURIComponent(keyId)}`, { method: 'DELETE' }),
+
+  getBotStatus: () =>
+    apiFetch('/api/quant/daytrade/bot/status'),
+
+  updateBotConfig: (body) =>
+    apiFetch('/api/quant/daytrade/bot/config', { method: 'POST', body: JSON.stringify(body) }),
+
+  getCodeSnippets: (apiKey = '') =>
+    apiFetch(`/api/quant/daytrade/snippets?api_key=${encodeURIComponent(apiKey)}`),
 }

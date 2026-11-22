@@ -44,6 +44,16 @@
 - **Multi-Currency**: THB/USD toggle in My Portfolio header. Converts all values using live FX rate from `/api/prices/live` (`fx_thb_per_usd`). Handled client-side.
 - **Mobile Responsive**: Layout has hamburger menu (slide-in sidebar drawer) + bottom nav bar on mobile (<680px). All new pages have responsive grid/table layouts.
 
+## MetaTrader 5 Live Trading
+- **MT5 Live Trading** (`/mt5`): Direct live trading integration via Python `MetaTrader5` package on Windows.
+- Connect: `POST /api/mt5/connect` with login, password, server (e.g. Demo or Real).
+- Status & Account: `GET /api/mt5/status`, `GET /api/mt5/account` (Balance, Equity, Profit, Margin, Leverage).
+- Positions: `GET /api/mt5/positions` with live P/L, `POST /api/mt5/close` (single), `POST /api/mt5/close-all` (emergency exit).
+- Orders: `POST /api/mt5/order` for Market BUY/SELL deals with SL/TP and adaptive filling modes (IOC/FOK/RETURN).
+- Auto-Rebalance: `POST /api/mt5/auto-rebalance` translates Quantix MPT optimal portfolio weights into executed MT5 orders.
+- Backend: `backend/mt5_trade.py`. Frontend: `frontend/src/pages/Mt5Trade.jsx`.
+
+
 ## Verification
 - Health check: `curl http://localhost:8001/health` → `{"status": "ok", ...}`
 - Frontend: `curl http://localhost:3000/` → landing page HTML.
