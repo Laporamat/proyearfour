@@ -250,6 +250,12 @@ export const api = {
   mt5History: () =>
     apiFetch('/api/mt5/history'),
 
+  mt5ResetDemo: () =>
+    apiFetch('/api/mt5/reset-demo', { method: 'POST' }),
+
+  mt5Candles: (symbol, period = '1mo', interval = '1d') =>
+    apiFetch(`/api/mt5/candles?symbol=${encodeURIComponent(symbol)}&period=${period}&interval=${interval}`),
+
   // ── Quant Day Trading & ML Bot API ──
   daytradeSignals: () =>
     apiFetch('/api/quant/daytrade/signals'),

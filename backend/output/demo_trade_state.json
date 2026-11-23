@@ -1,0 +1,33 @@
+{
+  "account": {
+    "login": 889900,
+    "name": "Quantix Demo Account",
+    "server": "Quantix Demo Trading",
+    "currency": "USD",
+    "balance": 10000.0,
+    "equity": 9999.9,
+    "profit": -0.1,
+    "margin": 0.75,
+    "margin_free": 9999.15,
+    "margin_level": 1337958.26,
+    "leverage": 100
+  },
+  "positions": [
+    {
+      "ticket": 5001,
+      "symbol": "PTT",
+      "type": "BUY",
+      "volume": 0.02,
+      "price_open": 37.42,
+      "price_current": 37.37,
+      "sl": 36.41,
+      "tp": 39.47,
+      "profit": -0.1,
+      "swap": 0.0,
+      "time": "2026-11-23 18:36:07 UTC",
+      "comment": "Quantix_ML_Bot_80_Neutral"
+    }
+  ],
+  "ticket_counter": 5002,
+  "trade_history": []
+}

@@ -430,12 +430,16 @@ async def get_ml_signals() -> Dict[str, Any]:
 _api_keys_store: Dict[str, Dict[str, Any]] = {}
 _raw_keys_by_id: Dict[str, str] = {}
 
+import json
+
+BOT_STATE_FILE = Path("output") / "daytrade_bot_state.json"
+
 _bot_state: Dict[str, Any] = {
-    "enabled": False,
+    "enabled": True,  # Keep enabled so bot trades autonomously even when user logs out
     "min_confidence": 75.0,
     "default_lot": 0.02,
-    "max_positions": 3,
-    "symbols": ["AAPL", "NVDA", "TSLA", "GLD", "DELTA", "PTT"],
+    "max_positions": 5,
+    "symbols": ["AAPL", "NVDA", "TSLA", "MSFT", "AMZN", "META", "GLD", "PTT", "DELTA"],
     "auto_sl_tp": True,
     "strategy": "ML-RandomForest-Regime + RSI/EMA/ATR",
     "last_run": None,
@@ -443,6 +447,30 @@ _bot_state: Dict[str, Any] = {
     "orders_executed": 0,
     "activity_log": [],
 }
+
+def _save_bot_state():
+    """Save bot state to disk so it runs persistently across server reboots / logouts."""
+    try:
+        BOT_STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
+        with open(BOT_STATE_FILE, "w", encoding="utf-8") as f:
+            json.dump(_bot_state, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        log.warning(f"Failed to save bot state: {e}")
+
+def _load_bot_state():
+    """Load persistent bot configuration."""
+    global _bot_state
+    if BOT_STATE_FILE.exists():
+        try:
+            with open(BOT_STATE_FILE, "r", encoding="utf-8") as f:
+                loaded = json.load(f)
+                if isinstance(loaded, dict) and "enabled" in loaded:
+                    _bot_state.update(loaded)
+                    log.info(f"✓ Loaded persistent bot state (enabled={_bot_state['enabled']})")
+        except Exception as e:
+            log.warning(f"Failed to load bot state: {e}")
+
+_load_bot_state()
 
 _bot_task: Optional[asyncio.Task] = None
 
@@ -528,40 +556,90 @@ async def _auto_trade_bot_worker():
             target_symbols = set(_bot_state.get("symbols", []))
             min_conf = float(_bot_state.get("min_confidence", 75.0))
 
-            # Check open positions (Supports both Simulation, Native MT5, and Bridge)
+            # ── 1. ACTIVE POSITION MANAGEMENT (Take Profit, Cut Loss, Signal Rotation) ──
             active_symbols = set()
             try:
                 if mt5_trade is not None and mt5_trade._state.get("connected"):
-                    active_positions = []
+                    # First update floating prices & P/L
                     if mt5_trade._state["mode"] == "simulation":
-                        active_positions = mt5_trade._sim_state.get("positions", [])
+                        await mt5_trade._sim_update_positions()
+                        active_positions = list(mt5_trade._sim_state.get("positions", []))
                     elif mt5_trade._state["mode"] == "native" and mt5_trade.MT5_AVAILABLE:
                         loop = asyncio.get_running_loop()
                         active_positions = await loop.run_in_executor(mt5_trade._executor, mt5_trade._native_get_positions)
                     elif mt5_trade._state["mode"] == "bridge":
                         bridge_res = await mt5_trade._bridge_request("GET", "/api/mt5/positions")
                         active_positions = bridge_res.get("positions", [])
+                    else:
+                        active_positions = []
 
+                    # Evaluate closing any open position based on ML day-trading rules
+                    for p in list(active_positions):
+                        ticket = p.get("ticket")
+                        raw_sym = str(p.get("symbol", "")).upper()
+                        clean_sym = raw_sym.replace("USD", "").replace(".US", "").replace(".BK", "").replace("#", "").strip()
+                        p_profit = float(p.get("profit", 0.0))
+                        p_type = str(p.get("type", "BUY")).upper()
+
+                        # Find latest signal for this symbol
+                        cur_sig = next((s for s in signals if s["symbol"] == clean_sym), None)
+                        sig_action = cur_sig.get("action", "") if cur_sig else ""
+                        sig_conf = cur_sig.get("confidence", 0) if cur_sig else 0
+
+                        should_close = False
+                        close_reason = ""
+
+                        # Rule A: Take Profit threshold (+$5.00)
+                        if p_profit >= 5.0:
+                            should_close = True
+                            close_reason = f"Take Profit (+${p_profit:.2f})"
+                        # Rule B: Stop Loss threshold (-$4.50)
+                        elif p_profit <= -4.5:
+                            should_close = True
+                            close_reason = f"Stop Loss (-${abs(p_profit):.2f})"
+                        # Rule C: Signal Inversion (held BUY, ML now signals SELL with >=70% confidence)
+                        elif cur_sig and sig_conf >= 70:
+                            if p_type == "BUY" and "SELL" in sig_action:
+                                should_close = True
+                                close_reason = f"Signal Inverted to {sig_action} ({sig_conf}%)"
+                            elif p_type == "SELL" and "BUY" in sig_action:
+                                should_close = True
+                                close_reason = f"Signal Inverted to {sig_action} ({sig_conf}%)"
+
+                        if should_close and ticket:
+                            try:
+                                close_res = await mt5_trade.close_mt5_position_direct(ticket, reason=close_reason)
+                                realized_p = close_res.get("profit", p_profit)
+                                _bot_state["activity_log"].insert(0, {
+                                    "timestamp": datetime.now(timezone.utc).strftime("%H:%M:%S"),
+                                    "symbol": clean_sym,
+                                    "action": "CLOSE",
+                                    "confidence": sig_conf,
+                                    "price": p.get("price_current", 0),
+                                    "status": "closed",
+                                    "message": f"✓ [BOT EXIT] ปิด Ticket #{ticket} {clean_sym} ({close_reason}) Realized P/L: ${realized_p:+.2f}",
+                                    "order_ticket": ticket,
+                                })
+                                _bot_state["activity_log"] = _bot_state["activity_log"][:50]
+                                _save_bot_state()
+                                active_positions = [x for x in active_positions if x.get("ticket") != ticket]
+                            except Exception as ce:
+                                log.warning(f"Bot failed to auto-close position #{ticket}: {ce}")
+
+                    # Re-map remaining active positions
                     for p in active_positions:
                         raw_sym = str(p.get("symbol", "")).upper()
-                        # normalize back (e.g. NVDAUSD -> NVDA, PTT.BK -> PTT)
                         clean = raw_sym.replace("USD", "").replace(".US", "").replace(".BK", "").replace("#", "").strip()
                         active_symbols.add(raw_sym)
                         active_symbols.add(clean)
 
-                    if len(active_positions) >= _bot_state.get("max_positions", 3):
-                        _bot_state["activity_log"].insert(0, {
-                            "timestamp": datetime.now(timezone.utc).strftime("%H:%M:%S"),
-                            "symbol": "SYSTEM",
-                            "action": "SKIP",
-                            "confidence": 0,
-                            "status": "max_positions",
-                            "message": f"Max positions ({len(active_positions)}/{_bot_state['max_positions']}) reached — skipping cycle",
-                        })
-                        _bot_state["activity_log"] = _bot_state["activity_log"][:50]
+                    max_pos = int(_bot_state.get("max_positions", 5))
+                    if len(active_positions) >= max_pos:
+                        # Reached maximum active positions — wait for exits without cluttering activity log
                         continue
+
             except Exception as e:
-                log.warning(f"Bot position check error: {e}")
+                log.warning(f"Bot position management error: {e}")
 
             for sig in signals:
                 sym = sig["symbol"]
@@ -589,6 +667,17 @@ async def _auto_trade_bot_worker():
                     # Execute on MT5 if connected
                     if mt5_trade is not None and mt5_trade._state.get("connected"):
                         try:
+                            # Pre-check if symbol is tradable at active broker when in native MT5 mode
+                            if mt5_trade._state.get("mode") == "native" and mt5_trade.MT5_AVAILABLE:
+                                broker_sym = mt5_trade._resolve_broker_symbol(sym)
+                                s_info = mt5_trade.mt5.symbol_info(broker_sym)
+                                if not s_info:
+                                    log_entry["status"] = "skipped_unavailable"
+                                    log_entry["message"] = f"ข้าม {sym}: โบรกเกอร์ {mt5_trade._state.get('server', 'MT5')} ไม่มีสินทรัพย์นี้ (มีเฉพาะ US Stocks/Forex/Gold)"
+                                    _bot_state["activity_log"].insert(0, log_entry)
+                                    _bot_state["activity_log"] = _bot_state["activity_log"][:50]
+                                    continue
+
                             order_req = mt5_trade.OrderRequest(
                                 symbol=sym,
                                 action=trade_action,
@@ -608,15 +697,17 @@ async def _auto_trade_bot_worker():
                             log_entry["order_ticket"] = ticket
                             log_entry["message"] = f"✓ [{exec_mode.upper()}] Order #{ticket} {trade_action} {sym} @ {fill_p} (Regime: {regime.get('state')})"
                             _bot_state["orders_executed"] += 1
+                            _save_bot_state()
                         except Exception as ex:
                             log_entry["status"] = "failed"
                             log_entry["message"] = f"Execution error: {str(ex)[:120]}"
                     else:
                         log_entry["status"] = "not_connected"
-                        log_entry["message"] = f"MT5 not connected — signal: {trade_action} {sym} @ {sig['current_price']}"
+                        log_entry["message"] = f"Trading Desk not connected — signal: {trade_action} {sym} @ {sig['current_price']}"
 
                     _bot_state["activity_log"].insert(0, log_entry)
                     _bot_state["activity_log"] = _bot_state["activity_log"][:50]
+                    _save_bot_state()
                     active_symbols.add(sym)
                     break  # one trade per cycle for safety
 
@@ -807,6 +898,7 @@ def register(app: FastAPI) -> None:
             "status": "active" if cfg.enabled else "stopped",
             "message": f"Bot {status_txt} (ML: RandomForest | Min Conf: {_bot_state['min_confidence']}% | Lot: {_bot_state['default_lot']})",
         })
+        _save_bot_state()
         return {"status": "updated", "bot": _bot_state}
 
     # ── 5. Code Snippets ──────────────────────────────────────────────────────

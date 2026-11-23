@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { api } from '../hooks/useApi'
+import TradingViewChart from '../components/TradingViewChart'
+import TickerTape from '../components/TickerTape'
 import s from './Mt5Trade.module.css'
 
 // ── The 25 Quantix Project Assets ─────────────────────────────────────────────
@@ -64,6 +66,9 @@ export default function Mt5Trade() {
   const [tp, setTp] = useState('')
   const [autoSlTp, setAutoSlTp] = useState(true)
   const [tick, setTick] = useState({ bid: 228.40, ask: 228.50, spread: 0.10 })
+  const [candles, setCandles] = useState([])
+  const [candlesLoading, setCandlesLoading] = useState(false)
+  const [chartTf, setChartTf] = useState('1mo')
 
   // ML Day Trade Signals
   const [mlData, setMlData] = useState(null)
@@ -136,6 +141,19 @@ export default function Mt5Trade() {
       // ignore tick jitter errors
     }
   }, [status.connected, symbol])
+
+  // ── 3.1 Fetch Candlesticks for TradingView Chart ──
+  const fetchCandles = useCallback(async (sym = symbol, tf = chartTf) => {
+    setCandlesLoading(true)
+    try {
+      const res = await api.mt5Candles(sym, tf, tf === '5d' ? '1h' : '1d')
+      if (res && res.candles) setCandles(res.candles)
+    } catch (e) {
+      console.warn('Candles error:', e.message)
+    } finally {
+      setCandlesLoading(false)
+    }
+  }, [symbol, chartTf])
 
   // ── 4. Fetch ML Day Trade Signals ──
   const fetchSignals = useCallback(async () => {
@@ -218,6 +236,40 @@ export default function Mt5Trade() {
     }
   }, [symbol, autoSlTp, activeSignal])
 
+  // Fetch candles on symbol or timeframe change
+  useEffect(() => {
+    fetchCandles(symbol, chartTf)
+  }, [symbol, chartTf, fetchCandles])
+
+  // ── Export Closed Trade History to CSV ──
+  const handleExportCsv = () => {
+    if (!history || history.length === 0) {
+      alert('ยังไม่มีประวัติการเทรดที่ปิดแล้ว')
+      return
+    }
+    const headers = ['Ticket', 'Symbol', 'Type', 'Volume', 'Price Open', 'Price Close', 'Profit USD', 'Commission', 'Reason', 'Closed At']
+    const rows = history.map(h => [
+      h.ticket,
+      h.symbol,
+      h.type,
+      h.volume,
+      h.price_open,
+      h.price_close,
+      h.profit,
+      h.commission || 1.0,
+      `"${h.close_reason || 'CLOSED'}"`,
+      h.closed_at || ''
+    ])
+    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n')
+    const encodedUri = encodeURI(csvContent)
+    const link = document.createElement('a')
+    link.setAttribute('href', encodedUri)
+    link.setAttribute('download', `quantix_trade_blotter_${new Date().toISOString().slice(0, 10)}.csv`)
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
+
   // ── Connect MT5 (Native or Paper Trading) ──
   const handleConnect = async (e, forceSimulation = false) => {
     e?.preventDefault()
@@ -247,15 +299,16 @@ export default function Mt5Trade() {
     }
   }
 
-  // ── Disconnect MT5 ──
-  const handleDisconnect = async () => {
+  // ── Reset Demo Balance ($10,000) ──
+  const handleResetDemo = async () => {
+    if (!window.confirm('คุณต้องการรีเซ็ตยอดเงินบัญชี Demo กลับเป็น $10,000 หรือไม่?')) return
     setActionLoading(true)
     try {
-      await api.mt5Disconnect()
-      setStatus({ available: true, connected: false, mode: 'disconnected' })
-      setAccount(null)
-      setPositions([])
-      setMessage('ตัดการเชื่อมต่อ MT5 เรียบร้อยแล้ว')
+      await api.mt5ResetDemo()
+      await fetchStatus()
+      await fetchPositions()
+      await fetchHistory()
+      setMessage('รีเซ็ตยอดเงินบัญชี Demo กลับเป็น $10,000.00 เรียบร้อยแล้ว')
     } catch (err) {
       setError(err.message)
     } finally {
@@ -411,8 +464,31 @@ export default function Mt5Trade() {
     ? QUANTIX_25_ASSETS
     : QUANTIX_25_ASSETS.filter(a => a.category === selectedCategory)
 
+  // Institutional Trading Blotter Metrics
+  const winTrades = history.filter(t => (t.profit || 0) > 0).length
+  const lossTrades = history.filter(t => (t.profit || 0) < 0).length
+  const winRate = history.length > 0 ? ((winTrades / history.length) * 100).toFixed(1) : '0.0'
+  const grossProfit = history.filter(t => (t.profit || 0) > 0).reduce((acc, t) => acc + t.profit, 0)
+  const grossLoss = Math.abs(history.filter(t => (t.profit || 0) < 0).reduce((acc, t) => acc + t.profit, 0))
+  const profitFactor = grossLoss > 0 ? (grossProfit / grossLoss).toFixed(2) : (grossProfit > 0 ? '∞' : '0.00')
+  const netRealized = history.reduce((acc, t) => acc + (t.profit || 0), 0).toFixed(2)
+
+  // Risk % allocation preset handler
+  const handleApplyRiskPreset = (pct) => {
+    const eq = account?.equity || 10000
+    const riskAmount = eq * (pct / 100)
+    const p = tick.ask || activeAsset.base_price || 100
+    const slDist = sl ? Math.abs(p - parseFloat(sl)) : p * 0.015
+    const computedLot = Math.max(0.01, Math.min(2.0, (riskAmount / (slDist * 100))))
+    setVolume(computedLot.toFixed(2))
+    setMessage(`ตั้งค่า Volume เป็น ${computedLot.toFixed(2)} Lot ตามความเสี่ยง ${pct}% ($${riskAmount.toFixed(0)})`)
+  }
+
   return (
     <div className={s.page}>
+      {/* ── Top 25-Asset Streaming Ticker Tape ── */}
+      <TickerTape onSelectSymbol={(sym) => setSymbol(sym)} activeSymbol={symbol} />
+
       {/* ── Top Bar / Quant Telemetry Header ── */}
       <div className={s.header}>
         <div className={s.titleArea}>
@@ -438,28 +514,22 @@ export default function Mt5Trade() {
         </div>
 
         <div className={s.headerActions}>
-          {status.connected ? (
-            <div className={s.connectedGroup}>
-              <div className={`${s.statusChip} ${s.connected}`}>
-                <span className={s.dot}></span>
-                <span>
-                  {status.mode === 'simulation' ? 'Paper Trading ($10K)' : `MT5 #${account?.login || 'Active'}`}
-                </span>
-              </div>
-              <button className={s.btnDisconnect} onClick={handleDisconnect} disabled={actionLoading}>
-                ตัดการเชื่อมต่อ
-              </button>
+          <div className={s.connectedGroup}>
+            <div className={`${s.statusChip} ${s.connected}`}>
+              <span className={s.dot}></span>
+              <span>
+                {status.mode === 'simulation' || !status.connected ? '⚡ Demo Trading Desk ($10,000)' : `MT5 #${account?.login || 'Active'}`}
+              </span>
             </div>
-          ) : (
-            <div className={s.connectButtonGroup}>
-              <button className={s.btnPaperTrade} onClick={(e) => handleConnect(e, true)} disabled={actionLoading}>
-                ⚡ ทดลอง Paper Trading ($10,000)
+            <button className={s.btnPaperTrade} onClick={handleResetDemo} disabled={actionLoading} title="รีเซ็ตยอดเงินกลับเป็น $10,000">
+              🔄 รีเซ็ตเงิน $10K
+            </button>
+            {status.connected && status.mode !== 'simulation' && (
+              <button className={s.btnDisconnect} onClick={handleResetDemo} disabled={actionLoading}>
+                สลับกลับ Demo
               </button>
-              <button className={s.btnConnectPrimary} onClick={() => setShowConnectModal(true)}>
-                เชื่อมต่อ MT5 จริง
-              </button>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
 
@@ -617,6 +687,42 @@ export default function Mt5Trade() {
               </div>
             </div>
 
+            {/* Interactive TradingView Candlestick Chart */}
+            <div className={s.chartCard}>
+              <div className={s.chartHeader}>
+                <div className={s.chartMeta}>
+                  <span className={s.chartSymbolTitle}>
+                    {activeAsset.symbol} — {activeAsset.name}
+                  </span>
+                  <span className={s.marketStatePill}>{activeAsset.category}</span>
+                  <span className={s.chartPriceBadge}>
+                    {curSymbol}{tick.last || tick.ask}
+                  </span>
+                </div>
+                <div className={s.timeframeGroup}>
+                  {['5d', '1mo', '3mo', '1y'].map((tf) => (
+                    <button
+                      key={tf}
+                      type="button"
+                      className={`${s.timeframeBtn} ${chartTf === tf ? s.timeframeBtnActive : ''}`}
+                      onClick={() => setChartTf(tf)}
+                    >
+                      {tf.toUpperCase()}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <TradingViewChart
+                candles={candles}
+                symbol={symbol}
+                livePrice={tick.last || tick.ask}
+                positions={positions}
+                suggestedSl={activeSignal?.suggested_sl}
+                suggestedTp={activeSignal?.suggested_tp}
+              />
+            </div>
+
             {/* Real-time ML Signal Banner for Selected 25 Asset */}
             {activeSignal && (
               <div className={`${s.mlSignalBanner} ${activeSignal.action.includes('BUY') ? s.sigBuy : activeSignal.action.includes('SELL') ? s.sigSell : s.sigNeutral}`}>
@@ -664,6 +770,32 @@ export default function Mt5Trade() {
               </div>
             )}
 
+            {/* Institutional Analytics Blotter */}
+            <div className={s.analyticsCard}>
+              <div className={s.analyticsGrid}>
+                <div className={s.analyticsItem}>
+                  <span className={s.analyticsLabel}>Closed Win Rate</span>
+                  <span className={`${s.analyticsVal} ${Number(winRate) >= 50 ? s.textGreen : s.textRed}`}>
+                    {winRate}%
+                  </span>
+                </div>
+                <div className={s.analyticsItem}>
+                  <span className={s.analyticsLabel}>Profit Factor</span>
+                  <span className={s.analyticsVal}>{profitFactor}</span>
+                </div>
+                <div className={s.analyticsItem}>
+                  <span className={s.analyticsLabel}>Realized Net P/L</span>
+                  <span className={`${s.analyticsVal} ${Number(netRealized) >= 0 ? s.profitPos : s.profitNeg}`}>
+                    {Number(netRealized) >= 0 ? '+' : ''}${netRealized}
+                  </span>
+                </div>
+                <div className={s.analyticsItem}>
+                  <span className={s.analyticsLabel}>Total Executions</span>
+                  <span className={s.analyticsVal}>{history.length} Deals</span>
+                </div>
+              </div>
+            </div>
+
             {/* Open Positions & Trade History Table */}
             <div className={s.positionsCard}>
               <div className={s.sectionTitle}>
@@ -681,11 +813,18 @@ export default function Mt5Trade() {
                     Closed History ({history.length})
                   </button>
                 </div>
-                {posTab === 'active' && positions.length > 0 && (
-                  <button className={s.btnSmallCloseAll} onClick={handleCloseAll}>
-                    Close All ({positions.length})
-                  </button>
-                )}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  {posTab === 'history' && history.length > 0 && (
+                    <button className={s.btnExportCsv} onClick={handleExportCsv} title="ดาวน์โหลดประวัติการเทรดเป็นไฟล์ CSV">
+                      📥 Export CSV
+                    </button>
+                  )}
+                  {posTab === 'active' && positions.length > 0 && (
+                    <button className={s.btnSmallCloseAll} onClick={handleCloseAll}>
+                      Close All ({positions.length})
+                    </button>
+                  )}
+                </div>
               </div>
 
               {posTab === 'active' ? (
@@ -903,6 +1042,31 @@ export default function Mt5Trade() {
                     className={s.input}
                   />
                 </div>
+
+                {/* Risk-Based Capital Allocation Presets */}
+                <div style={{ marginTop: '10px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                    <label style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-muted, #64748b)' }}>
+                      Risk-Based Capital Presets
+                    </label>
+                    <span style={{ fontSize: '0.68rem', color: '#64748b' }}>
+                      Margin: ~${(parseFloat(volume || 0.02) * (tick.ask || 100)).toFixed(0)}
+                    </span>
+                  </div>
+                  <div className={s.riskPresets}>
+                    {[1, 2, 5].map((pct) => (
+                      <button
+                        key={pct}
+                        type="button"
+                        className={s.riskPresetBtn}
+                        onClick={() => handleApplyRiskPreset(pct)}
+                        title={`คำนวณ Volume ตามความเสี่ยง ${pct}% ของพอร์ต ($${((account?.equity || 10000) * pct / 100).toFixed(0)})`}
+                      >
+                        {pct}% Risk
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
 
               {/* Buy / Sell Quick Execution Buttons */}
@@ -922,6 +1086,32 @@ export default function Mt5Trade() {
                 >
                   <span className={s.btnActionTitle}>BUY {symbol}</span>
                   <span className={s.btnActionPrice}>@{curSymbol}{tick.ask}</span>
+                </button>
+              </div>
+
+              {/* Quick Scalp Hotkeys */}
+              <div className={s.quickScalpGrid}>
+                <button
+                  type="button"
+                  className={s.btnScalpBuy}
+                  onClick={() => {
+                    setVolume('0.02')
+                    handleOrder('BUY')
+                  }}
+                  disabled={actionLoading}
+                >
+                  ⚡ Scalp BUY 0.02
+                </button>
+                <button
+                  type="button"
+                  className={s.btnScalpSell}
+                  onClick={() => {
+                    setVolume('0.02')
+                    handleOrder('SELL')
+                  }}
+                  disabled={actionLoading}
+                >
+                  ⚡ Scalp SELL 0.02
                 </button>
               </div>
 
@@ -1030,7 +1220,7 @@ export default function Mt5Trade() {
               <div>
                 <h2>Automated Quantix ML Bot for 25 Project Assets</h2>
                 <p>
-                  บอทจะสแกนสัญญาณเทรดสำหรับสินทรัพย์ 25 ตัวตลอดเวลา และส่งคำสั่งเทรดบน MetaTrader 5 อัตโนมัติเมื่อมั่นใจเกินเกณฑ์
+                  บอทจะสแกนสัญญาณเทรดสำหรับสินทรัพย์ 25 ตัวตลอดเวลา และส่งคำสั่งเทรดบน Demo Trading Desk อัตโนมัติ (ทำงานต่อเนื่องในแบ็กกราวด์ แม้จะออกจากระบบ)
                 </p>
               </div>
             </div>

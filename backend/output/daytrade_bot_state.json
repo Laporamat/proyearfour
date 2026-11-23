@@ -1,0 +1,50 @@
+{
+  "enabled": true,
+  "min_confidence": 75.0,
+  "default_lot": 0.02,
+  "max_positions": 5,
+  "symbols": [
+    "AAPL",
+    "NVDA",
+    "TSLA",
+    "MSFT",
+    "AMZN",
+    "META",
+    "GLD",
+    "PTT",
+    "DELTA"
+  ],
+  "auto_sl_tp": true,
+  "strategy": "ML-RandomForest-Regime + RSI/EMA/ATR",
+  "last_run": "2026-11-23T18:36:06.941689+00:00",
+  "signals_evaluated": 500,
+  "orders_executed": 2,
+  "activity_log": [
+    {
+      "timestamp": "18:36:06",
+      "symbol": "PTT",
+      "action": "BUY",
+      "confidence": 80.5,
+      "price": 37.4,
+      "sl": 36.41,
+      "tp": 39.47,
+      "regime": "Neutral",
+      "status": "executed",
+      "message": "✓ [SIMULATION] Order #5001 BUY PTT @ 37.42 (Regime: Neutral)",
+      "order_ticket": 5001
+    },
+    {
+      "timestamp": "18:30:47",
+      "symbol": "PTT",
+      "action": "BUY",
+      "confidence": 80.5,
+      "price": 37.4,
+      "sl": 36.41,
+      "tp": 39.47,
+      "regime": "Neutral",
+      "status": "executed",
+      "message": "✓ [SIMULATION] Order #5001 BUY PTT @ 37.42 (Regime: Neutral)",
+      "order_ticket": 5001
+    }
+  ]
+}
