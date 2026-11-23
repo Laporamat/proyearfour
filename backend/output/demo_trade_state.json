@@ -5,11 +5,11 @@
     "server": "Quantix Demo Trading",
     "currency": "USD",
     "balance": 10000.0,
-    "equity": 9999.9,
-    "profit": -0.1,
+    "equity": 9999.92,
+    "profit": -0.08,
     "margin": 0.75,
-    "margin_free": 9999.15,
-    "margin_level": 1337958.26,
+    "margin_free": 9999.17,
+    "margin_level": 1337603.0,
     "leverage": 100
   },
   "positions": [
@@ -19,10 +19,10 @@
       "type": "BUY",
       "volume": 0.02,
       "price_open": 37.42,
-      "price_current": 37.37,
+      "price_current": 37.38,
       "sl": 36.41,
       "tp": 39.47,
-      "profit": -0.1,
+      "profit": -0.08,
       "swap": 0.0,
       "time": "2026-11-23 18:36:07 UTC",
       "comment": "Quantix_ML_Bot_80_Neutral"
