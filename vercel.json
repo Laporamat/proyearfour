@@ -10,6 +10,11 @@
       "framework": "vite"
     }
   },
+  "functions": {
+    "backend/**/*.py": {
+      "excludeFiles": "{tests/**,__tests__/**,**/*.test.py,**/test_*.py,.venv/**,output/*.csv,output/*.log}"
+    }
+  },
   "rewrites": [
     {
       "source": "/api/(.*)",

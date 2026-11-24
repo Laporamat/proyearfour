@@ -1,0 +1,23 @@
+# Virtual environments
+.venv
+venv
+env
+ENV
+.env
+.env.*
+
+# Python caches, tests & compiled files
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache
+tests
+
+# Logs
+*.log
+requirements.full.txt
+
+# Large CSV datasets & logs in output
+output/*.csv
+output/*.log

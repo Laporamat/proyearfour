@@ -1,0 +1,50 @@
+# Virtual environments
+.venv
+venv
+env
+ENV
+.env
+.env.*
+
+# Python caches, tests & compiled files
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache
+tests
+backend/tests
+backend/.pytest_cache
+backend/.venv
+
+# Git, logs & temp files
+.git
+.github
+*.log
+backend_stderr.log
+backend_stdout.log
+
+# Node & Frontend dependencies (Vite handles its own build)
+node_modules
+frontend/node_modules
+frontend/dist
+
+# Project documentation & local scripts
+memory
+test_reports
+.base44
+.emergent
+run
+docker-compose.base44.yml
+backend.Dockerfile
+run_windows.bat
+run_windows.ps1
+auth_testing.md
+AGENTS.md
+backend/requirements.full.txt
+
+# Large CSV datasets & logs in output
+backend/output/*.csv
+backend/output/*.log
+output/*.csv
+output/*.log
