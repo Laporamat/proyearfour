@@ -32,12 +32,12 @@
   ],
   "auto_sl_tp": true,
   "strategy": "ML-RandomForest-Regime + RSI/EMA/ATR",
-  "last_run": "2026-11-24T21:14:18.614959+00:00",
-  "signals_evaluated": 28962,
+  "last_run": "2026-11-24T21:31:40.600864+00:00",
+  "signals_evaluated": 30287,
   "orders_executed": 33,
   "activity_log": [
     {
-      "timestamp": "21:14:19",
+      "timestamp": "21:31:41",
       "symbol": "CPALL",
       "action": "SELL",
       "confidence": 80.8,
@@ -49,7 +49,7 @@
       "message": "Execution error: บัญชีเงินสด (Spot Cash) ไม่มีหุ้น CPALL ในพอร์ต จึงไม่สามารถขายได้ — กรุณาส่งคำสั่ง BUY เพื่อถือหุ้นก่อน"
     },
     {
-      "timestamp": "21:14:03",
+      "timestamp": "21:31:18",
       "symbol": "CPALL",
       "action": "SELL",
       "confidence": 80.8,
@@ -61,7 +61,7 @@
       "message": "Execution error: บัญชีเงินสด (Spot Cash) ไม่มีหุ้น CPALL ในพอร์ต จึงไม่สามารถขายได้ — กรุณาส่งคำสั่ง BUY เพื่อถือหุ้นก่อน"
     },
     {
-      "timestamp": "21:13:40",
+      "timestamp": "21:31:02",
       "symbol": "CPALL",
       "action": "SELL",
       "confidence": 80.8,
@@ -73,7 +73,7 @@
       "message": "Execution error: บัญชีเงินสด (Spot Cash) ไม่มีหุ้น CPALL ในพอร์ต จึงไม่สามารถขายได้ — กรุณาส่งคำสั่ง BUY เพื่อถือหุ้นก่อน"
     },
     {
-      "timestamp": "21:13:24",
+      "timestamp": "21:30:41",
       "symbol": "CPALL",
       "action": "SELL",
       "confidence": 80.8,
@@ -85,7 +85,7 @@
       "message": "Execution error: บัญชีเงินสด (Spot Cash) ไม่มีหุ้น CPALL ในพอร์ต จึงไม่สามารถขายได้ — กรุณาส่งคำสั่ง BUY เพื่อถือหุ้นก่อน"
     },
     {
-      "timestamp": "21:12:59",
+      "timestamp": "21:30:25",
       "symbol": "CPALL",
       "action": "SELL",
       "confidence": 80.8,
@@ -97,7 +97,7 @@
       "message": "Execution error: บัญชีเงินสด (Spot Cash) ไม่มีหุ้น CPALL ในพอร์ต จึงไม่สามารถขายได้ — กรุณาส่งคำสั่ง BUY เพื่อถือหุ้นก่อน"
     },
     {
-      "timestamp": "21:12:43",
+      "timestamp": "21:30:05",
       "symbol": "CPALL",
       "action": "SELL",
       "confidence": 80.8,
@@ -109,7 +109,7 @@
       "message": "Execution error: บัญชีเงินสด (Spot Cash) ไม่มีหุ้น CPALL ในพอร์ต จึงไม่สามารถขายได้ — กรุณาส่งคำสั่ง BUY เพื่อถือหุ้นก่อน"
     },
     {
-      "timestamp": "21:12:21",
+      "timestamp": "21:29:49",
       "symbol": "CPALL",
       "action": "SELL",
       "confidence": 80.8,
@@ -121,7 +121,7 @@
       "message": "Execution error: บัญชีเงินสด (Spot Cash) ไม่มีหุ้น CPALL ในพอร์ต จึงไม่สามารถขายได้ — กรุณาส่งคำสั่ง BUY เพื่อถือหุ้นก่อน"
     },
     {
-      "timestamp": "21:12:05",
+      "timestamp": "21:29:24",
       "symbol": "CPALL",
       "action": "SELL",
       "confidence": 80.8,
@@ -133,7 +133,7 @@
       "message": "Execution error: บัญชีเงินสด (Spot Cash) ไม่มีหุ้น CPALL ในพอร์ต จึงไม่สามารถขายได้ — กรุณาส่งคำสั่ง BUY เพื่อถือหุ้นก่อน"
     },
     {
-      "timestamp": "21:11:37",
+      "timestamp": "21:29:09",
       "symbol": "CPALL",
       "action": "SELL",
       "confidence": 80.8,
@@ -145,7 +145,7 @@
       "message": "Execution error: บัญชีเงินสด (Spot Cash) ไม่มีหุ้น CPALL ในพอร์ต จึงไม่สามารถขายได้ — กรุณาส่งคำสั่ง BUY เพื่อถือหุ้นก่อน"
     },
     {
-      "timestamp": "21:11:21",
+      "timestamp": "21:28:47",
       "symbol": "CPALL",
       "action": "SELL",
       "confidence": 80.8,
@@ -157,7 +157,7 @@
       "message": "Execution error: บัญชีเงินสด (Spot Cash) ไม่มีหุ้น CPALL ในพอร์ต จึงไม่สามารถขายได้ — กรุณาส่งคำสั่ง BUY เพื่อถือหุ้นก่อน"
     },
     {
-      "timestamp": "21:11:01",
+      "timestamp": "21:28:32",
       "symbol": "CPALL",
       "action": "SELL",
       "confidence": 80.8,
@@ -169,7 +169,7 @@
       "message": "Execution error: บัญชีเงินสด (Spot Cash) ไม่มีหุ้น CPALL ในพอร์ต จึงไม่สามารถขายได้ — กรุณาส่งคำสั่ง BUY เพื่อถือหุ้นก่อน"
     },
     {
-      "timestamp": "21:10:45",
+      "timestamp": "21:28:10",
       "symbol": "CPALL",
       "action": "SELL",
       "confidence": 80.8,
@@ -181,7 +181,7 @@
       "message": "Execution error: บัญชีเงินสด (Spot Cash) ไม่มีหุ้น CPALL ในพอร์ต จึงไม่สามารถขายได้ — กรุณาส่งคำสั่ง BUY เพื่อถือหุ้นก่อน"
     },
     {
-      "timestamp": "21:10:18",
+      "timestamp": "21:27:55",
       "symbol": "CPALL",
       "action": "SELL",
       "confidence": 80.8,
@@ -193,7 +193,7 @@
       "message": "Execution error: บัญชีเงินสด (Spot Cash) ไม่มีหุ้น CPALL ในพอร์ต จึงไม่สามารถขายได้ — กรุณาส่งคำสั่ง BUY เพื่อถือหุ้นก่อน"
     },
     {
-      "timestamp": "21:10:02",
+      "timestamp": "21:27:34",
       "symbol": "CPALL",
       "action": "SELL",
       "confidence": 80.8,
@@ -205,7 +205,7 @@
       "message": "Execution error: บัญชีเงินสด (Spot Cash) ไม่มีหุ้น CPALL ในพอร์ต จึงไม่สามารถขายได้ — กรุณาส่งคำสั่ง BUY เพื่อถือหุ้นก่อน"
     },
     {
-      "timestamp": "21:09:36",
+      "timestamp": "21:27:18",
       "symbol": "CPALL",
       "action": "SELL",
       "confidence": 80.8,
@@ -217,7 +217,7 @@
       "message": "Execution error: บัญชีเงินสด (Spot Cash) ไม่มีหุ้น CPALL ในพอร์ต จึงไม่สามารถขายได้ — กรุณาส่งคำสั่ง BUY เพื่อถือหุ้นก่อน"
     },
     {
-      "timestamp": "21:09:20",
+      "timestamp": "21:26:55",
       "symbol": "CPALL",
       "action": "SELL",
       "confidence": 80.8,
@@ -229,7 +229,7 @@
       "message": "Execution error: บัญชีเงินสด (Spot Cash) ไม่มีหุ้น CPALL ในพอร์ต จึงไม่สามารถขายได้ — กรุณาส่งคำสั่ง BUY เพื่อถือหุ้นก่อน"
     },
     {
-      "timestamp": "21:08:54",
+      "timestamp": "21:26:40",
       "symbol": "CPALL",
       "action": "SELL",
       "confidence": 80.8,
@@ -241,7 +241,7 @@
       "message": "Execution error: บัญชีเงินสด (Spot Cash) ไม่มีหุ้น CPALL ในพอร์ต จึงไม่สามารถขายได้ — กรุณาส่งคำสั่ง BUY เพื่อถือหุ้นก่อน"
     },
     {
-      "timestamp": "21:08:39",
+      "timestamp": "21:26:13",
       "symbol": "CPALL",
       "action": "SELL",
       "confidence": 80.8,
@@ -253,7 +253,7 @@
       "message": "Execution error: บัญชีเงินสด (Spot Cash) ไม่มีหุ้น CPALL ในพอร์ต จึงไม่สามารถขายได้ — กรุณาส่งคำสั่ง BUY เพื่อถือหุ้นก่อน"
     },
     {
-      "timestamp": "21:08:14",
+      "timestamp": "21:25:57",
       "symbol": "CPALL",
       "action": "SELL",
       "confidence": 80.8,
@@ -265,7 +265,7 @@
       "message": "Execution error: บัญชีเงินสด (Spot Cash) ไม่มีหุ้น CPALL ในพอร์ต จึงไม่สามารถขายได้ — กรุณาส่งคำสั่ง BUY เพื่อถือหุ้นก่อน"
     },
     {
-      "timestamp": "21:07:58",
+      "timestamp": "21:25:41",
       "symbol": "CPALL",
       "action": "SELL",
       "confidence": 80.8,
@@ -277,7 +277,7 @@
       "message": "Execution error: บัญชีเงินสด (Spot Cash) ไม่มีหุ้น CPALL ในพอร์ต จึงไม่สามารถขายได้ — กรุณาส่งคำสั่ง BUY เพื่อถือหุ้นก่อน"
     },
     {
-      "timestamp": "21:07:35",
+      "timestamp": "21:25:19",
       "symbol": "CPALL",
       "action": "SELL",
       "confidence": 80.8,
@@ -289,7 +289,7 @@
       "message": "Execution error: บัญชีเงินสด (Spot Cash) ไม่มีหุ้น CPALL ในพอร์ต จึงไม่สามารถขายได้ — กรุณาส่งคำสั่ง BUY เพื่อถือหุ้นก่อน"
     },
     {
-      "timestamp": "21:07:19",
+      "timestamp": "21:25:03",
       "symbol": "CPALL",
       "action": "SELL",
       "confidence": 80.8,
@@ -301,7 +301,7 @@
       "message": "Execution error: บัญชีเงินสด (Spot Cash) ไม่มีหุ้น CPALL ในพอร์ต จึงไม่สามารถขายได้ — กรุณาส่งคำสั่ง BUY เพื่อถือหุ้นก่อน"
     },
     {
-      "timestamp": "21:06:56",
+      "timestamp": "21:24:41",
       "symbol": "CPALL",
       "action": "SELL",
       "confidence": 80.8,
@@ -313,7 +313,7 @@
       "message": "Execution error: บัญชีเงินสด (Spot Cash) ไม่มีหุ้น CPALL ในพอร์ต จึงไม่สามารถขายได้ — กรุณาส่งคำสั่ง BUY เพื่อถือหุ้นก่อน"
     },
     {
-      "timestamp": "21:06:40",
+      "timestamp": "21:24:25",
       "symbol": "CPALL",
       "action": "SELL",
       "confidence": 80.8,
@@ -325,7 +325,7 @@
       "message": "Execution error: บัญชีเงินสด (Spot Cash) ไม่มีหุ้น CPALL ในพอร์ต จึงไม่สามารถขายได้ — กรุณาส่งคำสั่ง BUY เพื่อถือหุ้นก่อน"
     },
     {
-      "timestamp": "21:06:14",
+      "timestamp": "21:24:03",
       "symbol": "CPALL",
       "action": "SELL",
       "confidence": 80.8,
@@ -337,7 +337,7 @@
       "message": "Execution error: บัญชีเงินสด (Spot Cash) ไม่มีหุ้น CPALL ในพอร์ต จึงไม่สามารถขายได้ — กรุณาส่งคำสั่ง BUY เพื่อถือหุ้นก่อน"
     },
     {
-      "timestamp": "21:05:58",
+      "timestamp": "21:23:47",
       "symbol": "CPALL",
       "action": "SELL",
       "confidence": 80.8,
@@ -349,7 +349,7 @@
       "message": "Execution error: บัญชีเงินสด (Spot Cash) ไม่มีหุ้น CPALL ในพอร์ต จึงไม่สามารถขายได้ — กรุณาส่งคำสั่ง BUY เพื่อถือหุ้นก่อน"
     },
     {
-      "timestamp": "21:05:34",
+      "timestamp": "21:23:24",
       "symbol": "CPALL",
       "action": "SELL",
       "confidence": 80.8,
@@ -361,7 +361,7 @@
       "message": "Execution error: บัญชีเงินสด (Spot Cash) ไม่มีหุ้น CPALL ในพอร์ต จึงไม่สามารถขายได้ — กรุณาส่งคำสั่ง BUY เพื่อถือหุ้นก่อน"
     },
     {
-      "timestamp": "21:05:19",
+      "timestamp": "21:23:07",
       "symbol": "CPALL",
       "action": "SELL",
       "confidence": 80.8,
@@ -373,7 +373,7 @@
       "message": "Execution error: บัญชีเงินสด (Spot Cash) ไม่มีหุ้น CPALL ในพอร์ต จึงไม่สามารถขายได้ — กรุณาส่งคำสั่ง BUY เพื่อถือหุ้นก่อน"
     },
     {
-      "timestamp": "21:04:55",
+      "timestamp": "21:22:41",
       "symbol": "CPALL",
       "action": "SELL",
       "confidence": 80.8,
@@ -385,7 +385,7 @@
       "message": "Execution error: บัญชีเงินสด (Spot Cash) ไม่มีหุ้น CPALL ในพอร์ต จึงไม่สามารถขายได้ — กรุณาส่งคำสั่ง BUY เพื่อถือหุ้นก่อน"
     },
     {
-      "timestamp": "21:04:39",
+      "timestamp": "21:22:25",
       "symbol": "CPALL",
       "action": "SELL",
       "confidence": 80.8,
@@ -397,7 +397,7 @@
       "message": "Execution error: บัญชีเงินสด (Spot Cash) ไม่มีหุ้น CPALL ในพอร์ต จึงไม่สามารถขายได้ — กรุณาส่งคำสั่ง BUY เพื่อถือหุ้นก่อน"
     },
     {
-      "timestamp": "21:04:20",
+      "timestamp": "21:22:05",
       "symbol": "CPALL",
       "action": "SELL",
       "confidence": 80.8,
@@ -409,7 +409,7 @@
       "message": "Execution error: บัญชีเงินสด (Spot Cash) ไม่มีหุ้น CPALL ในพอร์ต จึงไม่สามารถขายได้ — กรุณาส่งคำสั่ง BUY เพื่อถือหุ้นก่อน"
     },
     {
-      "timestamp": "21:04:04",
+      "timestamp": "21:21:46",
       "symbol": "CPALL",
       "action": "SELL",
       "confidence": 80.8,
@@ -421,7 +421,7 @@
       "message": "Execution error: บัญชีเงินสด (Spot Cash) ไม่มีหุ้น CPALL ในพอร์ต จึงไม่สามารถขายได้ — กรุณาส่งคำสั่ง BUY เพื่อถือหุ้นก่อน"
     },
     {
-      "timestamp": "21:03:42",
+      "timestamp": "21:21:20",
       "symbol": "CPALL",
       "action": "SELL",
       "confidence": 80.8,
@@ -433,7 +433,7 @@
       "message": "Execution error: บัญชีเงินสด (Spot Cash) ไม่มีหุ้น CPALL ในพอร์ต จึงไม่สามารถขายได้ — กรุณาส่งคำสั่ง BUY เพื่อถือหุ้นก่อน"
     },
     {
-      "timestamp": "21:03:25",
+      "timestamp": "21:21:05",
       "symbol": "CPALL",
       "action": "SELL",
       "confidence": 80.8,
@@ -445,7 +445,7 @@
       "message": "Execution error: บัญชีเงินสด (Spot Cash) ไม่มีหุ้น CPALL ในพอร์ต จึงไม่สามารถขายได้ — กรุณาส่งคำสั่ง BUY เพื่อถือหุ้นก่อน"
     },
     {
-      "timestamp": "21:03:04",
+      "timestamp": "21:20:39",
       "symbol": "CPALL",
       "action": "SELL",
       "confidence": 80.8,
@@ -457,7 +457,7 @@
       "message": "Execution error: บัญชีเงินสด (Spot Cash) ไม่มีหุ้น CPALL ในพอร์ต จึงไม่สามารถขายได้ — กรุณาส่งคำสั่ง BUY เพื่อถือหุ้นก่อน"
     },
     {
-      "timestamp": "21:02:49",
+      "timestamp": "21:20:22",
       "symbol": "CPALL",
       "action": "SELL",
       "confidence": 80.8,
@@ -469,7 +469,7 @@
       "message": "Execution error: บัญชีเงินสด (Spot Cash) ไม่มีหุ้น CPALL ในพอร์ต จึงไม่สามารถขายได้ — กรุณาส่งคำสั่ง BUY เพื่อถือหุ้นก่อน"
     },
     {
-      "timestamp": "21:02:20",
+      "timestamp": "21:20:06",
       "symbol": "CPALL",
       "action": "SELL",
       "confidence": 80.8,
@@ -481,7 +481,7 @@
       "message": "Execution error: บัญชีเงินสด (Spot Cash) ไม่มีหุ้น CPALL ในพอร์ต จึงไม่สามารถขายได้ — กรุณาส่งคำสั่ง BUY เพื่อถือหุ้นก่อน"
     },
     {
-      "timestamp": "21:02:04",
+      "timestamp": "21:19:43",
       "symbol": "CPALL",
       "action": "SELL",
       "confidence": 80.8,
@@ -493,7 +493,7 @@
       "message": "Execution error: บัญชีเงินสด (Spot Cash) ไม่มีหุ้น CPALL ในพอร์ต จึงไม่สามารถขายได้ — กรุณาส่งคำสั่ง BUY เพื่อถือหุ้นก่อน"
     },
     {
-      "timestamp": "21:01:41",
+      "timestamp": "21:19:28",
       "symbol": "CPALL",
       "action": "SELL",
       "confidence": 80.8,
@@ -505,7 +505,7 @@
       "message": "Execution error: บัญชีเงินสด (Spot Cash) ไม่มีหุ้น CPALL ในพอร์ต จึงไม่สามารถขายได้ — กรุณาส่งคำสั่ง BUY เพื่อถือหุ้นก่อน"
     },
     {
-      "timestamp": "21:01:25",
+      "timestamp": "21:19:08",
       "symbol": "CPALL",
       "action": "SELL",
       "confidence": 80.8,
@@ -517,7 +517,7 @@
       "message": "Execution error: บัญชีเงินสด (Spot Cash) ไม่มีหุ้น CPALL ในพอร์ต จึงไม่สามารถขายได้ — กรุณาส่งคำสั่ง BUY เพื่อถือหุ้นก่อน"
     },
     {
-      "timestamp": "21:00:57",
+      "timestamp": "21:18:52",
       "symbol": "CPALL",
       "action": "SELL",
       "confidence": 80.8,
@@ -529,7 +529,7 @@
       "message": "Execution error: บัญชีเงินสด (Spot Cash) ไม่มีหุ้น CPALL ในพอร์ต จึงไม่สามารถขายได้ — กรุณาส่งคำสั่ง BUY เพื่อถือหุ้นก่อน"
     },
     {
-      "timestamp": "21:00:41",
+      "timestamp": "21:18:28",
       "symbol": "CPALL",
       "action": "SELL",
       "confidence": 80.8,
@@ -541,7 +541,7 @@
       "message": "Execution error: บัญชีเงินสด (Spot Cash) ไม่มีหุ้น CPALL ในพอร์ต จึงไม่สามารถขายได้ — กรุณาส่งคำสั่ง BUY เพื่อถือหุ้นก่อน"
     },
     {
-      "timestamp": "21:00:20",
+      "timestamp": "21:18:12",
       "symbol": "CPALL",
       "action": "SELL",
       "confidence": 80.8,
@@ -553,7 +553,7 @@
       "message": "Execution error: บัญชีเงินสด (Spot Cash) ไม่มีหุ้น CPALL ในพอร์ต จึงไม่สามารถขายได้ — กรุณาส่งคำสั่ง BUY เพื่อถือหุ้นก่อน"
     },
     {
-      "timestamp": "21:00:04",
+      "timestamp": "21:17:51",
       "symbol": "CPALL",
       "action": "SELL",
       "confidence": 80.8,
@@ -565,7 +565,7 @@
       "message": "Execution error: บัญชีเงินสด (Spot Cash) ไม่มีหุ้น CPALL ในพอร์ต จึงไม่สามารถขายได้ — กรุณาส่งคำสั่ง BUY เพื่อถือหุ้นก่อน"
     },
     {
-      "timestamp": "20:59:38",
+      "timestamp": "21:17:35",
       "symbol": "CPALL",
       "action": "SELL",
       "confidence": 80.8,
@@ -577,7 +577,7 @@
       "message": "Execution error: บัญชีเงินสด (Spot Cash) ไม่มีหุ้น CPALL ในพอร์ต จึงไม่สามารถขายได้ — กรุณาส่งคำสั่ง BUY เพื่อถือหุ้นก่อน"
     },
     {
-      "timestamp": "20:59:23",
+      "timestamp": "21:17:09",
       "symbol": "CPALL",
       "action": "SELL",
       "confidence": 80.8,
@@ -589,7 +589,7 @@
       "message": "Execution error: บัญชีเงินสด (Spot Cash) ไม่มีหุ้น CPALL ในพอร์ต จึงไม่สามารถขายได้ — กรุณาส่งคำสั่ง BUY เพื่อถือหุ้นก่อน"
     },
     {
-      "timestamp": "20:59:00",
+      "timestamp": "21:16:54",
       "symbol": "CPALL",
       "action": "SELL",
       "confidence": 80.8,
@@ -601,7 +601,7 @@
       "message": "Execution error: บัญชีเงินสด (Spot Cash) ไม่มีหุ้น CPALL ในพอร์ต จึงไม่สามารถขายได้ — กรุณาส่งคำสั่ง BUY เพื่อถือหุ้นก่อน"
     },
     {
-      "timestamp": "20:58:45",
+      "timestamp": "21:16:28",
       "symbol": "CPALL",
       "action": "SELL",
       "confidence": 80.8,
@@ -613,7 +613,7 @@
       "message": "Execution error: บัญชีเงินสด (Spot Cash) ไม่มีหุ้น CPALL ในพอร์ต จึงไม่สามารถขายได้ — กรุณาส่งคำสั่ง BUY เพื่อถือหุ้นก่อน"
     },
     {
-      "timestamp": "20:58:14",
+      "timestamp": "21:16:11",
       "symbol": "CPALL",
       "action": "SELL",
       "confidence": 80.8,
@@ -625,7 +625,7 @@
       "message": "Execution error: บัญชีเงินสด (Spot Cash) ไม่มีหุ้น CPALL ในพอร์ต จึงไม่สามารถขายได้ — กรุณาส่งคำสั่ง BUY เพื่อถือหุ้นก่อน"
     },
     {
-      "timestamp": "20:57:57",
+      "timestamp": "21:15:47",
       "symbol": "CPALL",
       "action": "SELL",
       "confidence": 80.8,
