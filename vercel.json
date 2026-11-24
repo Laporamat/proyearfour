@@ -3,16 +3,16 @@
   "services": {
     "backend": {
       "root": "backend",
-      "framework": "fastapi"
+      "framework": "fastapi",
+      "functions": {
+        "**/*.py": {
+          "excludeFiles": "{tests/**,__tests__/**,**/*.test.py,**/test_*.py,.venv/**,output/*.csv,output/*.log}"
+        }
+      }
     },
     "frontend": {
       "root": "frontend",
       "framework": "vite"
-    }
-  },
-  "functions": {
-    "backend/**/*.py": {
-      "excludeFiles": "{tests/**,__tests__/**,**/*.test.py,**/test_*.py,.venv/**,output/*.csv,output/*.log}"
     }
   },
   "rewrites": [
