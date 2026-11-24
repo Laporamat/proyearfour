@@ -12,6 +12,9 @@ export default function Rebalancing() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [data, setData] = useState(null)
+  const [autoRebalancing, setAutoRebalancing] = useState(false)
+  const [rebalanceMsg, setRebalanceMsg] = useState('')
+  const [rebalanceErr, setRebalanceErr] = useState('')
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -43,6 +46,37 @@ export default function Rebalancing() {
 
   useEffect(() => { load() }, [load])
 
+  const handleAutoRebalance = async () => {
+    if (!data?.target_allocation?.length) return
+    const confirmed = window.confirm(
+      'คุณต้องการส่งคำสั่งปรับพอร์ตไปยัง Quant Day Trade ตามสัดส่วนเป้าหมาย (MPT + Regime) หรือไม่?\n\nระบบจะส่งคำสั่งเทรดทันที และอัปเดตข้อมูลมายัง My Portfolio อัตโนมัติ'
+    )
+    if (!confirmed) return
+
+    setAutoRebalancing(true)
+    setRebalanceMsg('')
+    setRebalanceErr('')
+    try {
+      const allocations = {}
+      for (const item of data.target_allocation) {
+        if (item.weight > 0.01) {
+          allocations[item.ticker] = item.weight / 100
+        }
+      }
+      const res = await api.mt5AutoRebalance({
+        allocations,
+        comment: 'AutoRebalance_MPT',
+      })
+      const count = res?.orders?.length || 0
+      setRebalanceMsg(`⚡ ปรับพอร์ตสำเร็จ! ส่งคำสั่งเทรด ${count} รายการไปยัง Quant Day Trade และซิงค์ข้อมูลกับ My Portfolio เรียบร้อยแล้ว`)
+      await load()
+    } catch (err) {
+      setRebalanceErr(err.message || 'ไม่สามารถปรับพอร์ตอัตโนมัติได้')
+    } finally {
+      setAutoRebalancing(false)
+    }
+  }
+
   const regime = data?.regime
   const regimeLabel = regime?.regime || '—'
   const regimeCls = regimeLabel.toLowerCase()
@@ -56,10 +90,39 @@ export default function Rebalancing() {
             แนะนำการปรับสัดส่วนพอร์ตตาม MPT + สภาวะตลาดปัจจุบัน
           </p>
         </div>
-        <button className="btn btn-ghost" onClick={load} disabled={loading}>
-          {loading ? <span className="spinner" /> : '↻ รีเฟรช'}
-        </button>
+        <div className={s.headerActions}>
+          <button
+            className="btn btn-primary"
+            onClick={handleAutoRebalance}
+            disabled={autoRebalancing || loading || !data}
+            title="ส่งคำสั่งปรับพอร์ตไปยัง Quant Day Trade อัตโนมัติ"
+          >
+            {autoRebalancing ? (
+              <>
+                <span className="spinner" /> กำลังปรับพอร์ต…
+              </>
+            ) : (
+              '⚡ ปรับพอร์ตอัตโนมัติผ่าน Quant Day Trade'
+            )}
+          </button>
+          <button className="btn btn-ghost" onClick={load} disabled={loading || autoRebalancing}>
+            {loading ? <span className="spinner" /> : '↻ รีเฟรช'}
+          </button>
+        </div>
       </header>
+
+      {rebalanceMsg && (
+        <div className={s.successBanner}>
+          <span>{rebalanceMsg}</span>
+          <button className={s.bannerClose} onClick={() => setRebalanceMsg('')}>✕</button>
+        </div>
+      )}
+      {rebalanceErr && (
+        <div className={s.errorBanner}>
+          <span>⚠️ {rebalanceErr}</span>
+          <button className={s.bannerClose} onClick={() => setRebalanceErr('')}>✕</button>
+        </div>
+      )}
 
       {loading ? (
         <div className={`card ${s.empty}`}>กำลังคำนวณคำแนะนำ…</div>

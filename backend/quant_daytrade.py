@@ -434,12 +434,14 @@ import json
 
 BOT_STATE_FILE = Path("output") / "daytrade_bot_state.json"
 
+_ALL_25_SYMBOLS = [a["symbol"] for a in DAYTRADE_ASSETS]
+
 _bot_state: Dict[str, Any] = {
     "enabled": True,  # Keep enabled so bot trades autonomously even when user logs out
-    "min_confidence": 75.0,
-    "default_lot": 0.02,
-    "max_positions": 5,
-    "symbols": ["AAPL", "NVDA", "TSLA", "MSFT", "AMZN", "META", "GLD", "PTT", "DELTA"],
+    "min_confidence": 70.0,
+    "default_lot": 1.0,  # 1 share default in Spot Cash mode
+    "max_positions": 8,
+    "symbols": _ALL_25_SYMBOLS,
     "auto_sl_tp": True,
     "strategy": "ML-RandomForest-Regime + RSI/EMA/ATR",
     "last_run": None,
@@ -466,7 +468,16 @@ def _load_bot_state():
                 loaded = json.load(f)
                 if isinstance(loaded, dict) and "enabled" in loaded:
                     _bot_state.update(loaded)
-                    log.info(f"✓ Loaded persistent bot state (enabled={_bot_state['enabled']})")
+                    # Ensure all 25 assets are available if symbols list was incomplete
+                    if len(_bot_state.get("symbols", [])) < 15:
+                        _bot_state["symbols"] = _ALL_25_SYMBOLS
+                    if int(_bot_state.get("max_positions", 0)) < 8:
+                        _bot_state["max_positions"] = 8
+                    if float(_bot_state.get("min_confidence", 100)) > 75:
+                        _bot_state["min_confidence"] = 70.0
+                    if float(_bot_state.get("default_lot", 0.02)) < 0.5:
+                        _bot_state["default_lot"] = 1.0
+                    log.info(f"✓ Loaded persistent bot state (enabled={_bot_state['enabled']}, lot={_bot_state['default_lot']})")
         except Exception as e:
             log.warning(f"Failed to load bot state: {e}")
 
@@ -482,7 +493,7 @@ class CreateApiKeyRequest(BaseModel):
 class BotConfigRequest(BaseModel):
     enabled: bool
     min_confidence: Optional[float] = 75.0
-    default_lot: Optional[float] = 0.02
+    default_lot: Optional[float] = 1.0
     max_positions: Optional[int] = 3
     symbols: Optional[List[str]] = None
     auto_sl_tp: Optional[bool] = True
@@ -579,6 +590,11 @@ async def _auto_trade_bot_worker():
                         raw_sym = str(p.get("symbol", "")).upper()
                         clean_sym = raw_sym.replace("USD", "").replace(".US", "").replace(".BK", "").replace("#", "").strip()
                         p_profit = float(p.get("profit", 0.0))
+                        p_cost = float(p.get("cost_basis", 0.0)) or (float(p.get("price_open", 1.0)) * float(p.get("volume", 1.0)))
+                        p_pct = (p_profit / p_cost * 100) if p_cost > 0 else float(p.get("profit_pct", 0.0))
+                        p_cur_p = float(p.get("price_current", 0.0))
+                        p_tp = float(p.get("tp", 0.0))
+                        p_sl = float(p.get("sl", 0.0))
                         p_type = str(p.get("type", "BUY")).upper()
 
                         # Find latest signal for this symbol
@@ -589,16 +605,16 @@ async def _auto_trade_bot_worker():
                         should_close = False
                         close_reason = ""
 
-                        # Rule A: Take Profit threshold (+$5.00)
-                        if p_profit >= 5.0:
+                        # Rule A: Take Profit threshold (Proportional percentage >=0.65% or +$1.50 profit or reached TP)
+                        if p_pct >= 0.65 or p_profit >= 1.50 or (p_tp > 0 and p_cur_p >= p_tp):
                             should_close = True
-                            close_reason = f"Take Profit (+${p_profit:.2f})"
-                        # Rule B: Stop Loss threshold (-$4.50)
-                        elif p_profit <= -4.5:
+                            close_reason = f"Take Profit (+{p_pct:.2f}% | +${p_profit:.2f})"
+                        # Rule B: Stop Loss threshold (Percentage <=-1.20% or -$2.50 loss or reached SL)
+                        elif p_pct <= -1.20 or p_profit <= -2.50 or (p_sl > 0 and p_cur_p <= p_sl):
                             should_close = True
-                            close_reason = f"Stop Loss (-${abs(p_profit):.2f})"
-                        # Rule C: Signal Inversion (held BUY, ML now signals SELL with >=70% confidence)
-                        elif cur_sig and sig_conf >= 70:
+                            close_reason = f"Stop Loss ({p_pct:.2f}% | -${abs(p_profit):.2f})"
+                        # Rule C: Signal Inversion (held BUY, ML now signals SELL with >=68% confidence)
+                        elif cur_sig and sig_conf >= 68:
                             if p_type == "BUY" and "SELL" in sig_action:
                                 should_close = True
                                 close_reason = f"Signal Inverted to {sig_action} ({sig_conf}%)"
@@ -617,8 +633,9 @@ async def _auto_trade_bot_worker():
                                     "confidence": sig_conf,
                                     "price": p.get("price_current", 0),
                                     "status": "closed",
-                                    "message": f"✓ [BOT EXIT] ปิด Ticket #{ticket} {clean_sym} ({close_reason}) Realized P/L: ${realized_p:+.2f}",
+                                    "message": f"✓ [BOT TAKE PROFIT / EXIT] ปิด Ticket #{ticket} {clean_sym} ({close_reason}) Realized P/L: ${realized_p:+.2f}",
                                     "order_ticket": ticket,
+                                    "profit": realized_p,
                                 })
                                 _bot_state["activity_log"] = _bot_state["activity_log"][:50]
                                 _save_bot_state()
@@ -633,7 +650,7 @@ async def _auto_trade_bot_worker():
                         active_symbols.add(raw_sym)
                         active_symbols.add(clean)
 
-                    max_pos = int(_bot_state.get("max_positions", 5))
+                    max_pos = int(_bot_state.get("max_positions", 8))
                     if len(active_positions) >= max_pos:
                         # Reached maximum active positions — wait for exits without cluttering activity log
                         continue
@@ -641,7 +658,18 @@ async def _auto_trade_bot_worker():
             except Exception as e:
                 log.warning(f"Bot position management error: {e}")
 
-            for sig in signals:
+            # Sort actionable signals by highest ML confidence first
+            actionable_signals = sorted(
+                [s for s in signals if s["action"] in ("BUY", "STRONG_BUY", "SELL", "STRONG_SELL") and s["confidence"] >= min_conf],
+                key=lambda x: x["confidence"],
+                reverse=True
+            )
+
+            for sig in actionable_signals:
+                max_pos = int(_bot_state.get("max_positions", 8))
+                if len(active_symbols) >= max_pos:
+                    break
+
                 sym = sig["symbol"]
                 if sym not in target_symbols or sym in active_symbols:
                     continue
@@ -649,8 +677,9 @@ async def _auto_trade_bot_worker():
                 action = sig["action"]
                 confidence = sig["confidence"]
 
-                if action in ("BUY", "STRONG_BUY", "SELL", "STRONG_SELL") and confidence >= min_conf:
-                    trade_action = "BUY" if "BUY" in action else "SELL"
+                # In Spot Cash trading desk, new positions must be BUY (cannot short sell unheld stocks)
+                if ("BUY" in action) and confidence >= min_conf:
+                    trade_action = "BUY"
                     log_entry = {
                         "timestamp": datetime.now(timezone.utc).strftime("%H:%M:%S"),
                         "symbol": sym,
@@ -681,7 +710,7 @@ async def _auto_trade_bot_worker():
                             order_req = mt5_trade.OrderRequest(
                                 symbol=sym,
                                 action=trade_action,
-                                volume=_bot_state.get("default_lot", 0.02),
+                                volume=float(_bot_state.get("default_lot", 1.0)),
                                 sl=sig["suggested_sl"] if _bot_state.get("auto_sl_tp") else 0.0,
                                 tp=sig["suggested_tp"] if _bot_state.get("auto_sl_tp") else 0.0,
                                 comment=f"Quantix ML Bot {int(confidence)}% {regime.get('state', '')}",

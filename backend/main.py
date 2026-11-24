@@ -391,17 +391,21 @@ async def api_returns_history(period: str = "1y"):
     """
     คืน cumulative return (%) จริง (rebased เป็น 0% ณ ต้นช่วง) สำหรับ line chart
     period: '1d' | '1w' | '1m' | '3m' | '6m' | '1y' | '3y' | 'all'
-    ข้อมูลเป็น end-of-day ต่อวัน — คำนวณด้วย compounding จาก daily returns จริง
+    ข้อมูลเป็น end-of-day ต่อวัน + อัปเดตราคา/ผลตอบแทนสด ณ ปัจจุบัน (Real-time Today)
     """
     csv = OUTPUT_DIR / "daily_returns.csv"
     if not csv.exists():
-        raise HTTPException(
-            status_code=404,
-            detail="ไม่พบ daily_returns.csv — กรุณารัน /api/pipeline ก่อน"
-        )
+        # Fallback to backend/output if running from root
+        alt_csv = Path(__file__).resolve().parent / "output" / "daily_returns.csv"
+        if alt_csv.exists():
+            csv = alt_csv
+        else:
+            raise HTTPException(
+                status_code=404,
+                detail="ไม่พบ daily_returns.csv — กรุณารัน /api/pipeline ก่อน"
+            )
 
     df = pd.read_csv(csv, index_col=0, parse_dates=True).sort_index()
-
     df = df.reindex(sorted(df.columns), axis=1)
     all_tickers = list(df.columns)
 
@@ -410,6 +414,24 @@ async def api_returns_history(period: str = "1y"):
 
     if df.empty:
         return {"period": period, "tickers": [], "data": []}
+
+    # ── Augment with Live Real-time Today Returns if available ────────────────
+    try:
+        from live import get_live_snapshot
+        snap = await get_live_snapshot()
+        live_changes = snap.get("changes", {})
+        # Always use actual today's date (not from live snapshot which may lag)
+        today_ts = pd.Timestamp.now().normalize()
+        # Only add today row if today is a weekday and not already in df
+        if today_ts.dayofweek < 5 and today_ts > df.index.max():
+            today_row = {}
+            for col in df.columns:
+                chg = live_changes.get(col, 0.0)
+                today_row[col] = float(chg) / 100.0 if chg is not None else 0.0
+            today_df = pd.DataFrame([today_row], index=[today_ts])
+            df = pd.concat([df, today_df])
+    except Exception as ex:
+        log.warning("Failed to augment live returns: %s", ex)
 
     now = df.index.max()
     cutoff_map = {
@@ -430,20 +452,35 @@ async def api_returns_history(period: str = "1y"):
     growth = (1 + sliced).cumprod()
     base = {c: growth[c].loc[growth[c].first_valid_index()]
             for c in growth.columns if growth[c].first_valid_index() is not None}
-    cum = (growth.div(pd.Series(base), axis=1) - 1) * 100
+    cum_daily = (growth.div(pd.Series(base), axis=1) - 1) * 100
 
     gran = {
         "1d": "D", "1w": "D", "1m": "D", "3m": "D", "6m": "D",
         "1y": "W", "3y": "ME", "all": "ME",
     }.get(period, "W")
-    if gran != "D":
-        cum = cum.resample(gran).last().dropna(how="all")
 
-    fmt = "%b %y" if gran == "ME" else "%d %b"
-    labels = cum.index.strftime(fmt)
+    if gran == "D":
+        cum = cum_daily
+    else:
+        cum_resampled = cum_daily.resample(gran).last().dropna(how="all")
+        latest_daily_dt = cum_daily.index[-1]
+        if not cum_resampled.empty and cum_resampled.index[-1] != latest_daily_dt:
+            if cum_resampled.index[-1] >= latest_daily_dt:
+                cum_resampled.index = list(cum_resampled.index[:-1]) + [latest_daily_dt]
+            else:
+                cum_resampled = pd.concat([cum_resampled, cum_daily.iloc[[-1]]])
+        cum = cum_resampled
 
+    today_dt = pd.Timestamp.now().normalize()
     records = []
-    for lbl, (_, row) in zip(labels, cum.iterrows()):
+    for dt, row in cum.iterrows():
+        if dt.date() == today_dt.date():
+            lbl = dt.strftime("%d %b") + " (วันนี้)"
+        elif gran == "ME":
+            lbl = dt.strftime("%b %y")
+        else:
+            lbl = dt.strftime("%d %b")
+
         entry = {"date": lbl}
         entry.update({k: round(float(v), 2) for k, v in row.items() if pd.notna(v)})
         records.append(entry)

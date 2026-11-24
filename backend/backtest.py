@@ -199,9 +199,31 @@ def _backtest_regime(prices: pd.DataFrame, regime_df: pd.DataFrame | None) -> tu
     return port_returns, metrics
 
 
-def run_backtest(period: str = "all") -> dict:
+def _backtest_user_portfolio(prices: pd.DataFrame, user_weights: dict[str, float]) -> tuple[pd.Series, dict]:
+    """คำนวณผลตอบแทนย้อนหลังของพอร์ตจริงของผู้ใช้ (My Portfolio / Quant Day Trade)"""
+    if not user_weights:
+        return pd.Series(dtype=float), {}
+
+    tickers = [t for t in user_weights if t in prices.columns]
+    if not tickers:
+        return pd.Series(dtype=float), {}
+
+    w = pd.Series({t: user_weights[t] for t in tickers})
+    total_w = w.sum()
+    if total_w <= 0:
+        return pd.Series(dtype=float), {}
+    w = w / total_w
+
+    returns = prices[tickers].pct_change().fillna(0)
+    port_returns = (returns * w).sum(axis=1)
+
+    metrics = _compute_metrics(port_returns)
+    return port_returns, metrics
+
+
+def run_backtest(period: str = "all", user_holdings: list[dict] | None = None) -> dict:
     """
-    รัน backtest เปรียบเทียบ 3 กลยุทธ์
+    รัน backtest เปรียบเทียบกลยุทธ์ (รวม My Portfolio ของผู้ใช้)
 
     period: '1y' | '3y' | 'all'
     คืน dict ที่มี: strategies, comparison, equity_curves
@@ -223,10 +245,27 @@ def run_backtest(period: str = "all") -> dict:
     regime_df = _load_regime_predictions()
     mpt_weights = _load_mpt_weights()
 
-    # รัน 3 กลยุทธ์
+    # รัน 3 กลยุทธ์มาตรฐาน
     bh_returns, bh_metrics = _backtest_buy_hold(prices)
     mpt_returns, mpt_metrics = _backtest_mpt(prices, mpt_weights)
     reg_returns, reg_metrics = _backtest_regime(prices, regime_df)
+
+    # รันกลยุทธ์พอร์ตจริงของผู้ใช้ (ถ้ามีหุ้นที่ถือครอง)
+    user_returns = None
+    user_metrics = None
+    if user_holdings:
+        holding_vals = {}
+        for h in user_holdings:
+            sym = h.get("ticker", "").replace(".BK", "").replace(".US", "").strip().upper()
+            sh = float(h.get("shares", 1.0))
+            p_val = float(h.get("buyPrice", 100.0))
+            if sym in prices.columns:
+                holding_vals[sym] = holding_vals.get(sym, 0.0) + (sh * p_val)
+
+        tot_val = sum(holding_vals.values())
+        if tot_val > 0:
+            user_weights = {sym: val / tot_val for sym, val in holding_vals.items()}
+            user_returns, user_metrics = _backtest_user_portfolio(prices, user_weights)
 
     # สร้าง equity curves (rebase ให้เริ่มที่ 100)
     def _equity_curve(returns):
@@ -240,7 +279,19 @@ def run_backtest(period: str = "all") -> dict:
             for idx, v in monthly.items() if pd.notna(v)
         ]
 
-    strategies = [
+    strategies = []
+
+    # ใส่ My Portfolio ถ้ามีข้อมูล
+    if user_returns is not None and not user_returns.empty:
+        strategies.append({
+            "name": "My Portfolio (พอร์ตปัจจุบัน)",
+            "description": f"พอร์ตลงทุนจริงของคุณ ({len(user_holdings)} สินทรัพย์ที่ถือครองจริง)",
+            "metrics": user_metrics,
+            "equity_curve": _equity_curve(user_returns),
+            "color": "#10b981",  # Emerald Green
+        })
+
+    strategies.extend([
         {
             "name": "Buy & Hold",
             "description": "ถือ equal-weight ทุกสินทรัพย์ ไม่ปรับพอร์ต",
@@ -262,7 +313,7 @@ def run_backtest(period: str = "all") -> dict:
             "equity_curve": _equity_curve(reg_returns),
             "color": "var(--c5)",
         },
-    ]
+    ])
 
     # สร้าง comparison table
     comparison = []
@@ -295,9 +346,34 @@ def register(app: FastAPI) -> None:
 
     @app.get("/api/backtest")
     async def api_backtest(period: str = Query("all", regex="^(1y|3y|all)$")):
-        """รัน backtest เปรียบเทียบ 3 กลยุทธ์"""
+        """รัน backtest เปรียบเทียบกลยุทธ์ พร้อมพอร์ตจริงของผู้ใช้"""
         try:
-            result = run_backtest(period=period)
+            # ดึง holdings ของผู้ใช้
+            user_holdings = []
+            try:
+                from auth import db
+                doc = await db.user_multi_portfolios.find_one({"portfolios.items.0": {"$exists": True}})
+                if doc and doc.get("portfolios"):
+                    user_holdings = doc["portfolios"][0].get("items", [])
+            except Exception as ex:
+                log.warning(f"Could not load user holdings for backtest: {ex}")
+
+            # Fallback to demo positions if no MongoDB items
+            if not user_holdings:
+                try:
+                    import json
+                    sim_file = OUTPUT_DIR / "demo_trade_state.json"
+                    if sim_file.exists():
+                        with open(sim_file, "r", encoding="utf-8") as f:
+                            s_data = json.load(f)
+                            user_holdings = [
+                                {"ticker": p["symbol"], "shares": p.get("volume", 1.0), "buyPrice": p.get("price_open", 100.0)}
+                                for p in s_data.get("positions", [])
+                            ]
+                except Exception:
+                    pass
+
+            result = run_backtest(period=period, user_holdings=user_holdings)
             return result
         except FileNotFoundError as e:
             raise HTTPException(status_code=404, detail=str(e))

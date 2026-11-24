@@ -310,10 +310,11 @@ _sim_state = {
         "balance": 10000.0,
         "equity": 10000.0,
         "profit": 0.0,
+        "holdings_value": 0.0,
         "margin": 0.0,
         "margin_free": 10000.0,
-        "margin_level": 0.0,
-        "leverage": 100,
+        "margin_level": 100.0,
+        "leverage": 1,
     },
     "positions": [],
     "ticket_counter": 5001,
@@ -343,6 +344,202 @@ def _load_sim_state():
             log.warning(f"Failed to load demo_trade_state: {e}")
 
 _load_sim_state()
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  CROSS-MODULE SYNC: Quant Day Trade → My Portfolio / Rebalance / Backtest
+# ══════════════════════════════════════════════════════════════════════════════
+
+async def _sync_trade_to_portfolios(symbol: str, action: str, shares: float, fill_price: float, user_id: Optional[str] = None):
+    """
+    Sync executed DayTrade/MT5 deal to My Portfolio collection (user_multi_portfolios in MongoDB).
+    Ensures that buying or selling in Quant Day Trade immediately updates:
+      - My Portfolio holdings, values & P/L
+      - Rebalancing suggestions
+      - Backtesting real portfolio
+    """
+    try:
+        from auth import db
+        from live import get_live_snapshot
+        from yh import USD_TICKERS
+
+        clean_sym = symbol.upper().replace(".BK", "").replace(".US", "").strip()
+
+        # FX conversion if needed (My Portfolio stores buyPrice in THB)
+        fx_rate = 35.0
+        try:
+            snap = await get_live_snapshot()
+            fx_rate = snap.get("fx_thb_per_usd", 35.0)
+        except Exception:
+            pass
+
+        is_usd = clean_sym in USD_TICKERS or clean_sym in (
+            "AAPL", "MSFT", "GOOGL", "AMZN", "NVDA", "TSLA", "META", "JNJ", "V", "JPM", "GLD", "TLT", "IEF", "SHY", "BIL"
+        )
+        price_thb = round(fill_price * fx_rate, 2) if is_usd else round(fill_price, 2)
+        today_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+
+        target_user_ids = []
+        if user_id:
+            target_user_ids = [user_id]
+        else:
+            users = await db.users.find({}, {"user_id": 1}).to_list(50)
+            if users:
+                target_user_ids = [u["user_id"] for u in users]
+            else:
+                docs = await db.user_multi_portfolios.find({}, {"user_id": 1}).to_list(50)
+                target_user_ids = [d["user_id"] for d in docs]
+
+        for uid in target_user_ids:
+            doc = await db.user_multi_portfolios.find_one({"user_id": uid})
+            if not doc or not doc.get("portfolios"):
+                default_p = {
+                    "id": f"p_{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}",
+                    "name": "พอร์ตหลัก",
+                    "icon": "📊",
+                    "created_at": datetime.now(timezone.utc).isoformat(),
+                    "items": [],
+                }
+                portfolios = [default_p]
+            else:
+                portfolios = doc["portfolios"]
+
+            active_p = portfolios[0]
+            items = active_p.setdefault("items", [])
+
+            match_idx = -1
+            for i, itm in enumerate(items):
+                if itm.get("ticker", "").upper().replace(".BK", "").strip() == clean_sym:
+                    match_idx = i
+                    break
+
+            if action.upper() == "BUY":
+                if match_idx >= 0:
+                    old_item = items[match_idx]
+                    old_sh = float(old_item.get("shares", 0))
+                    new_sh = old_sh + float(shares)
+                    old_cost = float(old_item.get("buyPrice", price_thb)) * old_sh
+                    new_cost = old_cost + (price_thb * float(shares))
+                    old_item["shares"] = round(new_sh, 4)
+                    old_item["buyPrice"] = round(new_cost / new_sh, 2) if new_sh > 0 else price_thb
+                    old_item["buyDate"] = today_str
+                else:
+                    new_item = {
+                        "id": f"h_dt_{int(time.time() * 1000)}_{clean_sym}",
+                        "ticker": clean_sym,
+                        "shares": round(float(shares), 4),
+                        "buyDate": today_str,
+                        "buyPrice": price_thb,
+                    }
+                    items.append(new_item)
+
+            elif action.upper() in ("SELL", "CLOSE"):
+                if match_idx >= 0:
+                    old_item = items[match_idx]
+                    old_sh = float(old_item.get("shares", 0))
+                    if old_sh <= float(shares) + 0.001:
+                        items.pop(match_idx)
+                    else:
+                        old_item["shares"] = round(old_sh - float(shares), 4)
+
+            await db.user_multi_portfolios.update_one(
+                {"user_id": uid},
+                {"$set": {"portfolios": portfolios}},
+                upsert=True
+            )
+            log.info(f"✓ Synced {action} {clean_sym} ({shares} shares @ ฿{price_thb}) to My Portfolio for user {uid}")
+    except Exception as e:
+        log.warning(f"Portfolio sync warning: {e}")
+
+
+async def _sync_all_open_positions_to_portfolio():
+    """Sync all currently open Quant Day Trade positions into My Portfolio."""
+    try:
+        from auth import db
+        from live import get_live_snapshot
+        from yh import USD_TICKERS
+
+        users = await db.users.find({}, {"user_id": 1}).to_list(50)
+        target_uids = [u["user_id"] for u in users] if users else []
+        if not target_uids:
+            docs = await db.user_multi_portfolios.find({}, {"user_id": 1}).to_list(50)
+            target_uids = [d["user_id"] for d in docs]
+
+        if not target_uids:
+            return
+
+        fx_rate = 35.0
+        try:
+            snap = await get_live_snapshot()
+            fx_rate = snap.get("fx_thb_per_usd", 35.0)
+        except Exception:
+            pass
+
+        today_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+
+        for uid in target_uids:
+            doc = await db.user_multi_portfolios.find_one({"user_id": uid})
+            if not doc or not doc.get("portfolios"):
+                default_p = {
+                    "id": f"p_{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}",
+                    "name": "พอร์ตหลัก",
+                    "icon": "📊",
+                    "created_at": datetime.now(timezone.utc).isoformat(),
+                    "items": [],
+                }
+                portfolios = [default_p]
+            else:
+                portfolios = doc["portfolios"]
+
+            active_p = portfolios[0]
+            existing_items = active_p.setdefault("items", [])
+
+            # Active symbols currently held in DayTrade
+            open_positions = _sim_state.get("positions", [])
+            open_symbols = {pos["symbol"].upper().replace(".BK", "").replace(".US", "").strip() for pos in open_positions}
+
+            # Remove DayTrade holdings that have been liquidated/closed
+            active_p["items"] = [
+                itm for itm in existing_items
+                if not (itm.get("id", "").startswith("h_dt_") and itm.get("ticker", "").upper().replace(".BK", "").strip() not in open_symbols)
+            ]
+            existing_items = active_p["items"]
+            existing_map = {itm["ticker"].upper().replace(".BK", "").strip(): itm for itm in existing_items}
+
+            # Map open positions from DayTrade into My Portfolio
+            for pos in open_positions:
+                sym = pos["symbol"].upper().replace(".BK", "").replace(".US", "").strip()
+                vol = float(pos.get("volume", 1.0))
+                p_open = float(pos.get("price_open", 100.0))
+                is_thai = sym in _THAI_SYMBOLS
+                # If Thai stock, p_open in DayTrade is USD (e.g. ~1.10), convert to THB (37.33)
+                if is_thai:
+                    price_thb = round(p_open * fx_rate, 2) if p_open < 10.0 else round(p_open, 2)
+                else:
+                    price_thb = round(p_open * fx_rate, 2)
+
+                if sym in existing_map:
+                    existing_map[sym]["shares"] = vol
+                    existing_map[sym]["buyPrice"] = price_thb
+                else:
+                    new_item = {
+                        "id": f"h_dt_{int(time.time()*1000)}_{sym}",
+                        "ticker": sym,
+                        "shares": vol,
+                        "buyDate": today_str,
+                        "buyPrice": price_thb,
+                    }
+                    existing_items.append(new_item)
+                    existing_map[sym] = new_item
+
+            await db.user_multi_portfolios.update_one(
+                {"user_id": uid},
+                {"$set": {"portfolios": portfolios}},
+                upsert=True
+            )
+            log.info(f"✓ Synced {len(open_positions)} DayTrade positions to My Portfolio for {uid}")
+    except Exception as e:
+        log.warning(f"Failed to sync all positions to portfolio: {e}")
 
 
 # ── Pydantic Request Models ───────────────────────────────────────────────────
@@ -400,24 +597,48 @@ class RebalanceTradeRequest(BaseModel):
 async def _sim_update_positions():
     positions_to_close = []
 
+    try:
+        from live import get_live_snapshot
+        snap = get_live_snapshot()
+        fx_rate = float(snap.get("fx_rate") or snap.get("fx_thb_per_usd") or 35.0)
+    except Exception:
+        fx_rate = 35.0
+
     for pos in _sim_state["positions"]:
         try:
             live = await _get_live_price(pos["symbol"])
-            current_price = live["bid"] if pos["type"] == "BUY" else live["ask"]
-            pos["price_current"] = current_price
+            raw_price = live["bid"] if pos["type"] == "BUY" else live["ask"]
+            sym = pos["symbol"].upper().replace(".BK", "").replace(".US", "").strip()
+            is_thai = sym in _THAI_SYMBOLS
 
-            contract_size = 100.0
-            if pos["type"] == "BUY":
-                pos["profit"] = round(
-                    (current_price - pos["price_open"]) * pos["volume"] * contract_size, 2
-                )
+            # If Thai stock, raw_price is in THB, convert to USD for USD-denominated MT5 account
+            current_price = round(raw_price / fx_rate, 2) if is_thai else round(raw_price, 2)
+            if is_thai and pos.get("price_open", 0) > 10.0:
+                pos["price_open"] = round(pos["price_open"] / fx_rate, 2)
+
+            pos["price_current"] = current_price
+            volume = float(pos.get("volume", 1.0))
+            cost_basis = pos.get("cost_basis", round(pos["price_open"] * volume, 2))
+            if is_thai and cost_basis > 10.0:
+                cost_basis = round(cost_basis / fx_rate, 2)
+            pos["cost_basis"] = round(cost_basis, 2)
+            market_val = round(current_price * volume, 2)
+            pos["market_value"] = market_val
+            pos["profit"] = round(market_val - pos["cost_basis"], 2)
+            if pos["price_open"] > 0:
+                pos["profit_pct"] = round(((current_price - pos["price_open"]) / pos["price_open"]) * 100, 2)
             else:
-                pos["profit"] = round(
-                    (pos["price_open"] - current_price) * pos["volume"] * contract_size, 2
-                )
+                pos["profit_pct"] = 0.0
 
             sl = pos.get("sl", 0.0) or 0.0
             tp = pos.get("tp", 0.0) or 0.0
+            if is_thai:
+                if sl > 10.0:
+                    sl = round(sl / fx_rate, 2)
+                    pos["sl"] = sl
+                if tp > 10.0:
+                    tp = round(tp / fx_rate, 2)
+                    pos["tp"] = tp
 
             if pos["type"] == "BUY":
                 if sl > 0 and current_price <= sl:
@@ -439,42 +660,45 @@ async def _sim_update_positions():
 
     for pos in positions_to_close:
         reason = pos.pop("close_reason", "SL/TP")
-        realized_pl = pos["profit"]
+        volume = float(pos.get("volume", 1.0))
+        sale_proceeds = round(pos["price_current"] * volume, 2)
+        # Credit full sale proceeds back to cash balance
         _sim_state["account"]["balance"] = round(
-            _sim_state["account"]["balance"] + realized_pl, 2
+            _sim_state["account"]["balance"] + sale_proceeds, 2
         )
-        _sim_state["trade_history"].append({
+        realized_pl = pos["profit"]
+        _sim_state["trade_history"].insert(0, {
             "ticket": pos["ticket"],
             "symbol": pos["symbol"],
             "type": pos["type"],
-            "volume": pos["volume"],
+            "volume": volume,
             "price_open": pos["price_open"],
             "price_close": pos["price_current"],
+            "cost_basis": pos.get("cost_basis", round(pos["price_open"] * volume, 2)),
+            "proceeds": sale_proceeds,
             "profit": realized_pl,
+            "profit_pct": pos.get("profit_pct", 0.0),
             "close_reason": reason,
             "closed_at": datetime.now(timezone.utc).isoformat(),
         })
         _sim_state["positions"].remove(pos)
 
-    total_floating_pl = sum(p.get("profit", 0.0) for p in _sim_state["positions"])
-    total_margin = sum(
-        p["price_current"] * p["volume"] * 100.0 / _sim_state["account"]["leverage"]
-        for p in _sim_state["positions"]
-    )
-    _sim_state["account"]["profit"] = round(total_floating_pl, 2)
-    _sim_state["account"]["equity"] = round(
-        _sim_state["account"]["balance"] + total_floating_pl, 2
-    )
-    _sim_state["account"]["margin"] = round(total_margin, 2)
-    _sim_state["account"]["margin_free"] = round(
-        _sim_state["account"]["equity"] - total_margin, 2
-    )
-    if total_margin > 0:
-        _sim_state["account"]["margin_level"] = round(
-            (_sim_state["account"]["equity"] / total_margin) * 100, 2
-        )
-    else:
-        _sim_state["account"]["margin_level"] = 0.0
+    if positions_to_close:
+        await _sync_all_open_positions_to_portfolio()
+
+    # Spot Cash Accounting (No leverage debt, pure Cash + Holdings)
+    total_holdings_value = round(sum(p.get("market_value", p["price_current"] * float(p.get("volume", 1.0))) for p in _sim_state["positions"]), 2)
+    total_floating_pl = round(sum(p.get("profit", 0.0) for p in _sim_state["positions"]), 2)
+    cash_balance = round(_sim_state["account"]["balance"], 2)
+
+    _sim_state["account"]["balance"] = cash_balance
+    _sim_state["account"]["holdings_value"] = total_holdings_value
+    _sim_state["account"]["profit"] = total_floating_pl
+    _sim_state["account"]["equity"] = round(cash_balance + total_holdings_value, 2)
+    _sim_state["account"]["margin"] = total_holdings_value
+    _sim_state["account"]["margin_free"] = cash_balance
+    _sim_state["account"]["margin_level"] = 100.0 if total_holdings_value > 0 else 0.0
+    _sim_state["account"]["leverage"] = 1
 
     # Save to disk
     _save_sim_state()
@@ -860,52 +1084,129 @@ async def _execute_order_core(req: OrderRequest) -> dict[str, Any]:
 
     if _state["mode"] == "simulation":
         live = await _get_live_price(req.symbol)
-        fill_price = live["ask"] if req.action.upper() == "BUY" else live["bid"]
+        action_upper = req.action.upper().strip()
+        fill_price = live["ask"] if action_upper == "BUY" else live["bid"]
+        sym_clean = req.symbol.upper().replace(".BK", "").replace(".US", "").strip()
+        shares = float(req.volume)
+        is_thai = sym_clean in _THAI_SYMBOLS
 
-        contract_size = 100.0
-        required_margin = fill_price * req.volume * contract_size / _sim_state["account"]["leverage"]
-        if required_margin > _sim_state["account"]["margin_free"]:
-            raise RuntimeError(
-                f"Margin ไม่เพียงพอ — ต้องการ ${required_margin:.2f} แต่มี Free Margin ${_sim_state['account']['margin_free']:.2f}"
-            )
+        try:
+            from live import get_live_snapshot
+            snap = get_live_snapshot()
+            fx_rate = float(snap.get("fx_rate") or snap.get("fx_thb_per_usd") or 35.0)
+        except Exception:
+            fx_rate = 35.0
 
-        ticket = _sim_state["ticket_counter"]
-        _sim_state["ticket_counter"] += 1
+        # For Thai stocks, live price is in THB; convert to USD for USD-denominated DayTrade account
+        fill_price_usd = round(fill_price / fx_rate, 2) if is_thai else round(fill_price, 2)
 
-        # Deduct realistic order commission ($1.00 base + 0.05% of notional)
-        commission = round(max(1.0, req.volume * 25.0), 2)
-        _sim_state["account"]["balance"] = round(_sim_state["account"]["balance"] - commission, 2)
+        if action_upper == "BUY":
+            cost = round(fill_price_usd * shares, 2)
+            avail_cash = _sim_state["account"]["balance"]
+            if cost > avail_cash:
+                raise RuntimeError(
+                    f"เงินสดไม่เพียงพอ — ต้องการซื้อ ${cost:.2f} ({shares:g} หุ้น @ ${fill_price_usd:.2f}) แต่มีเงินสดคงเหลือ ${_sim_state['account']['balance']:.2f}"
+                )
 
-        pos = {
-            "ticket": ticket,
-            "symbol": req.symbol.upper().replace(".BK", "").strip(),
-            "type": req.action.upper().strip(),
-            "volume": req.volume,
-            "price_open": fill_price,
-            "price_current": fill_price,
-            "sl": req.sl or 0.0,
-            "tp": req.tp or 0.0,
-            "profit": 0.0,
-            "commission": commission,
-            "swap": 0.0,
-            "time": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC"),
-            "comment": safe_comment,
-        }
-        _sim_state["positions"].insert(0, pos)
-        await _sim_update_positions()
+            # Deduct exact stock purchase cost directly from Cash Balance
+            _sim_state["account"]["balance"] = round(_sim_state["account"]["balance"] - cost, 2)
+            ticket = _sim_state["ticket_counter"]
+            _sim_state["ticket_counter"] += 1
 
-        return {
-            "status": "done",
-            "order": ticket,
-            "deal": ticket,
-            "price": fill_price,
-            "volume": req.volume,
-            "action": req.action.upper(),
-            "symbol": req.symbol.upper(),
-            "commission": commission,
-            "mode": "simulation",
-            "note": f"Paper Trade เปิดที่ราคาจริง {fill_price} (หักค่าธรรมเนียม ${commission:.2f})",
-        }
+            pos = {
+                "ticket": ticket,
+                "symbol": sym_clean,
+                "type": "BUY",
+                "volume": shares,
+                "price_open": fill_price_usd,
+                "price_current": fill_price_usd,
+                "cost_basis": cost,
+                "market_value": cost,
+                "sl": round(req.sl / fx_rate, 2) if (is_thai and req.sl and req.sl > 10.0) else (req.sl or 0.0),
+                "tp": round(req.tp / fx_rate, 2) if (is_thai and req.tp and req.tp > 10.0) else (req.tp or 0.0),
+                "profit": 0.0,
+                "profit_pct": 0.0,
+                "commission": 0.0,
+                "swap": 0.0,
+                "time": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC"),
+                "comment": safe_comment,
+            }
+            _sim_state["positions"].insert(0, pos)
+            await _sim_update_positions()
+            await _sync_all_open_positions_to_portfolio()
+
+            return {
+                "status": "done",
+                "order": ticket,
+                "deal": ticket,
+                "price": fill_price_usd,
+                "volume": shares,
+                "action": "BUY",
+                "symbol": sym_clean,
+                "cost": cost,
+                "cash_remaining": _sim_state["account"]["balance"],
+                "mode": "simulation",
+                "note": f"ซื้อสำเร็จ: ตัดเงินสด ${cost:.2f} ({shares:g} หุ้น @ ${fill_price_usd:.2f}) เงินสดคงเหลือ ${_sim_state['account']['balance']:.2f}",
+            }
+
+        elif action_upper == "SELL":
+            # Spot cash: SELL closes / liquidates holding and returns full cash proceeds to Balance
+            match = [p for p in _sim_state["positions"] if p["symbol"] == sym_clean]
+            if not match:
+                raise RuntimeError(
+                    f"บัญชีเงินสด (Spot Cash) ไม่มีหุ้น {sym_clean} ในพอร์ต จึงไม่สามารถขายได้ — กรุณาส่งคำสั่ง BUY เพื่อถือหุ้นก่อน"
+                )
+            p = match[0]
+            pos_vol = float(p.get("volume", 1.0))
+            sell_vol = min(shares, pos_vol)
+            sale_proceeds = round(fill_price_usd * sell_vol, 2)
+            cost_basis_portion = round(p.get("cost_basis", p["price_open"] * pos_vol) * (sell_vol / pos_vol), 2)
+            realized_pl = round(sale_proceeds - cost_basis_portion, 2)
+
+            # Credit full sale proceeds back to cash balance
+            _sim_state["account"]["balance"] = round(_sim_state["account"]["balance"] + sale_proceeds, 2)
+
+            ticket = _sim_state["ticket_counter"]
+            _sim_state["ticket_counter"] += 1
+
+            _sim_state["trade_history"].insert(0, {
+                "ticket": ticket,
+                "symbol": sym_clean,
+                "type": "SELL",
+                "volume": sell_vol,
+                "price_open": p["price_open"],
+                "price_close": fill_price_usd,
+                "cost_basis": cost_basis_portion,
+                "proceeds": sale_proceeds,
+                "profit": realized_pl,
+                "profit_pct": round(((fill_price_usd - p["price_open"]) / p["price_open"]) * 100, 2) if p["price_open"] > 0 else 0.0,
+                "close_reason": "MANUAL_SELL",
+                "closed_at": datetime.now(timezone.utc).isoformat(),
+            })
+
+            if sell_vol >= pos_vol:
+                _sim_state["positions"].remove(p)
+            else:
+                p["volume"] = round(pos_vol - sell_vol, 4)
+                p["cost_basis"] = round(p["cost_basis"] - cost_basis_portion, 2)
+
+            await _sim_update_positions()
+            await _sync_all_open_positions_to_portfolio()
+
+            return {
+                "status": "done",
+                "order": ticket,
+                "deal": ticket,
+                "price": fill_price_usd,
+                "volume": sell_vol,
+                "action": "SELL",
+                "symbol": sym_clean,
+                "proceeds": sale_proceeds,
+                "profit": realized_pl,
+                "cash_remaining": _sim_state["account"]["balance"],
+                "mode": "simulation",
+                "note": f"ขายสำเร็จ: ได้รับเงินสดคืน ${sale_proceeds:.2f} (กำไร/ขาดทุน ${realized_pl:+.2f}) เงินสดรวม ${_sim_state['account']['balance']:.2f}",
+            }
 
     sym_clean = req.symbol.upper().replace(".BK", "").replace(".US", "").strip()
     if sym_clean not in ALLOWED_SYMBOLS_SET and req.symbol.upper() not in ALLOWED_SYMBOLS_SET:
@@ -967,35 +1268,48 @@ async def close_mt5_position_direct(ticket: int, reason: str = "BOT_EXIT") -> di
         p = match[0]
         live = await _get_live_price(p["symbol"])
         close_price = live["bid"] if p["type"] == "BUY" else live["ask"]
-        contract_size = 100.0
-        if p["type"] == "BUY":
-            realized_pl = round((close_price - p["price_open"]) * p["volume"] * contract_size, 2)
-        else:
-            realized_pl = round((p["price_open"] - close_price) * p["volume"] * contract_size, 2)
+        is_thai = p["symbol"] in _THAI_SYMBOLS
+        try:
+            from live import get_live_snapshot
+            snap = get_live_snapshot()
+            fx_rate = float(snap.get("fx_rate") or snap.get("fx_thb_per_usd") or 35.0)
+        except Exception:
+            fx_rate = 35.0
+
+        close_price_usd = round(close_price / fx_rate, 2) if is_thai else round(close_price, 2)
+        volume = float(p.get("volume", 1.0))
+        sale_proceeds = round(close_price_usd * volume, 2)
+        cost_basis = p.get("cost_basis", round(p["price_open"] * volume, 2))
+        realized_pl = round(sale_proceeds - cost_basis, 2)
 
         _sim_state["positions"].remove(p)
+        # Credit full sale proceeds back to cash balance
         _sim_state["account"]["balance"] = round(
-            _sim_state["account"]["balance"] + realized_pl, 2
+            _sim_state["account"]["balance"] + sale_proceeds, 2
         )
         _sim_state["trade_history"].insert(0, {
             "ticket": p["ticket"],
             "symbol": p["symbol"],
             "type": p["type"],
-            "volume": p["volume"],
+            "volume": volume,
             "price_open": p["price_open"],
-            "price_close": close_price,
+            "price_close": close_price_usd,
+            "cost_basis": cost_basis,
+            "proceeds": sale_proceeds,
             "profit": realized_pl,
-            "commission": p.get("commission", 1.0),
+            "profit_pct": round(((close_price_usd - p["price_open"]) / p["price_open"]) * 100, 2) if p["price_open"] > 0 else 0.0,
             "close_reason": reason,
             "closed_at": datetime.now(timezone.utc).isoformat(),
         })
         _sim_state["trade_history"] = _sim_state["trade_history"][:100]
         await _sim_update_positions()
         _save_sim_state()
+        await _sync_all_open_positions_to_portfolio()
         return {
             "ticket": ticket,
             "status": "closed",
-            "price_close": close_price,
+            "price_close": close_price_usd,
+            "proceeds": sale_proceeds,
             "profit": realized_pl,
             "close_reason": reason,
             "mode": "simulation",
@@ -1145,10 +1459,11 @@ def register(app: FastAPI) -> None:
                 "balance": 10000.0,
                 "equity": 10000.0,
                 "profit": 0.0,
+                "holdings_value": 0.0,
                 "margin": 0.0,
                 "margin_free": 10000.0,
-                "margin_level": 0.0,
-                "leverage": 100,
+                "margin_level": 100.0,
+                "leverage": 1,
             },
             "positions": [],
             "ticket_counter": 5001,
@@ -1184,7 +1499,23 @@ def register(app: FastAPI) -> None:
     async def get_mt5_account():
         if _state["mode"] == "simulation":
             await _sim_update_positions()
-            return _sim_state["account"]
+            acc = dict(_sim_state["account"])
+            # Recalculate holdings_value from live positions (always consistent with /positions)
+            positions = _sim_state.get("positions", [])
+            live_hv = round(sum(p.get("market_value", p.get("price_current", 0) * float(p.get("volume", 1))) for p in positions), 2)
+            live_pl = round(sum(p.get("profit", 0) for p in positions), 2)
+            acc["holdings_value"] = live_hv
+            acc["profit"] = live_pl
+            acc["equity"] = round(acc["balance"] + live_hv, 2)
+            acc["position_count"] = len(positions)
+            # Attach FX rate for frontend THB conversion
+            try:
+                from live import get_live_snapshot
+                snap = get_live_snapshot()
+                acc["fx_thb_per_usd"] = float(snap.get("fx_thb_per_usd") or 35.0)
+            except Exception:
+                acc["fx_thb_per_usd"] = 35.0
+            return acc
         if _state["mode"] == "bridge":
             return await _bridge_request("GET", "/api/mt5/account")
         if _state["mode"] == "native" and MT5_AVAILABLE:
@@ -1341,43 +1672,9 @@ def register(app: FastAPI) -> None:
     @app.post("/api/mt5/close")
     async def close_mt5_position(req: CloseRequest):
         if _state["mode"] == "simulation":
-            match = [p for p in _sim_state["positions"] if p["ticket"] == req.ticket]
-            if not match:
-                raise HTTPException(status_code=404, detail=f"ไม่พบ Position Ticket #{req.ticket}")
-            p = match[0]
-
-            live = await _get_live_price(p["symbol"])
-            close_price = live["bid"] if p["type"] == "BUY" else live["ask"]
-            contract_size = 100.0
-            if p["type"] == "BUY":
-                realized_pl = round((close_price - p["price_open"]) * p["volume"] * contract_size, 2)
-            else:
-                realized_pl = round((p["price_open"] - close_price) * p["volume"] * contract_size, 2)
-
-            _sim_state["positions"].remove(p)
-            _sim_state["account"]["balance"] = round(
-                _sim_state["account"]["balance"] + realized_pl, 2
-            )
-            _sim_state["trade_history"].append({
-                "ticket": p["ticket"],
-                "symbol": p["symbol"],
-                "type": p["type"],
-                "volume": p["volume"],
-                "price_open": p["price_open"],
-                "price_close": close_price,
-                "profit": realized_pl,
-                "close_reason": "MANUAL",
-                "closed_at": datetime.now(timezone.utc).isoformat(),
-            })
-            await _sim_update_positions()
-
-            return {
-                "ticket": req.ticket,
-                "status": "closed",
-                "price_close": close_price,
-                "profit": realized_pl,
-                "mode": "simulation",
-            }
+            res = await close_mt5_position_direct(req.ticket, reason="MANUAL")
+            await _sync_all_open_positions_to_portfolio()
+            return res
 
         if _state["mode"] == "bridge":
             payload = req.model_dump() if hasattr(req, "model_dump") else req.dict()
@@ -1394,48 +1691,15 @@ def register(app: FastAPI) -> None:
     @app.post("/api/mt5/close-all")
     async def close_all_mt5_positions():
         if _state["mode"] == "simulation":
-            total_profit = 0.0
+            results = []
             for p in list(_sim_state["positions"]):
                 try:
-                    live = await _get_live_price(p["symbol"])
-                    close_price = live["bid"] if p["type"] == "BUY" else live["ask"]
-                    contract_size = 100.0
-                    if p["type"] == "BUY":
-                        pl = round((close_price - p["price_open"]) * p["volume"] * contract_size, 2)
-                    else:
-                        pl = round((p["price_open"] - close_price) * p["volume"] * contract_size, 2)
-                    total_profit += pl
-                    _sim_state["trade_history"].append({
-                        "ticket": p["ticket"],
-                        "symbol": p["symbol"],
-                        "type": p["type"],
-                        "volume": p["volume"],
-                        "price_open": p["price_open"],
-                        "price_close": close_price,
-                        "profit": pl,
-                        "close_reason": "CLOSE_ALL",
-                        "closed_at": datetime.now(timezone.utc).isoformat(),
-                    })
-                except Exception:
-                    total_profit += p.get("profit", 0.0)
-
-            count = len(_sim_state["positions"])
-            _sim_state["positions"].clear()
-            _sim_state["account"]["balance"] = round(
-                _sim_state["account"]["balance"] + total_profit, 2
-            )
-            _sim_state["account"]["equity"] = _sim_state["account"]["balance"]
-            _sim_state["account"]["profit"] = 0.0
-            _sim_state["account"]["margin"] = 0.0
-            _sim_state["account"]["margin_free"] = _sim_state["account"]["balance"]
-            _sim_state["account"]["margin_level"] = 0.0
-
-            return {
-                "total_closed": count,
-                "total_profit": round(total_profit, 2),
-                "new_balance": _sim_state["account"]["balance"],
-                "mode": "simulation",
-            }
+                    res = await close_mt5_position_direct(p["ticket"], reason="PANIC_CLOSE_ALL")
+                    results.append(res)
+                except Exception as ex:
+                    results.append({"ticket": p["ticket"], "status": "error", "error": str(ex)})
+            await _sync_all_open_positions_to_portfolio()
+            return {"results": results, "total_closed": len(results)}
 
         if _state["mode"] == "bridge":
             return await _bridge_request("POST", "/api/mt5/close-all")
@@ -1449,6 +1713,7 @@ def register(app: FastAPI) -> None:
                     res.append({"ticket": p["ticket"], "status": "closed", **c})
                 except Exception as ex:
                     res.append({"ticket": p["ticket"], "status": "error", "error": str(ex)})
+            await _sync_all_open_positions_to_portfolio()
             return {"results": res, "total_closed": len(res)}
         raise HTTPException(status_code=400, detail="MT5 ยังไม่ได้เชื่อมต่อ")
 
@@ -1473,17 +1738,34 @@ def register(app: FastAPI) -> None:
         real_equity = float(req.total_risk_equity or acc["equity"])
         orders_placed = []
 
+        try:
+            from live import get_live_snapshot
+            snap = get_live_snapshot()
+            fx_rate = float(snap.get("fx_rate") or snap.get("fx_thb_per_usd") or 35.0)
+        except Exception:
+            fx_rate = 35.0
+
         for raw_sym, weight in req.allocations.items():
             sym = raw_sym.replace(".BK", "").strip().upper()
             if sym not in ALLOWED_SYMBOLS_SET or weight <= 0.01:
                 continue
             target_val = real_equity * float(weight)
-            lot = max(0.01, min(round(target_val / 10000.0, 2), 0.50))
+            # Spot cash: shares = target_val / price
+            try:
+                live_p = await _get_live_price(sym)
+                fill_p = live_p.get("ask") or 100.0
+                if sym in _THAI_SYMBOLS:
+                    target_val_curr = target_val * fx_rate
+                    shares = max(1.0, round(target_val_curr / fill_p, 0)) if fill_p > 0 else 1.0
+                else:
+                    shares = max(1.0, round(target_val / fill_p, 0)) if fill_p > 0 else 1.0
+            except Exception:
+                shares = 1.0
 
             order_req = OrderRequest(
                 symbol=sym,
                 action="BUY",
-                volume=lot,
+                volume=shares,
                 comment=_sanitize_comment(req.comment, fallback="QuantixRebalance"),
             )
             try:
@@ -1498,3 +1780,10 @@ def register(app: FastAPI) -> None:
             "real_equity_used": real_equity,
             "orders": orders_placed,
         }
+
+    # ── Manual Trigger for Cross-Module Sync ─────────────────────────────────
+    @app.post("/api/mt5/sync-portfolio")
+    async def api_sync_daytrade_to_portfolio():
+        """Sync current DayTrade open positions to My Portfolio immediately."""
+        await _sync_all_open_positions_to_portfolio()
+        return {"status": "ok", "message": "ซิงค์หุ้นจาก Quant Day Trade ไปยัง My Portfolio เรียบร้อยแล้ว"}

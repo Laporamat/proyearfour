@@ -185,31 +185,131 @@
 .iconBtn:hover { border-color: var(--border-hi); }
 .iconActive { border-color: var(--accent); background: var(--accent-dim); }
 
+/* ── Connected Trading Account Sync Strip ──── */
+.accountSyncBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 10px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  font-size: 0.74rem;
+}
+
+:global([data-theme="dark"]) .accountSyncBar {
+  background: #141721;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.accountSyncLeft {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.accountDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 6px #10b981;
+  animation: pulseAnim 2s infinite ease-in-out;
+}
+
+@keyframes pulseAnim {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.85); }
+}
+
+.accountTag {
+  font-family: 'Geist Mono', monospace;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: #2563eb;
+  background: rgba(37, 99, 235, 0.1);
+  padding: 2px 7px;
+  border-radius: 4px;
+}
+
+:global([data-theme="dark"]) .accountTag {
+  color: #60a5fa;
+}
+
+.accountLogin {
+  font-family: 'Geist Mono', monospace;
+  font-weight: 700;
+  color: var(--text-head);
+}
+
+.accountSyncRight {
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 500;
+}
+
 /* ── Summary cards ───────────────────────────── */
 .summary {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   gap: var(--sp-4);
 }
+
+@media (max-width: 1200px) {
+  .summary { grid-template-columns: repeat(3, 1fr); }
+}
+
+@media (max-width: 768px) {
+  .summary { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 480px) {
+  .summary { grid-template-columns: 1fr; }
+}
+
 .sumCard {
   display: flex;
   flex-direction: column;
   gap: var(--sp-1);
   padding: var(--sp-4) var(--sp-5);
+  position: relative;
 }
+
+.sumHighlight {
+  border-color: rgba(37, 99, 235, 0.35);
+  background: linear-gradient(145deg, rgba(37, 99, 235, 0.04), rgba(16, 185, 129, 0.03));
+}
+
+:global([data-theme="dark"]) .sumHighlight {
+  background: linear-gradient(145deg, rgba(37, 99, 235, 0.12), rgba(16, 185, 129, 0.06));
+  border-color: rgba(96, 165, 250, 0.35);
+}
+
 .sumLabel {
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   color: var(--text-muted);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
+
 .sumValue {
   font-size: 1.35rem;
   font-weight: 800;
   color: var(--text-head);
   letter-spacing: -0.02em;
 }
+
+.sumSub {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  font-weight: 500;
+  margin-top: 2px;
+}
+
 .sumCard.profit .sumValue { color: var(--green); }
 .sumCard.loss   .sumValue { color: var(--red); }
 

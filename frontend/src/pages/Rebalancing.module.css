@@ -14,10 +14,56 @@
   flex-wrap: wrap;
   gap: var(--sp-4);
 }
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  flex-wrap: wrap;
+}
 .sub {
   font-size: 0.78rem;
   color: var(--text-muted);
   margin-top: var(--sp-1);
+}
+
+/* ── Banners ─────────────────────────────────── */
+.successBanner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid var(--green);
+  border-radius: var(--r-md);
+  color: var(--green);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+.errorBanner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid var(--red);
+  border-radius: var(--r-md);
+  color: var(--red);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+.bannerClose {
+  background: transparent;
+  border: none;
+  color: inherit;
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 0 var(--sp-2);
+  opacity: 0.8;
+}
+.bannerClose:hover {
+  opacity: 1;
 }
 
 /* ── Regime card ─────────────────────────────── */

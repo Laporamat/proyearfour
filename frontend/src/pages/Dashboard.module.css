@@ -1,58 +1,102 @@
 /* ==========================================================================
-   Dashboard Module CSS — High-End Quant & Machine Learning Terminal
+   Quantix Pro — Institutional Financial Dashboard
+   Commercial Enterprise Design System
    ========================================================================== */
 
 .page {
   display: flex;
   flex-direction: column;
-  gap: var(--sp-5, 20px);
+  gap: 20px;
   height: 100%;
   min-height: 0;
-  max-width: 1600px;
+  max-width: 1680px;
   margin: 0 auto;
   padding: 0 4px 40px;
 }
 
-/* ── Top Header / Telemetry Bar ─────────────────────────────────────────── */
+/* ── 1. Commercial Executive Header ─────────────────────────────────────── */
 .header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 16px;
-  padding: 18px 22px;
+  padding: 20px 24px;
   background: var(--surface, #ffffff);
   border: 1px solid var(--border, rgba(15, 23, 42, 0.08));
-  border-radius: var(--r-lg, 12px);
+  border-radius: var(--r-xl, 14px);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
 }
 
 :global([data-theme="dark"]) .header {
   background: #141721;
   border-color: rgba(255, 255, 255, 0.08);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
 }
 
-.titleArea {
+.headerBrand {
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
 
-.badgeRow {
+.brandRow {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   flex-wrap: wrap;
 }
 
-.livePulse {
-  width: 7px;
-  height: 7px;
+.brandName {
+  font-family: 'Geist Mono', monospace;
+  font-size: 1.15rem;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  color: var(--text-head, #0b0f19);
+}
+
+:global([data-theme="dark"]) .brandName {
+  color: #f8fafc;
+}
+
+.tagTier {
+  font-family: 'Geist Mono', monospace;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: rgba(37, 99, 235, 0.1);
+  color: #2563eb;
+  border: 1px solid rgba(37, 99, 235, 0.25);
+}
+
+:global([data-theme="dark"]) .tagTier {
+  color: #60a5fa;
+  border-color: rgba(96, 165, 250, 0.3);
+}
+
+.liveFeedBadge {
+  font-family: 'Geist Mono', monospace;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.pulseDot {
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
   background: #10b981;
-  box-shadow: 0 0 10px #10b981;
-  display: inline-block;
+  box-shadow: 0 0 6px #10b981;
   animation: pulseAnim 2s infinite ease-in-out;
 }
 
@@ -61,41 +105,45 @@
   50% { opacity: 0.4; transform: scale(0.85); }
 }
 
-.terminalTag {
+.fxPill {
   font-family: 'Geist Mono', monospace;
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--text-muted, #64748b);
   padding: 2px 8px;
-  border-radius: 4px;
-  background: rgba(59, 130, 246, 0.08);
-  color: #3b82f6;
-  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-radius: 999px;
+  background: var(--surface2, #f5f5f4);
+  border: 1px solid var(--border, rgba(15, 23, 42, 0.08));
 }
 
-.mlModelTag {
-  font-family: 'Geist Mono', monospace;
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  padding: 2px 8px;
-  border-radius: 4px;
-  background: rgba(139, 92, 246, 0.08);
-  color: #8b5cf6;
-  border: 1px solid rgba(139, 92, 246, 0.25);
+:global([data-theme="dark"]) .fxPill {
+  background: #1c2030;
+  border-color: rgba(255, 255, 255, 0.08);
 }
 
-.regimeBadge {
-  font-family: 'Geist Mono', monospace;
-  font-size: 0.68rem;
-  font-weight: 700;
-  padding: 2px 8px;
-  border-radius: 4px;
-  border: 1px solid transparent;
+.headerSub {
+  font-size: 0.78rem;
+  color: var(--text-muted, #64748b);
+  margin: 0;
+}
+
+.headerActions {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.regimeIndicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: var(--r-md, 8px);
+  font-family: 'Geist Mono', monospace;
+  font-size: 0.72rem;
+  font-weight: 700;
+  border: 1px solid transparent;
 }
 
 .regimeBull {
@@ -116,56 +164,44 @@
   border-color: rgba(245, 158, 11, 0.25);
 }
 
-.titleArea h1 {
-  font-size: 1.35rem;
+.regimeLabel {
+  font-weight: 600;
+  opacity: 0.8;
+}
+
+.regimeVal {
+  font-weight: 800;
+}
+
+.regimeConf {
+  font-weight: 500;
+  opacity: 0.75;
+}
+
+.btnPrimary {
+  background: #2563eb;
+  color: #ffffff;
+  font-size: 0.8rem;
   font-weight: 700;
-  letter-spacing: -0.02em;
-  color: var(--text-head, #0b0f19);
-  margin: 4px 0 2px;
-}
-
-:global([data-theme="dark"]) .titleArea h1 {
-  color: #f8fafc;
-}
-
-.headerSub {
-  font-size: 0.78rem;
-  color: var(--text-muted, #64748b);
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex-wrap: wrap;
-  margin: 0;
-}
-
-.liveBadge {
+  padding: 8px 16px;
+  border-radius: var(--r-md, 8px);
+  text-decoration: none;
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 2px 8px 2px 6px;
-  border-radius: var(--r-pill, 999px);
+  gap: 6px;
+  transition: all 0.15s ease;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
+}
+
+.btnPrimary:hover {
+  background: #1d4ed8;
+  transform: translateY(-1px);
+}
+
+.btnSecondary {
   background: var(--surface2, #f5f5f4);
-  border: 1px solid var(--border, rgba(15, 23, 42, 0.08));
-  font-size: 0.68rem;
-  font-weight: 600;
   color: var(--text-head, #0b0f19);
-}
-
-:global([data-theme="dark"]) .liveBadge {
-  background: #1c2030;
-  color: #cbd5e1;
-}
-
-.headerActions {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.btnTerminalLink {
-  background: rgba(59, 130, 246, 0.08);
-  color: #3b82f6;
-  border: 1px solid rgba(59, 130, 246, 0.25);
+  border: 1px solid var(--border, rgba(15, 23, 42, 0.1));
   font-size: 0.8rem;
   font-weight: 600;
   padding: 8px 14px;
@@ -177,288 +213,304 @@
   transition: all 0.15s ease;
 }
 
-.btnTerminalLink:hover {
-  background: rgba(59, 130, 246, 0.18);
-  border-color: #3b82f6;
+:global([data-theme="dark"]) .btnSecondary {
+  background: #1c2030;
+  border-color: rgba(255, 255, 255, 0.08);
+  color: #cbd5e1;
 }
 
-/* ── KPI Grid ───────────────────────────────────────────────────────────── */
-.kpi {
+.btnSecondary:hover {
+  border-color: var(--accent, #2f5bd6);
+  color: var(--accent, #2f5bd6);
+}
+
+/* ── 2. KPI Grid ────────────────────────────────────────────────────────── */
+.kpiGrid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
-}
-
-@media (max-width: 1200px) {
-  .kpi { grid-template-columns: repeat(2, 1fr); }
-}
-
-@media (max-width: 560px) {
-  .kpi { grid-template-columns: 1fr; gap: 10px; }
-}
-
-/* ── Body Split ─────────────────────────────────────────────────────────── */
-.body {
-  display: grid;
-  grid-template-columns: 1fr 380px;
-  gap: 18px;
-  flex: 1;
-  min-height: 0;
-  align-items: start;
+  gap: 14px;
 }
 
 @media (max-width: 1100px) {
-  .body { grid-template-columns: 1fr; }
+  .kpiGrid { grid-template-columns: repeat(2, 1fr); }
 }
 
-/* ── Charts column ──────────────────────────────────────────────────────── */
-.charts {
+@media (max-width: 550px) {
+  .kpiGrid { grid-template-columns: 1fr; }
+}
+
+/* ── 3. Charts Row: Performance & Allocation ────────────────────────────── */
+.chartsRow {
+  display: grid;
+  grid-template-columns: 1.55fr 1fr;
+  gap: 16px;
+  align-items: stretch;
+}
+
+@media (max-width: 1050px) {
+  .chartsRow { grid-template-columns: 1fr; }
+}
+
+.performanceCard,
+.allocationCard {
+  background: var(--surface, #ffffff);
+  border: 1px solid var(--border, rgba(15, 23, 42, 0.08));
+  border-radius: var(--r-xl, 14px);
+  padding: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  display: flex;
+  flex-direction: column;
+}
+
+:global([data-theme="dark"]) .performanceCard,
+:global([data-theme="dark"]) .allocationCard {
+  background: #141721;
+  border-color: rgba(255, 255, 255, 0.07);
+}
+
+/* ── 4. Intelligence & Execution Row ────────────────────────────────────── */
+.intelRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  align-items: stretch;
+}
+
+@media (max-width: 1000px) {
+  .intelRow { grid-template-columns: 1fr; }
+}
+
+.regimeCard,
+.radarCard {
+  background: var(--surface, #ffffff);
+  border: 1px solid var(--border, rgba(15, 23, 42, 0.08));
+  border-radius: var(--r-xl, 14px);
+  padding: 20px;
   display: flex;
   flex-direction: column;
   gap: 16px;
-  min-width: 0;
-}
-
-.chartCard {
-  background: var(--surface, #ffffff);
-  border: 1px solid var(--border, rgba(15, 23, 42, 0.08));
-  border-radius: var(--r-lg, 12px);
-  padding: 20px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
 }
 
-:global([data-theme="dark"]) .chartCard {
+:global([data-theme="dark"]) .regimeCard,
+:global([data-theme="dark"]) .radarCard {
   background: #141721;
-  border-color: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.07);
 }
 
-/* ── ML Market Regime Intelligence Card ─────────────────────────────────── */
-.mlRegimeCard {
-  background: var(--surface, #ffffff);
-  border: 1px solid var(--border, rgba(15, 23, 42, 0.08));
-  border-radius: var(--r-lg, 12px);
-  padding: 20px;
+.cardHead {
   display: flex;
-  flex-direction: column;
-  gap: 16px;
-  position: relative;
-  overflow: hidden;
-}
-
-:global([data-theme="dark"]) .mlRegimeCard {
-  background: #141721;
-  border-color: rgba(255, 255, 255, 0.06);
-}
-
-.regimeHead {
-  display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 8px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid var(--border, rgba(15, 23, 42, 0.06));
 }
 
-.regimeHeadLeft {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+.sectionTag {
+  font-family: 'Geist Mono', monospace;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: #2563eb;
 }
 
-.regimeHeadLeft h3 {
-  font-size: 0.96rem;
+:global([data-theme="dark"]) .sectionTag {
+  color: #60a5fa;
+}
+
+.cardTitle {
+  font-size: 0.98rem;
   font-weight: 700;
   color: var(--text-head, #0b0f19);
-  margin: 0;
+  margin: 2px 0 0 0;
 }
 
-:global([data-theme="dark"]) .regimeHeadLeft h3 {
+:global([data-theme="dark"]) .cardTitle {
   color: #f8fafc;
 }
 
-.regimeModelPill {
-  font-family: 'Geist Mono', monospace;
-  font-size: 0.65rem;
-  font-weight: 600;
-  padding: 2px 7px;
-  border-radius: 4px;
-  background: rgba(139, 92, 246, 0.1);
-  color: #8b5cf6;
-  border: 1px solid rgba(139, 92, 246, 0.2);
+.cardLink {
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: var(--accent, #2f5bd6);
+  text-decoration: none;
 }
 
-.regimeDate {
-  font-family: 'Geist Mono', monospace;
-  font-size: 0.72rem;
-  color: var(--text-muted, #64748b);
+.cardLink:hover {
+  text-decoration: underline;
 }
 
-/* Probability Bars */
-.regimeBars {
+/* Probabilities */
+.probSection {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
-.regimeRow {
+.probRow {
   display: flex;
   align-items: center;
   gap: 12px;
 }
 
-.regimeLbl {
-  width: 75px;
+.probLabel {
+  width: 72px;
   font-size: 0.78rem;
   font-weight: 600;
   color: var(--text, #3f4650);
   flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  gap: 6px;
 }
 
-:global([data-theme="dark"]) .regimeLbl {
+:global([data-theme="dark"]) .probLabel {
   color: #cbd5e1;
 }
 
-.regimeBg {
+.probTrack {
   flex: 1;
   height: 8px;
   background: var(--surface2, #f5f5f4);
-  border-radius: var(--r-pill, 999px);
+  border-radius: 999px;
   overflow: hidden;
   border: 1px solid var(--border, rgba(15, 23, 42, 0.06));
 }
 
-:global([data-theme="dark"]) .regimeBg {
+:global([data-theme="dark"]) .probTrack {
   background: #1c2030;
   border-color: rgba(255, 255, 255, 0.06);
 }
 
-.regimeFill {
+.probBar {
   height: 100%;
-  border-radius: var(--r-pill, 999px);
-  transition: width 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 999px;
+  transition: width 0.6s ease;
 }
 
-.regimePct {
-  width: 52px;
+.probVal {
+  width: 50px;
   text-align: right;
   font-family: 'Geist Mono', monospace;
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   font-weight: 700;
 }
 
-/* Strategy Tactical Tilt Box */
-.tiltBox {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 16px;
-  border-radius: var(--r-md, 8px);
+/* Tactical Tilt Strip */
+.tacticalBox {
   background: var(--surface2, #f5f5f4);
   border: 1px solid var(--border, rgba(15, 23, 42, 0.06));
-  flex-wrap: wrap;
-  gap: 10px;
+  border-radius: var(--r-md, 8px);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
-:global([data-theme="dark"]) .tiltBox {
-  background: #1c2030;
+:global([data-theme="dark"]) .tacticalBox {
+  background: #181c28;
   border-color: rgba(255, 255, 255, 0.06);
 }
 
-.tiltContent {
+.tacticalHead {
   display: flex;
   align-items: center;
-  gap: 10px;
-  font-size: 0.8rem;
-  color: var(--text, #3f4650);
+  justify-content: space-between;
 }
 
-:global([data-theme="dark"]) .tiltContent {
-  color: #cbd5e1;
+.tacticalBadge {
+  font-family: 'Geist Mono', monospace;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: var(--surface, #ffffff);
+  border: 1px solid;
 }
 
-.tiltContent strong {
-  color: var(--text-head, #0b0f19);
+:global([data-theme="dark"]) .tacticalBadge {
+  background: #141721;
 }
 
-:global([data-theme="dark"]) .tiltContent strong {
-  color: #f8fafc;
-}
-
-.tiltLink {
-  font-size: 0.75rem;
+.rebalanceLink {
+  font-size: 0.72rem;
   font-weight: 700;
   color: var(--accent, #2f5bd6);
   text-decoration: none;
-  display: flex;
-  align-items: center;
-  gap: 4px;
 }
 
-:global([data-theme="dark"]) .tiltLink {
-  color: #60a5fa;
-}
-
-.tiltLink:hover {
+.rebalanceLink:hover {
   text-decoration: underline;
 }
 
-/* ── Real-time ML Day Trade Radar Widget ─────────────────────────────────── */
-.signalsWidget {
-  background: var(--surface, #ffffff);
-  border: 1px solid var(--border, rgba(15, 23, 42, 0.08));
-  border-radius: var(--r-lg, 12px);
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-:global([data-theme="dark"]) .signalsWidget {
-  background: #141721;
-  border-color: rgba(255, 255, 255, 0.06);
-}
-
-.signalsWidgetHead {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.signalsWidgetHead h3 {
-  font-size: 0.96rem;
-  font-weight: 700;
-  color: var(--text-head, #0b0f19);
+.tacticalText {
+  font-size: 0.78rem;
+  color: var(--text, #3f4650);
+  line-height: 1.45;
   margin: 0;
+}
+
+:global([data-theme="dark"]) .tacticalText {
+  color: #cbd5e1;
+}
+
+/* Top Feature Drivers */
+.driversSection {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-wrap: wrap;
+  padding-top: 4px;
 }
 
-:global([data-theme="dark"]) .signalsWidgetHead h3 {
-  color: #f8fafc;
+.driversLabel {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-muted, #64748b);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
-.signalsWidgetGrid {
+.driversList {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.driverPill {
+  font-family: 'Geist Mono', monospace;
+  font-size: 0.68rem;
+  color: var(--text-head, #0b0f19);
+  background: var(--surface2, #f5f5f4);
+  padding: 2px 8px;
+  border-radius: 4px;
+  border: 1px solid var(--border, rgba(15, 23, 42, 0.06));
+}
+
+:global([data-theme="dark"]) .driverPill {
+  background: #1c2030;
+  border-color: rgba(255, 255, 255, 0.06);
+  color: #cbd5e1;
+}
+
+.driverPill strong {
+  color: #2563eb;
+}
+
+:global([data-theme="dark"]) .driverPill strong {
+  color: #60a5fa;
+}
+
+/* Radar Grid */
+.radarGrid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 10px;
 }
 
-@media (max-width: 1000px) {
-  .signalsWidgetGrid { grid-template-columns: repeat(2, 1fr); }
+@media (max-width: 520px) {
+  .radarGrid { grid-template-columns: 1fr; }
 }
 
-@media (max-width: 600px) {
-  .signalsWidgetGrid { grid-template-columns: 1fr; }
-}
-
-.miniSigCard {
+.sigItem {
   background: var(--surface2, #f5f5f4);
-  border: 1px solid var(--border, rgba(15, 23, 42, 0.08));
+  border: 1px solid var(--border, rgba(15, 23, 42, 0.06));
   border-radius: var(--r-md, 8px);
   padding: 12px;
   display: flex;
@@ -467,36 +519,36 @@
   transition: all 0.15s ease;
 }
 
-:global([data-theme="dark"]) .miniSigCard {
-  background: #1c2030;
+:global([data-theme="dark"]) .sigItem {
+  background: #181c28;
   border-color: rgba(255, 255, 255, 0.06);
 }
 
-.miniSigCard:hover {
+.sigItem:hover {
   border-color: var(--accent, #2f5bd6);
   transform: translateY(-1px);
 }
 
-.miniSigTop {
+.sigHeader {
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 
-.miniSigSymbol {
+.sigSymbol {
   font-family: 'Geist Mono', monospace;
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   font-weight: 800;
   color: var(--text-head, #0b0f19);
 }
 
-:global([data-theme="dark"]) .miniSigSymbol {
+:global([data-theme="dark"]) .sigSymbol {
   color: #f8fafc;
 }
 
-.miniSigBadge {
+.sigBadge {
   font-family: 'Geist Mono', monospace;
-  font-size: 0.65rem;
+  font-size: 0.62rem;
   font-weight: 700;
   padding: 2px 6px;
   border-radius: 4px;
@@ -517,63 +569,97 @@
   color: #64748b;
 }
 
-.miniSigPrices {
+.sigBody {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
 }
 
-.miniSigPrice {
+.sigPrice {
   font-family: 'Geist Mono', monospace;
   font-size: 0.95rem;
   font-weight: 700;
   color: var(--text-head, #0b0f19);
 }
 
-:global([data-theme="dark"]) .miniSigPrice {
+:global([data-theme="dark"]) .sigPrice {
   color: #f1f5f9;
 }
 
-.miniSigConf {
+.sigConf {
   font-family: 'Geist Mono', monospace;
   font-size: 0.7rem;
   font-weight: 600;
   color: var(--text-muted, #64748b);
 }
 
-.miniSigBtn {
+.sigFoot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.68rem;
+  color: var(--text-muted, #64748b);
+  border-top: 1px dashed var(--border, rgba(15, 23, 42, 0.08));
+  padding-top: 6px;
+}
+
+:global([data-theme="dark"]) .sigFoot {
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+.sigActionBtn {
   background: var(--surface, #ffffff);
   border: 1px solid var(--border, rgba(15, 23, 42, 0.1));
   color: var(--accent, #2f5bd6);
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   font-weight: 700;
-  padding: 5px 0;
+  padding: 3px 8px;
   border-radius: 4px;
-  text-align: center;
   text-decoration: none;
   transition: all 0.15s ease;
 }
 
-:global([data-theme="dark"]) .miniSigBtn {
+:global([data-theme="dark"]) .sigActionBtn {
   background: #141721;
   border-color: rgba(255, 255, 255, 0.08);
   color: #60a5fa;
 }
 
-.miniSigBtn:hover {
+.sigActionBtn:hover {
   background: var(--accent, #2f5bd6);
   color: #ffffff;
 }
 
-:global([data-theme="dark"]) .miniSigBtn:hover {
-  background: #2563eb;
-  color: #ffffff;
+.emptyRadar {
+  padding: 24px;
+  text-align: center;
+  color: var(--text-muted, #64748b);
+  font-size: 0.8rem;
 }
 
-/* ── Side column (News) ─────────────────────────────────────────────────── */
-.side {
-  display: flex;
-  flex-direction: column;
+/* ── 5. Market Pulse & Asset Overview ───────────────────────────────────── */
+.marketRow {
+  display: grid;
+  grid-template-columns: 1.55fr 1fr;
   gap: 16px;
-  min-width: 0;
+  align-items: start;
+}
+
+@media (max-width: 1050px) {
+  .marketRow { grid-template-columns: 1fr; }
+}
+
+.tableCard,
+.newsCard {
+  background: var(--surface, #ffffff);
+  border: 1px solid var(--border, rgba(15, 23, 42, 0.08));
+  border-radius: var(--r-xl, 14px);
+  padding: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+}
+
+:global([data-theme="dark"]) .tableCard,
+:global([data-theme="dark"]) .newsCard {
+  background: #141721;
+  border-color: rgba(255, 255, 255, 0.07);
 }

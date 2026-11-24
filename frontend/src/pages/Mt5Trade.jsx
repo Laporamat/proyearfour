@@ -61,14 +61,14 @@ export default function Mt5Trade() {
 
   // Order pad state (default symbol: AAPL from the 25 assets)
   const [symbol, setSymbol] = useState('AAPL')
-  const [volume, setVolume] = useState('0.02')
+  const [volume, setVolume] = useState('1')
   const [sl, setSl] = useState('')
   const [tp, setTp] = useState('')
   const [autoSlTp, setAutoSlTp] = useState(true)
   const [tick, setTick] = useState({ bid: 228.40, ask: 228.50, spread: 0.10 })
   const [candles, setCandles] = useState([])
   const [candlesLoading, setCandlesLoading] = useState(false)
-  const [chartTf, setChartTf] = useState('1mo')
+  const [chartTf, setChartTf] = useState('5d') // Default 5D (15m) for active Day Trading
 
   // ML Day Trade Signals
   const [mlData, setMlData] = useState(null)
@@ -142,11 +142,20 @@ export default function Mt5Trade() {
     }
   }, [status.connected, symbol])
 
-  // ── 3.1 Fetch Candlesticks for TradingView Chart ──
+  // ── 3.1 Fetch Candlesticks for TradingView Chart (Day Trading Intervals) ──
+  const TF_INTERVALS = {
+    '1d': '5m',
+    '5d': '15m',
+    '1mo': '1h',
+    '3mo': '1d',
+    '1y': '1d',
+  }
+
   const fetchCandles = useCallback(async (sym = symbol, tf = chartTf) => {
     setCandlesLoading(true)
     try {
-      const res = await api.mt5Candles(sym, tf, tf === '5d' ? '1h' : '1d')
+      const interval = TF_INTERVALS[tf] || '15m'
+      const res = await api.mt5Candles(sym, tf, interval)
       if (res && res.candles) setCandles(res.candles)
     } catch (e) {
       console.warn('Candles error:', e.message)
@@ -323,7 +332,7 @@ export default function Mt5Trade() {
     setMessage('')
     try {
       const vol = parseFloat(volume)
-      if (isNaN(vol) || vol <= 0) throw new Error('กรุณาระบุจำนวน Lot ให้ถูกต้อง')
+      if (isNaN(vol) || vol <= 0) throw new Error('กรุณาระบุจำนวนหุ้น (Shares) ให้ถูกต้อง')
 
       const body = {
         symbol: symbol.trim().toUpperCase(),
@@ -335,7 +344,7 @@ export default function Mt5Trade() {
       }
 
       const res = await api.mt5Order(body)
-      setMessage(`ส่งคำสั่ง ${action} ${symbol} สำเร็จ! Ticket #${res.order || res.deal} @ ${curSymbol}${res.price}`)
+      setMessage(res.note || `ส่งคำสั่ง ${action} ${symbol} สำเร็จ! Ticket #${res.order || res.deal} @ ${curSymbol}${res.price}`)
       fetchPositions()
       fetchStatus()
     } catch (err) {
@@ -473,15 +482,27 @@ export default function Mt5Trade() {
   const profitFactor = grossLoss > 0 ? (grossProfit / grossLoss).toFixed(2) : (grossProfit > 0 ? '∞' : '0.00')
   const netRealized = history.reduce((acc, t) => acc + (t.profit || 0), 0).toFixed(2)
 
+  // ── Live-computed KPI values from positions (always consistent with the table) ──
+  const liveHoldingsValue = positions.reduce((sum, p) => {
+    const mv = p.market_value != null ? p.market_value : (p.price_current * p.volume)
+    return sum + (mv || 0)
+  }, 0)
+  const liveCostBasis = positions.reduce((sum, p) => {
+    const cb = p.cost_basis != null ? p.cost_basis : (p.price_open * p.volume)
+    return sum + (cb || 0)
+  }, 0)
+  const liveFloatingPL = positions.reduce((sum, p) => sum + (p.profit || 0), 0)
+  const liveCashBalance = account?.balance ?? 8561.28
+  const liveEquity = liveCashBalance + liveHoldingsValue
+
   // Risk % allocation preset handler
   const handleApplyRiskPreset = (pct) => {
     const eq = account?.equity || 10000
     const riskAmount = eq * (pct / 100)
     const p = tick.ask || activeAsset.base_price || 100
-    const slDist = sl ? Math.abs(p - parseFloat(sl)) : p * 0.015
-    const computedLot = Math.max(0.01, Math.min(2.0, (riskAmount / (slDist * 100))))
-    setVolume(computedLot.toFixed(2))
-    setMessage(`ตั้งค่า Volume เป็น ${computedLot.toFixed(2)} Lot ตามความเสี่ยง ${pct}% ($${riskAmount.toFixed(0)})`)
+    const computedShares = Math.max(1, Math.min(100, Math.round(riskAmount / p)))
+    setVolume(String(computedShares))
+    setMessage(`ตั้งค่า Volume เป็น ${computedShares} หุ้น ตามความเสี่ยง ${pct}% ($${riskAmount.toFixed(0)})`)
   }
 
   return (
@@ -550,30 +571,32 @@ export default function Mt5Trade() {
       {/* ── Quant Telemetry Metric Strip ── */}
       <div className={s.kpiGrid}>
         <div className={s.kpiCard}>
-          <div className={s.kpiLabel}>Balance / Equity</div>
+          <div className={s.kpiLabel}>Cash Balance (เงินสดในพอร์ต)</div>
           <div className={s.kpiValue}>
-            ${account?.equity != null ? Number(account.equity).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '10,000.00'}
+            ${liveCashBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </div>
           <div className={s.kpiSub}>
-            Balance: ${account?.balance != null ? Number(account.balance).toLocaleString('en-US', { minimumFractionDigits: 2 }) : '10,000.00'}
+            Total Equity: ${liveEquity.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (เงินสด + หุ้น)
+          </div>
+        </div>
+
+        <div className={s.kpiCard}>
+          <div className={s.kpiLabel}>Holdings Value (มูลค่าหุ้นที่ถือ)</div>
+          <div className={s.kpiValue}>
+            ${liveHoldingsValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </div>
+          <div className={s.kpiSub}>
+            ต้นทุนรวม: ${liveCostBasis.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} · {positions.length} Positions
           </div>
         </div>
 
         <div className={s.kpiCard}>
           <div className={s.kpiLabel}>Today's Floating P/L</div>
-          <div className={`${s.kpiValue} ${(account?.profit || 0) >= 0 ? s.profitPos : s.profitNeg}`}>
-            {(account?.profit || 0) >= 0 ? '+' : ''}${Number(account?.profit || 0).toFixed(2)}
+          <div className={`${s.kpiValue} ${liveFloatingPL >= 0 ? s.profitPos : s.profitNeg}`}>
+            {liveFloatingPL >= 0 ? '+' : ''}${liveFloatingPL.toFixed(2)}
           </div>
           <div className={s.kpiSub}>
-            ฿{Number((account?.profit || 0) * 35).toLocaleString('th-TH', { maximumFractionDigits: 0 })} THB
-          </div>
-        </div>
-
-        <div className={s.kpiCard}>
-          <div className={s.kpiLabel}>Open Order Tickets</div>
-          <div className={s.kpiValue}>{positions.length} Active</div>
-          <div className={s.kpiSub}>
-            Free Margin: ${Number(account?.margin_free || account?.equity || 10000).toLocaleString('en-US', { maximumFractionDigits: 0 })}
+            ฿{(liveFloatingPL * (account?.fx_thb_per_usd || 35)).toLocaleString('th-TH', { maximumFractionDigits: 0 })} THB
           </div>
         </div>
 
@@ -700,14 +723,14 @@ export default function Mt5Trade() {
                   </span>
                 </div>
                 <div className={s.timeframeGroup}>
-                  {['5d', '1mo', '3mo', '1y'].map((tf) => (
+                  {['1d', '5d', '1mo', '3mo', '1y'].map((tf) => (
                     <button
                       key={tf}
                       type="button"
                       className={`${s.timeframeBtn} ${chartTf === tf ? s.timeframeBtnActive : ''}`}
                       onClick={() => setChartTf(tf)}
                     >
-                      {tf.toUpperCase()}
+                      {tf === '1d' ? '1D' : tf === '5d' ? '5D' : tf === '1mo' ? '1MO' : tf === '3mo' ? '3MO' : '1Y'}
                     </button>
                   ))}
                 </div>
@@ -720,6 +743,7 @@ export default function Mt5Trade() {
                 positions={positions}
                 suggestedSl={activeSignal?.suggested_sl}
                 suggestedTp={activeSignal?.suggested_tp}
+                intervalLabel={TF_INTERVALS[chartTf] || '15m'}
               />
             </div>
 
@@ -840,11 +864,12 @@ export default function Mt5Trade() {
                           <th>Ticket</th>
                           <th>Symbol</th>
                           <th>Type</th>
-                          <th>Lots</th>
+                          <th>Shares (หุ้น)</th>
                           <th>Entry Price</th>
                           <th>Current Price</th>
+                          <th>Market Value</th>
+                          <th>P/L ($ / %)</th>
                           <th>SL / TP</th>
-                          <th>Profit ($)</th>
                           <th>Action</th>
                         </tr>
                       </thead>
@@ -859,13 +884,15 @@ export default function Mt5Trade() {
                               </span>
                             </td>
                             <td className={s.mono}>{p.volume}</td>
-                            <td className={s.mono}>{p.price_open}</td>
-                            <td className={s.mono}>{p.price_current}</td>
-                            <td className={s.mono}>
-                              {p.sl || '—'} / {p.tp || '—'}
-                            </td>
+                            <td className={s.mono}>${p.price_open}</td>
+                            <td className={s.mono}>${p.price_current}</td>
+                            <td className={s.mono}>${p.market_value ? p.market_value.toFixed(2) : (p.price_current * p.volume).toFixed(2)}</td>
                             <td className={`${s.mono} ${p.profit >= 0 ? s.profitPos : s.profitNeg}`}>
                               {p.profit >= 0 ? '+' : ''}${p.profit.toFixed(2)}
+                              {p.profit_pct != null ? ` (${p.profit_pct >= 0 ? '+' : ''}${p.profit_pct}%)` : ''}
+                            </td>
+                            <td className={s.mono}>
+                              {p.sl || '—'} / {p.tp || '—'}
                             </td>
                             <td>
                               <button
@@ -873,7 +900,7 @@ export default function Mt5Trade() {
                                 onClick={() => handleClose(p.ticket)}
                                 disabled={actionLoading}
                               >
-                                ✕ Close
+                                ✕ ขายคืนเงิน
                               </button>
                             </td>
                           </tr>
@@ -885,7 +912,7 @@ export default function Mt5Trade() {
               ) : (
                 history.length === 0 ? (
                   <div className={s.emptyState}>
-                    ยังไม่มีประวัติการปิดออเดอร์ — เมื่อปิดสถานะ ออเดอร์และกำไรขาดทุนจริง (Realized P/L) จะแสดงที่นี่
+                    ยังไม่มีประวัติการปิดออเดอร์ — เมื่อปิดสถานะ ออเดอร์และเงินสดที่ได้รับคืนพร้อมกำไรขาดทุนจริง (Realized P/L) จะแสดงที่นี่
                   </div>
                 ) : (
                   <div className={s.tableWrap}>
@@ -895,9 +922,10 @@ export default function Mt5Trade() {
                           <th>Ticket</th>
                           <th>Symbol</th>
                           <th>Type</th>
-                          <th>Lots</th>
-                          <th>Open Price</th>
-                          <th>Close Price</th>
+                          <th>Shares (หุ้น)</th>
+                          <th>Buy Price</th>
+                          <th>Sell Price</th>
+                          <th>Proceeds (เงินคืน)</th>
                           <th>Realized P/L ($)</th>
                           <th>Reason</th>
                           <th>Closed At</th>
@@ -914,8 +942,9 @@ export default function Mt5Trade() {
                               </span>
                             </td>
                             <td className={s.mono}>{h.volume}</td>
-                            <td className={s.mono}>{h.price_open}</td>
-                            <td className={s.mono}>{h.price_close}</td>
+                            <td className={s.mono}>${h.price_open}</td>
+                            <td className={s.mono}>${h.price_close}</td>
+                            <td className={s.mono}>${h.proceeds ? Number(h.proceeds).toFixed(2) : (h.price_close * h.volume).toFixed(2)}</td>
                             <td className={`${s.mono} ${h.profit >= 0 ? s.profitPos : s.profitNeg}`}>
                               {h.profit >= 0 ? '+' : ''}${Number(h.profit || 0).toFixed(2)}
                             </td>
@@ -987,27 +1016,27 @@ export default function Mt5Trade() {
 
               {/* Volume / Lot Sizing Chips */}
               <div className={s.fieldGroup}>
-                <label>Volume (Lots)</label>
+                <label>Volume (จำนวนหุ้น / Shares)</label>
                 <div className={s.lotChips}>
-                  {['0.01', '0.02', '0.05', '0.10', '0.50', '1.00'].map((lot) => (
+                  {['1', '2', '5', '10', '25', '50'].map((lot) => (
                     <button
                       key={lot}
                       type="button"
                       className={`${s.lotChip} ${volume === lot ? s.lotChipActive : ''}`}
                       onClick={() => setVolume(lot)}
                     >
-                      {lot}
+                      {lot} หุ้น
                     </button>
                   ))}
                 </div>
                 <input
                   type="number"
-                  step="0.01"
-                  min="0.01"
+                  step="1"
+                  min="1"
                   value={volume}
                   onChange={(e) => setVolume(e.target.value)}
                   className={s.input}
-                  placeholder="Lot Size"
+                  placeholder="จำนวนหุ้น (เช่น 1, 2, 5)"
                 />
               </div>
 
@@ -1050,7 +1079,7 @@ export default function Mt5Trade() {
                       Risk-Based Capital Presets
                     </label>
                     <span style={{ fontSize: '0.68rem', color: '#64748b' }}>
-                      Margin: ~${(parseFloat(volume || 0.02) * (tick.ask || 100)).toFixed(0)}
+                      Cost (มูลค่าซื้อ): ~${(parseFloat(volume || 1) * (tick.ask || 100)).toFixed(2)}
                     </span>
                   </div>
                   <div className={s.riskPresets}>
@@ -1095,23 +1124,23 @@ export default function Mt5Trade() {
                   type="button"
                   className={s.btnScalpBuy}
                   onClick={() => {
-                    setVolume('0.02')
+                    setVolume('1')
                     handleOrder('BUY')
                   }}
                   disabled={actionLoading}
                 >
-                  ⚡ Scalp BUY 0.02
+                  ⚡ BUY 1 หุ้น
                 </button>
                 <button
                   type="button"
                   className={s.btnScalpSell}
                   onClick={() => {
-                    setVolume('0.02')
+                    setVolume('1')
                     handleOrder('SELL')
                   }}
                   disabled={actionLoading}
                 >
-                  ⚡ Scalp SELL 0.02
+                  ⚡ SELL 1 หุ้น
                 </button>
               </div>
 
@@ -1257,15 +1286,15 @@ export default function Mt5Trade() {
 
               <div className={s.configRow}>
                 <label>
-                  <span>Order Lot Size per Deal</span>
-                  <strong>{botState?.default_lot || 0.02} Lots</strong>
+                  <span>Order Size per Deal (จำนวนหุ้นต่อไม้)</span>
+                  <strong>{botState?.default_lot || 1} Shares (หุ้น)</strong>
                 </label>
                 <input
                   type="number"
-                  step="0.01"
-                  min="0.01"
-                  max="1.0"
-                  value={botState?.default_lot || 0.02}
+                  step="1"
+                  min="1"
+                  max="100"
+                  value={botState?.default_lot || 1}
                   onChange={(e) => handleUpdateBotParam('default_lot', parseFloat(e.target.value))}
                   className={s.input}
                 />

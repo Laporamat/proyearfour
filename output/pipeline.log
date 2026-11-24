@@ -293,3 +293,24 @@
 2026-11-23 05:25:21,502 [WARNING] Error fetching native MT5 history: name 'timedelta' is not defined
 2026-11-23 05:25:29,613 [WARNING] Error fetching native MT5 history: name 'timedelta' is not defined
 2026-11-23 05:25:34,551 [WARNING] Error fetching native MT5 history: name 'timedelta' is not defined
+2026-11-25 01:39:02,539 [INFO] ============================================================
+2026-11-25 01:39:02,543 [INFO] เริ่ม Data Pipeline  [2020-01-01 → 2026-11-26]
+2026-11-25 01:39:02,543 [INFO] ============================================================
+2026-11-25 01:39:02,543 [INFO] STEP 1 — ดึงราคา Adjusted Close (2020-01-01 → 2026-11-26) จำนวน 25 ตัว
+2026-11-25 01:39:09,652 [INFO] ดึงข้อมูลครบทุกตัว ✓
+2026-11-25 01:39:09,652 [INFO] Shape หลังดึง: (1792, 25)
+2026-11-25 01:39:09,657 [INFO] STEP 2 — ดึงอัตราแลกเปลี่ยน USD/THB (2020-01-01 → 2026-11-26)
+2026-11-25 01:39:10,276 [INFO] ได้อัตราแลกเปลี่ยน 1795 วัน (ล่าสุด: 33.9200 THB/USD)
+2026-11-25 01:39:10,277 [INFO] STEP 3 — แปลง USD → THB สำหรับ 15 ตัว
+2026-11-25 01:39:10,318 [INFO] แปลงสกุลเงินเสร็จ ✓  (ทุกตัวอยู่ในหน่วย THB)
+2026-11-25 01:39:10,322 [INFO] STEP 4 — จัดการ Missing Values
+2026-11-25 01:39:10,338 [INFO]   จำนวน NaN ก่อน fill: 3934
+2026-11-25 01:39:10,358 [INFO]   จำนวน NaN หลัง fill:  0
+2026-11-25 01:39:10,373 [INFO] STEP 5 — Data Cleaning & Outlier Detection
+2026-11-25 01:39:10,388 [INFO]   ไม่พบ outlier ✓
+2026-11-25 01:39:10,393 [INFO]   Shape สุดท้าย: (1792, 25)
+2026-11-25 01:39:10,394 [INFO] STEP 6 — Export ผลลัพธ์
+2026-11-25 01:39:10,944 [INFO]   บันทึกราคา → output\prices_clean_thb.csv
+2026-11-25 01:39:11,394 [INFO]   บันทึก daily returns → output\daily_returns.csv
+2026-11-25 01:39:12,176 [INFO]   บันทึก summary → output\summary_report.txt
+2026-11-25 01:39:12,176 [INFO] Pipeline เสร็จสมบูรณ์ ✓

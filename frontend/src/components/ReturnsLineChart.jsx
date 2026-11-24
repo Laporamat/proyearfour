@@ -65,7 +65,11 @@ export default function ReturnsLineChart({ height = 210 }) {
     setLoading(false)
   }, [period])
 
-  useEffect(() => { load() }, [load, lastUpdated])
+  useEffect(() => {
+    load()
+    const timer = setInterval(load, 30_000)
+    return () => clearInterval(timer)
+  }, [load, lastUpdated])
 
   const toggle = t => setActive(prev => {
     const next = new Set(prev)
@@ -79,7 +83,10 @@ export default function ReturnsLineChart({ height = 210 }) {
     <div className={s.wrap}>
       {/* header */}
       <div className={s.header}>
-        <h3>Cumulative Return</h3>
+        <div className={s.titleRow}>
+          <h3>Cumulative Return</h3>
+          <span className={s.liveBadge} title="ข้อมูลอัปเดตเรียลไทม์ถึงปัจจุบัน">● LIVE</span>
+        </div>
         <div className={s.periods}>
           {PERIODS.map(p => (
             <button key={p}

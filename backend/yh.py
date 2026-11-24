@@ -33,7 +33,7 @@ warnings.filterwarnings("ignore")
 # ─────────────────────────────────────────────
 START_DATE = "2020-01-01"
 END_DATE   = datetime.today().strftime("%Y-%m-%d")
-OUTPUT_DIR = Path("output")
+OUTPUT_DIR = Path(__file__).resolve().parent / "output" if (Path(__file__).resolve().parent / "output").exists() else Path("output")
 
 # 25 สินทรัพย์เป้าหมาย
 US_STOCKS = ["AAPL", "MSFT", "GOOGL", "AMZN", "NVDA",
