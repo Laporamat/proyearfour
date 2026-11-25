@@ -8,14 +8,15 @@ Data Pipeline & Clean Data — Quant Project
   Bonds/Safe (5) : TLT, IEF, SHY, GLD, BIL
 
 ขั้นตอน:
-  1. ดึงราคา Adjusted Close จาก Yahoo Finance
-  2. ดึงอัตราแลกเปลี่ยน USD/THB แบบ time-series (ไม่ใช่แค่ค่าเดียว)
-  3. แปลง USD → THB เฉพาะหุ้น US + Bonds
-  4. Forward Fill → Backward Fill เพื่อจัดการวันหยุดที่ไม่ตรงกัน
-  5. Data Cleaning: ลบแถวที่ missing ทั้งหมด, ตรวจจับ outlier, validate
-  6. Export ผลลัพธ์เป็น CSV + สรุป report
+1. ดึงราคา Adjusted Close จาก Yahoo Finance
+2. ดึงอัตราแลกเปลี่ยน USD/THB แบบ time-series (ไม่ใช่แค่ค่าเดียว)
+3. แปลง USD → THB เฉพาะหุ้น US + Bonds
+4. Forward Fill → Backward Fill เพื่อจัดการวันหยุดที่ไม่ตรงกัน
+5. Data Cleaning: ลบแถวที่ missing ทั้งหมด, ตรวจจับ outlier, validate
+6. Export ผลลัพธ์เป็น CSV + สรุป report
 """
 
+import os
 import sys
 import logging
 import warnings
@@ -52,18 +53,21 @@ FX_FALLBACK   = 35.0                       # ค่าสำรองถ้า�
 # Outlier threshold — ถ้า daily return เกิน ±50% ถือว่า suspect
 OUTLIER_THRESHOLD = 0.50
 
+IS_VERCEL = bool(os.environ.get("VERCEL"))
+
 # ─────────────────────────────────────────────
 # LOGGING
 # ─────────────────────────────────────────────
-OUTPUT_DIR.mkdir(exist_ok=True)
+handlers: list[logging.Handler] = [logging.StreamHandler(sys.stdout)]
+
+if not IS_VERCEL:
+    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    handlers.append(logging.FileHandler(OUTPUT_DIR / "pipeline.log", encoding="utf-8"))
 
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
-    handlers=[
-        logging.StreamHandler(sys.stdout),
-        logging.FileHandler(OUTPUT_DIR / "pipeline.log", encoding="utf-8"),
-    ],
+    handlers=handlers,
 )
 log = logging.getLogger(__name__)
 
@@ -74,7 +78,7 @@ log = logging.getLogger(__name__)
 def fetch_prices(tickers: list[str], start: str, end: str) -> pd.DataFrame:
     log.info("STEP 1 — ดึงราคา Adjusted Close (%s → %s) จำนวน %d ตัว",
              start, end, len(tickers))
-    
+
     # yfinance ≥ 0.2.x ใช้ auto_adjust=True แทน Adj Close โดยตรง
     raw = yf.download(
         tickers,
@@ -210,7 +214,7 @@ def clean_data(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
         # บันทึก outlier report ไว้ก่อน
         outlier_report = returns[outlier_mask].stack().reset_index()
         outlier_report.columns = ["Date", "Ticker", "Return"]
-        outlier_report["Price"] = df.stack()[outlier_report.set_index(["Date","Ticker"]).index].values
+        outlier_report["Price"] = df.stack()[outlier_report.set_index(["Date", "Ticker"]).index].values
 
         # แทนที่ค่า outlier ด้วย NaN แล้ว forward-fill ใหม่
         df_clean = df.copy()
@@ -248,24 +252,8 @@ def clean_data(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
 def export_and_report(df: pd.DataFrame, outliers: pd.DataFrame) -> None:
     log.info("STEP 6 — Export ผลลัพธ์")
 
-    # บันทึกราคา clean
-    price_path = OUTPUT_DIR / "prices_clean_thb.csv"
-    df.to_csv(price_path)
-    log.info("  บันทึกราคา → %s", price_path)
-
-    # บันทึก daily returns
     returns = df.pct_change().dropna(how="all")
-    returns_path = OUTPUT_DIR / "daily_returns.csv"
-    returns.to_csv(returns_path)
-    log.info("  บันทึก daily returns → %s", returns_path)
 
-    # บันทึก outlier report
-    if not outliers.empty:
-        outlier_path = OUTPUT_DIR / "outlier_report.csv"
-        outliers.to_csv(outlier_path, index=False)
-        log.info("  บันทึก outlier report → %s", outlier_path)
-
-    # สรุป summary
     summary_lines = [
         "=" * 60,
         "PIPELINE SUMMARY REPORT",
@@ -277,9 +265,11 @@ def export_and_report(df: pd.DataFrame, outliers: pd.DataFrame) -> None:
         "",
         "สินทรัพย์ที่มีข้อมูล:",
     ]
-    for category, tickers in [("US Stocks", US_STOCKS),
-                               ("Thai Stocks", THAI_STOCKS),
-                               ("Bonds/Safe", BONDS)]:
+    for category, tickers in [
+        ("US Stocks", US_STOCKS),
+        ("Thai Stocks", THAI_STOCKS),
+        ("Bonds/Safe", BONDS),
+    ]:
         present = [t for t in tickers if t in df.columns]
         summary_lines.append(f"  {category:15s}: {len(present)}/{len(tickers)}  {present}")
 
@@ -294,10 +284,30 @@ def export_and_report(df: pd.DataFrame, outliers: pd.DataFrame) -> None:
     ]
 
     summary_text = "\n".join(summary_lines)
+    print("\n" + summary_text)
+
+    if IS_VERCEL:
+        log.info("  รันบน Vercel — ข้ามการเขียนไฟล์ลงดิสก์")
+        return
+
+    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+
+    price_path = OUTPUT_DIR / "prices_clean_thb.csv"
+    df.to_csv(price_path)
+    log.info("  บันทึกราคา → %s", price_path)
+
+    returns_path = OUTPUT_DIR / "daily_returns.csv"
+    returns.to_csv(returns_path)
+    log.info("  บันทึก daily returns → %s", returns_path)
+
+    if not outliers.empty:
+        outlier_path = OUTPUT_DIR / "outlier_report.csv"
+        outliers.to_csv(outlier_path, index=False)
+        log.info("  บันทึก outlier report → %s", outlier_path)
+
     summary_path = OUTPUT_DIR / "summary_report.txt"
     summary_path.write_text(summary_text, encoding="utf-8")
     log.info("  บันทึก summary → %s", summary_path)
-    print("\n" + summary_text)
 
 
 # ─────────────────────────────────────────────
@@ -308,10 +318,10 @@ def run_pipeline(start: str = START_DATE, end: str = END_DATE) -> pd.DataFrame:
     log.info("เริ่ม Data Pipeline  [%s → %s]", start, end)
     log.info("=" * 60)
 
-    prices   = fetch_prices(ALL_TICKERS, start, end)
-    fx       = fetch_fx_series(start, end)
-    prices   = convert_usd_to_thb(prices, fx)
-    prices   = handle_missing(prices)
+    prices = fetch_prices(ALL_TICKERS, start, end)
+    fx = fetch_fx_series(start, end)
+    prices = convert_usd_to_thb(prices, fx)
+    prices = handle_missing(prices)
     prices, outliers = clean_data(prices)
     export_and_report(prices, outliers)
 
